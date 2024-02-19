@@ -1,4 +1,4 @@
-FROM fedora:36
+FROM fedora:latest
 
 LABEL description="Build environment for segatools"
 
