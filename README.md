@@ -1,33 +1,31 @@
 # Segatools
 
-Version: `2023-11-22`
+Version: `2024-02-22`
 
 Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platforms.
 
 ## List of supported games
 
-* Chunithm
-  * [Chunithm (Plus)](doc/chunihook.md)
-  * [Chunithm Air (Plus)](doc/chunihook.md)
-  * [Chunithm Star (Plus)](doc/chunihook.md)
-  * [Chunithm Amazon (Plus)](doc/chunihook.md)
-  * [Chunithm Crystal (Plus)](doc/chunihook.md)
-  * Chunithm SUN
+* CHUNITHM
+  * up to [CHUNITHM PARADISE LOST](doc/chunihook.md)
+  * starting from CHUNITHM NEW!! 
 * Initial D
   * [Initial D Arcade Stage Zero](doc/idzhook.md)
   * Initial D THE ARCADE
+* Hatsune Miku: Project DIVA Arcade
+  * up to Future Tone
 * SEGA World Drivers Championship
-  * up to SEGA World Drivers Championship 2019
+  * SEGA World Drivers Championship 2019
 * Fate/Grand Order
   * Fate/Grand Order Arcade
-* ONGEKI
-  * up to bright MEMORY
+* O.N.G.E.K.I.
+  * starting from O.N.G.E.K.I.
 * maimai DX
-  * up to maimai DX FESTiVAL PLUS
+  * starting from maimai DX
 * Card Maker
-  * up to Card Maker 1.35
-* Wacca
-  * up to WACCA Reverse
+  * starting from Card Maker
+* WACCA
+  * starting from WACCA
 
 ## End-users
 

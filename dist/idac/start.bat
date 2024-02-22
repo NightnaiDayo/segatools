@@ -39,7 +39,7 @@ config_seat_single_ex.json ^
 config_seat_single_jp.json ^
 config_hook.json
 
-start /min inject -d -k idachook.dll amdaemon.exe -c %AMDAEMON_CFG%
+start "AM Daemon" /min inject -d -k idachook.dll amdaemon.exe -c %AMDAEMON_CFG%
 inject -d -k idachook.dll ..\WindowsNoEditor\GameProject.exe -culture=en launch=Cabinet ABSLOG="..\..\..\..\..\Userdata\GameProject.log" -Master -UserDir="..\..\..\Userdata" -NotInstalled -UNATTENDED
 taskkill /f /im amdaemon.exe > nul 2>&1
 
