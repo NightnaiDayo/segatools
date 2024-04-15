@@ -11,6 +11,8 @@
 
 #include "platform/config.h"
 
+#include "unityhook/config.h"
+
 struct cm_hook_config {
     struct platform_config platform;
     struct aime_config aime;
@@ -19,6 +21,7 @@ struct cm_hook_config {
     struct vfd_config vfd;
     struct cm_dll_config dll;
     struct touch_screen_config touch;
+    struct unity_config unity;
 };
 
 void cm_dll_config_load(

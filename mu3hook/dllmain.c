@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 
-#include "board/io4.h"
 #include "board/sg-reader.h"
 #include "board/vfd.h"
 
@@ -20,9 +19,11 @@
 #include "mu3hook/config.h"
 #include "mu3hook/io4.h"
 #include "mu3hook/mu3-dll.h"
-#include "mu3hook/unity.h"
 
 #include "platform/platform.h"
+
+#include "unityhook/config.h"
+#include "unityhook/hook.h"
 
 #include "util/dprintf.h"
 
@@ -99,7 +100,7 @@ static DWORD CALLBACK mu3_pre_startup(void)
        There seems to be an issue with other DLL hooks if `LoadLibraryW` is
        hooked earlier in the `mu3hook` initialization. */
 
-    unity_hook_init();
+    unity_hook_init(&mu3_hook_cfg.unity, mu3_hook_mod);
 
     /* Initialize debug helpers */
 

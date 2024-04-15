@@ -42,4 +42,5 @@ void mu3_hook_config_load(
     gfx_config_load(&cfg->gfx, filename);
     vfd_config_load(&cfg->vfd, filename);
     mu3_dll_config_load(&cfg->dll, filename);
+    unity_config_load(&cfg->unity, filename);
 }

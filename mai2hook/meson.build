@@ -15,6 +15,7 @@ shared_library(
         hooklib_lib,
         mai2io_lib,
         platform_lib,
+        unityhook_lib,
         util_lib,
     ],
     sources : [
@@ -25,7 +26,5 @@ shared_library(
         'io4.h',
         'mai2-dll.c',
         'mai2-dll.h',
-        'unity.h',
-        'unity.c',
     ],
 )

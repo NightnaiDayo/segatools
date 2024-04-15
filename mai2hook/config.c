@@ -39,4 +39,5 @@ void mai2_hook_config_load(
     io4_config_load(&cfg->io4, filename);
     vfd_config_load(&cfg->vfd, filename);
     mai2_dll_config_load(&cfg->dll, filename);
+    unity_config_load(&cfg->unity, filename);
 }

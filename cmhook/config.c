@@ -40,4 +40,5 @@ void cm_hook_config_load(
     vfd_config_load(&cfg->vfd, filename);
     touch_screen_config_load(&cfg->touch, filename);
     cm_dll_config_load(&cfg->dll, filename);
+    unity_config_load(&cfg->unity, filename);
 }

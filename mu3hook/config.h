@@ -13,6 +13,8 @@
 
 #include "platform/config.h"
 
+#include "unityhook/config.h"
+
 struct mu3_hook_config {
     struct platform_config platform;
     struct aime_config aime;
@@ -22,6 +24,7 @@ struct mu3_hook_config {
     // struct led15093_config led15093;
     struct vfd_config vfd;
     struct mu3_dll_config dll;
+    struct unity_config unity;
 };
 
 void mu3_dll_config_load(

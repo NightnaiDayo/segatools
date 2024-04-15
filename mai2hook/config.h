@@ -10,6 +10,8 @@
 
 #include "platform/config.h"
 
+#include "unityhook/config.h"
+
 struct mai2_hook_config {
     struct platform_config platform;
     struct aime_config aime;
@@ -17,6 +19,7 @@ struct mai2_hook_config {
     struct io4_config io4;
     struct vfd_config vfd;
     struct mai2_dll_config dll;
+    struct unity_config unity;
 };
 
 void mai2_dll_config_load(

@@ -12,9 +12,10 @@
 #include "mai2hook/config.h"
 #include "mai2hook/io4.h"
 #include "mai2hook/mai2-dll.h"
-#include "mai2hook/unity.h"
 
 #include "platform/platform.h"
+
+#include "unityhook/hook.h"
 
 #include "util/dprintf.h"
 
@@ -80,7 +81,7 @@ static DWORD CALLBACK mai2_pre_startup(void)
        There seems to be an issue with other DLL hooks if `LoadLibraryW` is
        hooked earlier in the `mai2hook` initialization. */
 
-    unity_hook_init();
+    unity_hook_init(&mai2_hook_cfg.unity, mai2_hook_mod);
 
     /* Initialize debug helpers */
 

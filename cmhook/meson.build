@@ -16,6 +16,7 @@ shared_library(
         hooklib_lib,
         cmio_lib,
         platform_lib,
+        unityhook_lib,
         util_lib,
     ],
     sources : [
@@ -26,7 +27,5 @@ shared_library(
         'io4.h',
         'cm-dll.c',
         'cm-dll.h',
-        'unity.h',
-        'unity.c',
     ],
 )
