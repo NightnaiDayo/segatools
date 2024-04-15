@@ -34,6 +34,10 @@ static const struct hook_symbol unity_kernel32_syms[] = {
 void unity_hook_init(const struct unity_config *cfg, HINSTANCE self) {
     assert(cfg != NULL);
 
+    if (!cfg->enable) {
+        return;
+    }
+
     if (unity_hook_initted) {
         return;
     }
