@@ -23,7 +23,7 @@ if cc.get_id() != 'msvc'
     add_project_arguments(
         '-ffunction-sections',
         '-fdata-sections',
-        # '-flto',  # Enable Link-Time Optimization
+        '-flto',  # Enable Link-Time Optimization
         language: 'c',
     )
 
@@ -32,7 +32,7 @@ if cc.get_id() != 'msvc'
         '-Wl,--exclude-all-symbols',
         '-Wl,--gc-sections',
         '-static-libgcc',
-        # '-flto',  # Enable Link-Time Optimization
+        '-flto',  # Enable Link-Time Optimization
         '-Wl,-s',  # Strip debug symbols
         language: 'c',
     )
