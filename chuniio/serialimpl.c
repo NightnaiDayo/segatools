@@ -97,3 +97,29 @@ void led_serial_update(struct _chuni_led_data_buf_t* data)
     
     ReleaseMutex(serial_write_mutex);
 }
+
+void led_serial_update_openithm(const byte* rgb)
+
+{
+    if (serial_port != INVALID_HANDLE_VALUE)
+    {
+        char led_buffer[100];
+        DWORD bytes_to_write;         // No of bytes to write into the port
+        DWORD bytes_written = 0;     // No of bytes written to the port
+        bytes_to_write = sizeof(led_buffer);
+        BOOL status;
+        
+        led_buffer[0] = 0xAA;
+        led_buffer[1] = 0xAA;
+        memcpy(led_buffer+2, rgb, sizeof(uint8_t) * 96);
+        led_buffer[98] = 0xDD;
+        led_buffer[99] = 0xDD;
+        
+        status = WriteFile(serial_port,        // Handle to the Serial port
+                           led_buffer,     // Data to be written to the port
+                           bytes_to_write,  //No of bytes to write
+                           &bytes_written, //Bytes written
+                           NULL);
+
+    }
+}

@@ -57,15 +57,13 @@ void chuni_io_config_load(
                 filename);
     }
 
-    GetPrivateProfileStringW(L"slider", L"ledport", L"COM5", port_input, 6, filename);
-    wcsncpy(cfg->led_com, L"\\\\.\\", 4);
-    wcsncat_s(cfg->led_com, 11, port_input, 6);
-
     cfg->cab_led_output_pipe = GetPrivateProfileIntW(L"led", L"cabLedOutputPipe", 1, filename);
     cfg->cab_led_output_serial = GetPrivateProfileIntW(L"led", L"cabLedOutputSerial", 0, filename);
     
     cfg->controller_led_output_pipe = GetPrivateProfileIntW(L"led", L"controllerLedOutputPipe", 1, filename);
     cfg->controller_led_output_serial = GetPrivateProfileIntW(L"led", L"controllerLedOutputSerial", 0, filename);
+
+    cfg->controller_led_output_openithm = GetPrivateProfileIntW(L"led", L"controllerLedOutputOpenITHM", 0, filename);
 
     cfg->led_serial_baud = GetPrivateProfileIntW(L"led", L"serialBaud", 921600, filename);
 

@@ -127,7 +127,11 @@ void led_output_update(uint8_t board, const byte* rgb)
         
         if (config->controller_led_output_serial)
         {
-            led_serial_update(escaped_data);
+            if (config->controller_led_output_openithm){
+                led_serial_update_openithm(rgb);
+            } else {
+                led_serial_update(escaped_data);
+            }
         }
     }
 }
