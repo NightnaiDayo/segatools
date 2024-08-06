@@ -63,7 +63,7 @@ void chuni_io_config_load(
     cfg->controller_led_output_pipe = GetPrivateProfileIntW(L"led", L"controllerLedOutputPipe", 1, filename);
     cfg->controller_led_output_serial = GetPrivateProfileIntW(L"led", L"controllerLedOutputSerial", 0, filename);
 
-    cfg->controller_led_output_openithm = GetPrivateProfileIntW(L"led", L"controllerLedOutputOpenITHM", 0, filename);
+    cfg->controller_led_output_openithm = GetPrivateProfileIntW(L"led", L"controllerLedOutputOpeNITHM", 0, filename);
 
     cfg->led_serial_baud = GetPrivateProfileIntW(L"led", L"serialBaud", 921600, filename);
 
