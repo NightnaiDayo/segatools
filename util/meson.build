@@ -19,6 +19,8 @@ util_lib = static_library(
         'dump.h',
         'lib.c',
         'lib.h',
+        'slurp.c',
+        'slurp.h',
         'str.c',
         'str.h',
     ],

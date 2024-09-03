@@ -84,6 +84,18 @@ emulates an IC card in its proximity. A variety of different IC cards can be
 emulated; the exact choice of card that is emulated depends on the presence or
 absence of the configured card ID files.
 
+### `proxyFlag`
+
+Default: `2`
+
+The "proxy flag" of the emulated Thinca authentication card. This should be 2 if no proxy is used, and 3 if it is. Invalid values will break Thinca authentication card reading. This information can be obtained by checking for the presence of "use_proxy: true" `tfps-res-pro\env.json`.
+
+### `authdataPath`
+
+Default: `DEVICE\authdata.bin`
+
+Path to the binary file containing data for a Thinca authentication card (see `emoney.txt`)
+
 ## `[vfd]`
 
 Controls emulation of the VFD GP1232A02A FUTABA assembly.

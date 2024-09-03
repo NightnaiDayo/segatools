@@ -16,6 +16,7 @@
 
 #include "util/dprintf.h"
 #include "util/dump.h"
+#include "util/slurp.h"
 
 static HRESULT sg_nfc_dispatch(
         void *ctx,
@@ -87,6 +88,8 @@ void sg_nfc_init(
         uint8_t addr,
         const struct sg_nfc_ops *ops,
         unsigned int gen,
+        unsigned int proxy_flag,
+        const wchar_t* authdata_path,
         void *ops_ctx)
 {
     assert(nfc != NULL);
@@ -96,6 +99,8 @@ void sg_nfc_init(
     nfc->ops_ctx = ops_ctx;
     nfc->addr = addr;
     nfc->gen = gen;
+    nfc->proxy_flag = proxy_flag;
+    nfc->authdata_path = authdata_path;
 }
 
 #ifdef NDEBUG
@@ -189,7 +194,8 @@ static HRESULT sg_nfc_dispatch(
                 &req->felica_encap,
                 &res->felica_encap);
 
-    case SG_NFC_CMD_MIFARE_AUTHENTICATE:
+    case SG_NFC_CMD_MIFARE_AUTHENTICATE_AIME:
+    case SG_NFC_CMD_MIFARE_AUTHENTICATE_BANA:
     case SG_NFC_CMD_SEND_HEX_DATA:
         return sg_nfc_cmd_send_hex_data(nfc, &req->simple, &res->simple);
 
@@ -381,17 +387,61 @@ static HRESULT sg_nfc_cmd_mifare_read_block(
 
     sg_nfc_dprintf(nfc, "Read uid %08x block %i\n", uid, req->payload.block_no);
 
-    if (req->payload.block_no > 3) {
+    if (req->payload.block_no > 14) {
         sg_nfc_dprintf(nfc, "MIFARE block number out of range\n");
 
         return E_FAIL;
+    } else if (req->payload.block_no >= 5){ // emoney auth encrypted
+
+        sg_res_init(&res->res, &req->req, sizeof(res->block));
+
+        char* auth;
+        long size = wslurp(nfc->authdata_path, &auth, false);
+        if (size < 0){
+            sg_nfc_dprintf(nfc, "Failed to read %ls: %lx!\n", nfc->authdata_path, GetLastError());
+            return E_FAIL;
+        }
+
+        int offset = 0;
+        if (req->payload.block_no == 6){
+            offset = 16;
+        } else if (req->payload.block_no == 8){
+            offset = 32;
+        } else if (req->payload.block_no == 9){
+            offset = 48;
+        } else if (req->payload.block_no == 10){
+            offset = 64;
+        } else if (req->payload.block_no == 12){
+            offset = 82;
+        } else if (req->payload.block_no == 13){
+            offset = 98;
+        } else if (req->payload.block_no == 14){
+            offset = 114;
+        }
+
+        for (int i = 0; i < 16 && offset + i < size; i++){
+            res->block[i] = auth[offset + i];
+        }
+
+        free(auth);
+
+    } else if (req->payload.block_no == 4){ // emoney auth plain
+
+        sg_res_init(&res->res, &req->req, sizeof(res->block));
+
+        res->block[0] = 0x54; // header
+        res->block[1] = 0x43;
+        res->block[2] = nfc->proxy_flag; // 2 or 3 depending on game (useProxy in env.json)
+        res->block[3] = 0x01; // unknown flag
+
+    } else { // read all other blocks normally
+
+        sg_res_init(&res->res, &req->req, sizeof(res->block));
+
+        memcpy( res->block,
+                nfc->mifare.sectors[0].blocks[req->payload.block_no].bytes,
+                sizeof(res->block));
     }
-
-    sg_res_init(&res->res, &req->req, sizeof(res->block));
-
-    memcpy( res->block,
-            nfc->mifare.sectors[0].blocks[req->payload.block_no].bytes,
-            sizeof(res->block));
 
     return S_OK;
 }

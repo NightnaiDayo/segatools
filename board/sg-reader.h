@@ -11,6 +11,8 @@ struct aime_config {
     bool enable;
     bool high_baudrate;
     unsigned int gen;
+    unsigned int proxy_flag;
+    wchar_t authdata_path[MAX_PATH];
 };
 
 HRESULT sg_reader_hook_init(
