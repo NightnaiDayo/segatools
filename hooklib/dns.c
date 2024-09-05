@@ -14,6 +14,7 @@
 #include "hook/table.h"
 
 #include "util/dprintf.h"
+#include "util/get_function_ordinal.h"
 
 #include "hooklib/dns.h"
 
@@ -81,6 +82,12 @@ static bool WINAPI hook_WinHttpCrackUrl(
         DWORD dwFlags,
         LPURL_COMPONENTS lpUrlComponents);
 
+static DWORD WINAPI hook_send(
+        SOCKET s,
+        const char* buf,
+        int len,
+        int flags);
+
 /* Link pointers */
 
 static DNS_STATUS (WINAPI *next_DnsQuery_A)(
@@ -122,6 +129,12 @@ static bool (WINAPI *next_WinHttpCrackUrl)(
         DWORD dwFlags,
         LPURL_COMPONENTS lpUrlComponents);
 
+static DWORD (WINAPI *next_send)(
+        SOCKET s,
+        const char* buf,
+        int len,
+        int flags);
+
 static const struct hook_symbol dns_hook_syms_dnsapi[] = {
     {
         .name       = "DnsQuery_A",
@@ -138,13 +151,17 @@ static const struct hook_symbol dns_hook_syms_dnsapi[] = {
     }
 };
 
-static const struct hook_symbol dns_hook_syms_ws2[] = {
+static struct hook_symbol dns_hook_syms_ws2[] = {
     {
         .name       = "getaddrinfo",
         .ordinal    = 176,
         .patch      = hook_getaddrinfo,
         .link       = (void **) &next_getaddrinfo,
-    }
+    }, {
+        .name       = "send",
+        .patch      = hook_send,
+        .link       = (void **) &next_send
+    },
 };
 
 static const struct hook_symbol dns_hook_syms_winhttp[] = {
@@ -174,6 +191,10 @@ static void dns_hook_init(void)
 
     dns_hook_initted = true;
     InitializeCriticalSection(&dns_hook_lock);
+
+    for (size_t i = 0; i < _countof(dns_hook_syms_ws2); ++i) {
+        dns_hook_syms_ws2[i].ordinal = get_function_ordinal("ws2_32.dll", dns_hook_syms_ws2[i].name);
+    }
 
     hook_table_apply(
             NULL,
@@ -617,4 +638,50 @@ static bool WINAPI hook_WinHttpCrackUrl(
         dwFlags,
         lpUrlComponents
     );
+}
+
+DWORD WINAPI hook_send(SOCKET s, const char* buf, int len, int flags) {
+    if (strstr(buf, "HTTP/") != NULL) {
+        char *new_buf = malloc(len + 1);
+        if (new_buf == NULL) return SOCKET_ERROR;
+
+        memcpy(new_buf, buf, len);
+        new_buf[len] = '\0';
+
+        char *host_start = strstr(new_buf, "Host: ");
+        if (host_start != NULL) {
+            char *host_end = strstr(host_start, "\r\n");
+            if (host_end != NULL) {
+                host_end += 2;
+                int host_len = host_end - host_start;
+
+                char *host_value_start = host_start + 6;
+                char *host_value_end = strstr(host_value_start, "\r\n");
+                if (host_value_end != NULL) {
+                    int value_len = host_value_end - host_value_start;
+                    char host_value[value_len + 1];
+                    strncpy(host_value, host_value_start, value_len);
+                    host_value[value_len] = '\0';
+
+                    for (struct dns_hook_entry *entry = dns_hook_entries; entry && entry->from; entry++) {
+                        char from_value[256];
+                        wcstombs(from_value, entry->from, sizeof(from_value));
+
+                        if (strcmp(host_value, from_value) == 0) {
+                            char to_value[256];
+                            wcstombs(to_value, entry->to, sizeof(to_value));
+                            snprintf(host_start, len - (host_start - new_buf), "Host: %s\r\n", to_value);
+                            break;
+                        }
+                    }
+                }
+                len = (int)strlen(new_buf);
+            }
+        }
+        DWORD result = next_send(s, new_buf, len, flags);
+        free(new_buf);
+        return result;
+    }
+
+    return next_send(s, buf, len, flags);
 }

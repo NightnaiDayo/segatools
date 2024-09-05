@@ -81,6 +81,7 @@ dinput8_lib = cc.find_library('dinput8')
 dxguid_lib = cc.find_library('dxguid')
 xinput_lib = cc.find_library('xinput')
 pathcch_lib = cc.find_library('pathcch')
+imagehlp_lib = cc.find_library('imagehlp')
 
 inc = include_directories('.')
 capnhook = subproject('capnhook')

@@ -5,6 +5,7 @@ util_lib = static_library(
     c_pch : '../precompiled.h',
     dependencies : [
         capnhook.get_variable('hook_dep'),
+        imagehlp_lib,
     ],
     sources : [
         'async.c',
@@ -17,6 +18,8 @@ util_lib = static_library(
         'dprintf.h',
         'dump.c',
         'dump.h',
+        'get_function_ordinal.c',
+        'get_function_ordinal.h',
         'lib.c',
         'lib.h',
         'str.c',
