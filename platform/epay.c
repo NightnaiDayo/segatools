@@ -119,15 +119,8 @@ static const struct hook_symbol epay_syms[] = {
     }
 };
 
-HRESULT epay_hook_init(const struct epay_config *cfg) {
-    HRESULT hr;
-    assert(cfg != NULL);
-
-    if (!cfg->enable) {
-        return S_FALSE;
-    }
-
-    hr = reg_hook_push_key(
+HRESULT epay_apply_registry_hooks(){
+    HRESULT hr = reg_hook_push_key(
             HKEY_LOCAL_MACHINE,
             L"SOFTWARE\\TFPaymentService\\ThincaRwAdapter",
             epay_adapter_keys,
@@ -162,34 +155,52 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
             L"SOFTWARE\\TFPaymentService\\ThincaTcapClient\\URL1",
             epay_tcap_url1_keys,
             _countof(epay_tcap_url1_keys));
-    
-    hook_table_apply(
-        NULL,
-        "ThincaPayment.dll",
-        epay_syms,
-        _countof(epay_syms));
-    
-    thinca_stub = (struct thinca_main *)malloc(sizeof(struct thinca_main));
-    thinca_stub->impl1 = (struct thinca_impl *)malloc(sizeof(struct thinca_impl));
 
-    thinca_stub->impl1->unk8 = thinca_unk8;
-    thinca_stub->impl1->initialize = thinca_initialize;
-    thinca_stub->impl1->dispose = thinca_dispose;
-    thinca_stub->impl1->setResource = thinca_set_resource;
-    thinca_stub->impl1->setThincaPaymentLog = thinca_set_pay_log;
-    thinca_stub->impl1->setThincaEventInterface = thinca_set_evt_handler;
-    thinca_stub->impl1->setIcasClientLog = thinca_set_client_log;
-    thinca_stub->impl1->setIcasClientConfig = thinca_set_client_cfg;
-    thinca_stub->impl1->setGoodsCode = thinca_set_goods_code;
-    thinca_stub->impl1->setTerminalSerial = thinca_set_serial;
-    thinca_stub->impl1->setClientCertificate = thinca_set_cert;
-    thinca_stub->impl1->checkDeal = thinca_check_deal;
-    thinca_stub->impl1->cancelRequest = thinca_cancel;
-    thinca_stub->impl1->selectButton = thinca_select;
-    thinca_stub->impl1->unk220 = thinca_unk;
-    thinca_stub->impl1->unk228 = thinca_unk;
-    
-    dprintf("Epay: Init\n");
+    return hr;
+}
+
+HRESULT epay_hook_init(const struct epay_config *cfg) {
+    HRESULT hr;
+    assert(cfg != NULL);
+
+    if (!cfg->enable) {
+        return S_FALSE;
+    }
+
+    hr = epay_apply_registry_hooks();
+    if (FAILED(hr)){
+        return hr;
+    }
+
+    if (cfg->hook) {
+        hook_table_apply(
+                NULL,
+                "ThincaPayment.dll",
+                epay_syms,
+                _countof(epay_syms));
+
+        thinca_stub = (struct thinca_main *) malloc(sizeof(struct thinca_main));
+        thinca_stub->impl1 = (struct thinca_impl *) malloc(sizeof(struct thinca_impl));
+
+        thinca_stub->impl1->unk8 = thinca_unk8;
+        thinca_stub->impl1->initialize = thinca_initialize;
+        thinca_stub->impl1->dispose = thinca_dispose;
+        thinca_stub->impl1->setResource = thinca_set_resource;
+        thinca_stub->impl1->setThincaPaymentLog = thinca_set_pay_log;
+        thinca_stub->impl1->setThincaEventInterface = thinca_set_evt_handler;
+        thinca_stub->impl1->setIcasClientLog = thinca_set_client_log;
+        thinca_stub->impl1->setIcasClientConfig = thinca_set_client_cfg;
+        thinca_stub->impl1->setGoodsCode = thinca_set_goods_code;
+        thinca_stub->impl1->setTerminalSerial = thinca_set_serial;
+        thinca_stub->impl1->setClientCertificate = thinca_set_cert;
+        thinca_stub->impl1->checkDeal = thinca_check_deal;
+        thinca_stub->impl1->cancelRequest = thinca_cancel;
+        thinca_stub->impl1->selectButton = thinca_select;
+        thinca_stub->impl1->unk220 = thinca_unk;
+        thinca_stub->impl1->unk228 = thinca_unk;
+
+        dprintf("Epay: Init\n");
+    }
 
     return hr;
 }

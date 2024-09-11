@@ -1,39 +1,34 @@
 # E-Money Authentication Procedure
-## by Haruka Akechi
+by Haruka Akechi
 
 ### SETTING UP
 
-1) Open Windows Powershell and execute these commands:
+1) Obtain the 64 byte long authentication card encryption key and the 32 byte long static authentication card ID. amdaemon.exe holds the secrets.
 
-`New-Item 'HKLM:\Software\TFPaymentService' -Force | Out-Null
-$acl = Get-Acl HKLM:\SOFTWARE\TFPaymentService
-$rule = New-Object System.Security.AccessControl.RegistryAccessRule($env:username, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
-$acl.SetAccessRule($rule)
-$acl | Set-Acl -Path HKLM:\SOFTWARE\TFPaymentService`
+2) Get this java file, insert the ID and key, probably edit the passphrase and compile+run to generate authcard.bin: https://gist.github.com/akechi-haruka/a506184638e695a04eabe8cb53f62c36
 
-2) Obtain the 64 byte long authentication card encryption key and the 32 byte long static authentication card ID. amdaemon.exe holds the secrets.
+3) Place authcard.bin in your DEVICE folder.
 
-3) Get this java file, insert the ID and key, probably edit the passphrase and compile+run to generate authcard.bin: https://gist.github.com/akechi-haruka/a506184638e695a04eabe8cb53f62c36
+4) Check tfps-res-pro\env.json for your game. If it contains a "use_proxy: true" statement, add "proxy_flag=3" under [aime]
 
-4) Place authcard.bin in your DEVICE folder.
+5) Replace the two URLs in tfps-res-pro\resource.xml to your servers'. This is to ensure the Host header will match the certificate's.
 
-5) Check tfps-res-pro\env.json for your game. If it contains a "use_proxy: true" statement, add "proxy_flag=3" under [aime]
+6) In segatools.ini add
+```
+[epay]
+enable=1
+hook=0
+```
 
-6) Replace the two URLs in tfps-res-pro\resource.xml to your servers'. This is to ensure the Host header will match the certificate's.
+7) Where amdaemon.exe is located, there should be a "ca.pem". Replace this file with either [this](https://curl.se/ca/cacert.pem) for the most common CA's (including Let's Encrypt), or whatever CA the server is using.
 
-7) In segatools.ini add
-`[epay]
-enable=0`
+8) Run your game and enter the test menu, and navigate to E-Money Settings.
 
-8) Where amdaemon.exe is located, there should be a "ca.pem". Replace this file with either [this](https://curl.se/ca/cacert.pem) for the most common CA's (including Let's Encrypt), or whatever CA the server is using.
+9) Select "Terminal Authentication"
 
-9) Run your game and enter the test menu, and navigate to E-Money Settings.
+10) Hold your key for scanning a card (default: RETURN)
 
-10) Select "Terminal Authentication"
-
-11) Hold your key for scanning a card (default: RETURN)
-
-12) If your shop name shows up, everything was done succesfully. Otherwise, check the VFD.
+11) If your shop name shows up, everything was done succesfully. Otherwise, check the VFD.
 
 ### TECHNICAL INFO
 

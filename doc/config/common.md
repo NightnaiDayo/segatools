@@ -565,3 +565,19 @@ Default: Empty string
 Configure the location of the "Option" data mount point. This mount point is
 optional (hence the name, probably) and contains directories which contain
 minor over-the-air content updates.
+
+## `[epay]`
+
+Configure Thinca Payment hooks.
+
+### `enable`
+
+Default: `1`
+
+Enables the Thinca emulation. This will apply registry hooks.
+
+### `hook`
+
+Default: `1`
+
+Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. To use a real E-Money server, set this to 0. (see doc/emoney.md)
