@@ -7,3 +7,4 @@
 // if to_src is NULL, all lookups for from_src will fail
 HRESULT dns_hook_push(const wchar_t *from_src, const wchar_t *to_src);
 
+void dns_hook_apply_hooks(HMODULE mod);

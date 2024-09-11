@@ -7,6 +7,7 @@
 
 #include "hook/table.h"
 
+#include "hooklib/dns.h"
 #include "hooklib/reg.h"
 
 #include "platform/epay.h"
@@ -172,6 +173,15 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
         return hr;
     }
 
+    dprintf("EPay: Registry initialized\n");
+
+    // HACK:(?) thincahttpclient.dll is loaded dynamically so we just preload it and apply DNS hooks to it
+    HMODULE thincahttpclient = LoadLibraryA("thincahttpclient.dll");
+    if (thincahttpclient != NULL){
+        dns_hook_apply_hooks(thincahttpclient);
+        dprintf("EPay: DNS hooked\n");
+    }
+
     if (cfg->hook) {
         hook_table_apply(
                 NULL,
@@ -199,7 +209,7 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
         thinca_stub->impl1->unk220 = thinca_unk;
         thinca_stub->impl1->unk228 = thinca_unk;
 
-        dprintf("Epay: Init\n");
+        dprintf("Epay: Hooks initialized\n");
     }
 
     return hr;
