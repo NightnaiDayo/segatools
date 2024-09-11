@@ -492,8 +492,6 @@ static int WSAAPI hook_getaddrinfo(
         goto end;
     }
 
-    dprintf("getaddrinfo: %s, %s\n", pNodeName, pServiceName);
-
     mbstowcs_s(&wstr_c, NULL, 0, pNodeName, 0);
     wstr = malloc(wstr_c * sizeof(wchar_t));
 
