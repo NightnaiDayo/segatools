@@ -30,7 +30,11 @@ On MacOSX, you can use homebrew or macports to install these packages.
 
 #### Windows
 
-TODO
+* make
+* mingw-w64-i686-toolchain
+* mingw-w64-x86_64-toolchain
+* mingw-w64-cross
+* zip
 
 ### IDE
 
@@ -89,6 +93,22 @@ make build-docker
 ```
 
 Once completed successfully, the build output is located in the `build/docker/zip` sub-folder.
+
+### Building with Windows
+
+* [Install MSYS2](https://www.msys2.org/)
+* After installation open "MSYS2 MSYS" from the start menu.
+* Run `pacman -Syu make`
+  * you may need to do this twice as on the first attempt it will update MSYS itself and not install make.
+  * Confirm any questions with yes, ok or all.
+* Run `pacman -Syu meson`
+* Run `pacman -Syu zip`
+* Run `pacman -Syu mingw-w64-i686-toolchain`
+* Run `pacman -Syu mingw-w64-x86_64-toolchain`
+* Run `pacman -Syu mingw-w64-cross`
+* Open a command prompt (`cmd.exe`) and `cd` to your `segatools` folder
+* Run `msys-build.bat`
+* Once completed successfully, build output is located in the `build/zip` sub-folder.
 
 ### Building with Docker Desktop on Windows
 

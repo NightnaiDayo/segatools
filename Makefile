@@ -28,6 +28,16 @@ build:
 	$(V)ninja -C $(BUILD_DIR_32)
 	$(V)meson setup $(MESON_OPTIONS) --cross cross-mingw-64.txt $(BUILD_DIR_64)
 	$(V)ninja -C $(BUILD_DIR_64)
+	
+.PHONY: build32 # Build the project
+build32:
+	$(V)meson setup $(MESON_OPTIONS) --cross cross-mingw-32.txt $(BUILD_DIR_32)
+	$(V)ninja -C $(BUILD_DIR_32)
+	
+.PHONY: build64 # Build the project
+build64:
+	$(V)meson setup $(MESON_OPTIONS) --cross cross-mingw-64.txt $(BUILD_DIR_64)
+	$(V)ninja -C $(BUILD_DIR_64)
 
 .PHONY: dist # Build and create a zip distribution package
 dist: build clean-zip zip
