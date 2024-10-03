@@ -39,6 +39,8 @@ static const size_t target_modules_len = _countof(target_modules);
 
 static void dll_hook_insert_hooks(HMODULE target);
 
+static unity_hook_callback_func hook_load_callback;
+
 static HMODULE WINAPI hook_LoadLibraryW(const wchar_t *name);
 static HMODULE (WINAPI *next_LoadLibraryW)(const wchar_t *name);
 static HMODULE WINAPI hook_LoadLibraryExW(const wchar_t *name, HANDLE  hFile, DWORD   dwFlags);
@@ -57,7 +59,7 @@ static const struct hook_symbol unity_kernel32_syms[] = {
 };
 
 
-void unity_hook_init(const struct unity_config *cfg, HINSTANCE self) {
+void unity_hook_init(const struct unity_config *cfg, HINSTANCE self, unity_hook_callback_func callback) {
     assert(cfg != NULL);
 
     if (!cfg->enable) {
@@ -70,6 +72,8 @@ void unity_hook_init(const struct unity_config *cfg, HINSTANCE self) {
 
     memcpy(&unity_config, cfg, sizeof(*cfg));
     dll_hook_insert_hooks(NULL);
+
+    hook_load_callback = callback;
 
     unity_hook_initted = true;
     dprintf("Unity: Hook enabled.\n");
@@ -144,6 +148,9 @@ static HMODULE WINAPI hook_LoadLibraryW(const wchar_t *name)
             reg_hook_insert_hooks(result);
             clock_hook_insert_hooks(result);
             proc_addr_insert_hooks(result);
+            if (hook_load_callback != NULL){
+                hook_load_callback(result, target_module);
+            }
 
             // Not needed?
             // serial_hook_apply_hooks(result);

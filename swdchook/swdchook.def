@@ -16,3 +16,12 @@ EXPORTS
     swdc_io_get_opbtns
     swdc_io_get_gamebtns
     swdc_io_get_analogs
+    swdc_io_led_init
+    swdc_io_led_set_fet_output
+    swdc_io_led_gs_update
+    swdc_io_led_set_leds
+    swdc_io_ffb_init
+    swdc_io_ffb_toggle
+    swdc_io_ffb_constant_force
+    swdc_io_ffb_rumble
+    swdc_io_ffb_damper

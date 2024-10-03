@@ -16,11 +16,22 @@
 static void swdc_xi_get_gamebtns(uint16_t *gamebtn_out);
 static void swdc_xi_get_analogs(struct swdc_io_analog_state *out);
 
+static HRESULT swdc_xi_ffb_init(void);
+static void swdc_xi_ffb_toggle(bool active);
+static void swdc_xi_ffb_constant_force(uint8_t direction, uint8_t force);
+static void swdc_xi_ffb_rumble(uint8_t force, uint8_t period);
+static void swdc_xi_ffb_damper(uint8_t force);
+
 static HRESULT swdc_xi_config_apply(const struct swdc_xi_config *cfg);
 
 static const struct swdc_io_backend swdc_xi_backend = {
-    .get_gamebtns  = swdc_xi_get_gamebtns,
-    .get_analogs   = swdc_xi_get_analogs,
+    .get_gamebtns       = swdc_xi_get_gamebtns,
+    .get_analogs        = swdc_xi_get_analogs,
+    .ffb_init           = swdc_xi_ffb_init,
+    .ffb_toggle         = swdc_xi_ffb_toggle,
+    .ffb_constant_force = swdc_xi_ffb_constant_force,
+    .ffb_rumble         = swdc_xi_ffb_rumble,
+    .ffb_damper         = swdc_xi_ffb_damper
 };
 
 static bool swdc_xi_single_stick_steering;
@@ -209,4 +220,36 @@ static void swdc_xi_get_analogs(struct swdc_io_analog_state *out)
 
     out->accel = xi.Gamepad.bRightTrigger << 8;
     out->brake = xi.Gamepad.bLeftTrigger << 8;
+}
+
+static HRESULT swdc_xi_ffb_init(void) {
+    return S_OK;
+}
+
+static void swdc_xi_ffb_toggle(bool active) {
+    XINPUT_VIBRATION vibration;
+
+    memset(&vibration, 0, sizeof(vibration));
+
+    XInputSetState(0, &vibration);
+}
+
+static void swdc_xi_ffb_constant_force(uint8_t direction, uint8_t force) {
+    return;
+}
+
+static void swdc_xi_ffb_rumble(uint8_t force, uint8_t period) {
+    XINPUT_VIBRATION vibration;
+    /* XInput max strength is 65.535, so multiply the 127.0 by 516. */
+    uint16_t strength = force * 516;
+
+    memset(&vibration, 0, sizeof(vibration));
+    vibration.wLeftMotorSpeed = strength;
+    vibration.wRightMotorSpeed = strength;
+
+    XInputSetState(0, &vibration);
+}
+
+static void swdc_xi_ffb_damper(uint8_t force) {
+    return;
 }

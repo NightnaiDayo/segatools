@@ -55,6 +55,11 @@ static const struct idz_io_backend idz_di_backend = {
     .jvs_read_buttons   = idz_di_jvs_read_buttons,
     .jvs_read_shifter   = idz_di_jvs_read_shifter,
     .jvs_read_analogs   = idz_di_jvs_read_analogs,
+    .ffb_init           = idz_di_ffb_init,
+    .ffb_toggle         = idz_di_ffb_toggle,
+    .ffb_constant_force = idz_di_ffb_constant_force,
+    .ffb_rumble         = idz_di_ffb_rumble,
+    .ffb_damper         = idz_di_ffb_damper
 };
 
 static HWND idz_di_wnd;
@@ -73,7 +78,6 @@ static uint8_t idz_di_gear[6];
 static bool idz_di_use_pedals;
 static bool idz_di_reverse_brake_axis;
 static bool idz_di_reverse_accel_axis;
-static uint16_t idz_di_center_spring_strength;
 
 HRESULT idz_di_init(
         const struct idz_di_config *cfg,
@@ -166,15 +170,11 @@ HRESULT idz_di_init(
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    hr = idz_di_dev_start(idz_di_dev, idz_di_wnd);
+    hr = idz_di_dev_init(cfg, idz_di_dev, idz_di_wnd);
 
     if (FAILED(hr)) {
         return hr;
     }
-
-    // Convert the strength from 0-100 to 0-10000 for DirectInput
-    idz_di_dev_start_fx(idz_di_dev, &idz_di_fx, 
-                        idz_di_center_spring_strength * 100);
 
     if (cfg->pedals_name[0] != L'\0') {
         hr = IDirectInput8_EnumDevices(
@@ -349,15 +349,24 @@ static HRESULT idz_di_config_apply(const struct idz_di_config *cfg)
         idz_di_gear[i] = cfg->gear[i];
     }
 
-    // FFB configuration
+        /* FFB configuration */
+    if (cfg->ffb_constant_force_strength < 0 || cfg->ffb_constant_force_strength > 100) {
+        dprintf("Wheel: Invalid constant force strength: %i\n", cfg->ffb_constant_force_strength);
 
-    if (cfg->center_spring_strength < 0 || cfg->center_spring_strength > 100) {
-        dprintf("Wheel: Invalid center spring strength: %i\n", cfg->center_spring_strength);
+        return E_INVALIDARG;
+    }
+    
+    if (cfg->ffb_rumble_strength < 0 || cfg->ffb_rumble_strength > 100) {
+        dprintf("Wheel: Invalid rumble strength: %i\n", cfg->ffb_rumble_strength);
 
         return E_INVALIDARG;
     }
 
-    idz_di_center_spring_strength = cfg->center_spring_strength;
+    if (cfg->ffb_damper_strength < 0 || cfg->ffb_damper_strength > 100) {
+        dprintf("Wheel: Invalid damper strength: %i\n", cfg->ffb_damper_strength);
+
+        return E_INVALIDARG;
+    }
 
     return S_OK;
 }

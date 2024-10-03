@@ -52,9 +52,14 @@ static const struct idac_di_axis idac_di_axes[] = {
 };
 
 static const struct idac_io_backend idac_di_backend = {
-    .get_gamebtns   = idac_di_get_buttons,
-    .get_shifter   = idac_di_get_shifter,
-    .get_analogs   = idac_di_get_analogs,
+    .get_gamebtns       = idac_di_get_buttons,
+    .get_shifter        = idac_di_get_shifter,
+    .get_analogs        = idac_di_get_analogs,
+    .ffb_init           = idac_di_ffb_init,
+    .ffb_toggle         = idac_di_ffb_toggle,
+    .ffb_constant_force = idac_di_ffb_constant_force,
+    .ffb_rumble         = idac_di_ffb_rumble,
+    .ffb_damper         = idac_di_ffb_damper
 };
 
 static HWND idac_di_wnd;
@@ -62,7 +67,6 @@ static IDirectInput8W *idac_di_api;
 static IDirectInputDevice8W *idac_di_dev;
 static IDirectInputDevice8W *idac_di_pedals;
 static IDirectInputDevice8W *idac_di_shifter;
-static IDirectInputEffect *idac_di_fx;
 static size_t idac_di_off_brake;
 static size_t idac_di_off_accel;
 static uint8_t idac_di_shift_dn;
@@ -75,7 +79,6 @@ static uint8_t idac_di_gear[6];
 static bool idac_di_use_pedals;
 static bool idac_di_reverse_brake_axis;
 static bool idac_di_reverse_accel_axis;
-static uint16_t idac_di_center_spring_strength;
 
 HRESULT idac_di_init(
         const struct idac_di_config *cfg,
@@ -105,7 +108,7 @@ HRESULT idac_di_init(
         return hr;
     }
 
-    /* Initial D Zero has some built-in DirectInput support that is not
+    /* Initial D THE ARCADE has some built-in DirectInput support that is not
        particularly useful. idachook shorts this out by redirecting dinput8.dll
        to a no-op implementation of DirectInput. However, idacio does need to
        talk to the real operating system implementation of DirectInput without
@@ -168,15 +171,11 @@ HRESULT idac_di_init(
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    hr = idac_di_dev_start(idac_di_dev, idac_di_wnd);
+    hr = idac_di_dev_init(cfg, idac_di_dev, idac_di_wnd);
 
     if (FAILED(hr)) {
         return hr;
     }
-
-    // Convert the strength from 0-100 to 0-10000 for DirectInput
-    idac_di_dev_start_fx(idac_di_dev, &idac_di_fx, 
-                         idac_di_center_spring_strength * 100);
 
     if (cfg->pedals_name[0] != L'\0') {
         hr = IDirectInput8_EnumDevices(
@@ -367,15 +366,24 @@ static HRESULT idac_di_config_apply(const struct idac_di_config *cfg)
         idac_di_gear[i] = cfg->gear[i];
     }
 
-    // FFB configuration
+    /* FFB configuration */
+    if (cfg->ffb_constant_force_strength < 0 || cfg->ffb_constant_force_strength > 100) {
+        dprintf("Wheel: Invalid constant force strength: %i\n", cfg->ffb_constant_force_strength);
 
-    if (cfg->center_spring_strength < 0 || cfg->center_spring_strength > 100) {
-        dprintf("Wheel: Invalid center spring strength: %i\n", cfg->center_spring_strength);
+        return E_INVALIDARG;
+    }
+    
+    if (cfg->ffb_rumble_strength < 0 || cfg->ffb_rumble_strength > 100) {
+        dprintf("Wheel: Invalid rumble strength: %i\n", cfg->ffb_rumble_strength);
 
         return E_INVALIDARG;
     }
 
-    idac_di_center_spring_strength = cfg->center_spring_strength;
+    if (cfg->ffb_damper_strength < 0 || cfg->ffb_damper_strength > 100) {
+        dprintf("Wheel: Invalid damper strength: %i\n", cfg->ffb_damper_strength);
+
+        return E_INVALIDARG;
+    }
 
     return S_OK;
 }

@@ -6,3 +6,12 @@ EXPORTS
     idz_io_jvs_read_buttons
     idz_io_jvs_read_coin_counter
     idz_io_jvs_read_shifter
+    idz_io_led_init
+    idz_io_led_set_fet_output
+    idz_io_led_gs_update
+    idz_io_led_set_leds
+    idz_io_ffb_init
+    idz_io_ffb_toggle
+    idz_io_ffb_constant_force
+    idz_io_ffb_rumble
+    idz_io_ffb_damper

@@ -32,5 +32,7 @@ shared_library(
         'jvs.h',
         'zinput.c',
         'zinput.h',
+        'ffb.c',
+        'ffb.h',
     ],
 )

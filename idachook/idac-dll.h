@@ -15,6 +15,11 @@ struct idac_dll {
     void (*led_set_fet_output)(const uint8_t *rgb);
     void (*led_gs_update)(const uint8_t *rgb);
     void (*led_set_leds)(const uint8_t *rgb);
+    HRESULT (*ffb_init)(void);
+    void (*ffb_toggle)(bool active);
+    void (*ffb_constant_force)(uint8_t direction, uint8_t force);
+    void (*ffb_rumble)(uint8_t period, uint8_t force);
+    void (*ffb_damper)(uint8_t force);
 };
 
 struct idac_dll_config {

@@ -78,12 +78,29 @@ void idz_di_config_load(struct idz_di_config *cfg, const wchar_t *filename)
     }
     
     // FFB configuration
+    cfg->ffb_constant_force_strength = GetPrivateProfileIntW(
+            L"dinput",
+            L"constantForceStrength",
+            100,
+            filename);
 
-    cfg->center_spring_strength = GetPrivateProfileIntW(
-                            L"dinput",
-                            L"centerSpringStrength",
-                            30,
-                            filename);
+    cfg->ffb_rumble_strength = GetPrivateProfileIntW(
+            L"dinput",
+            L"rumbleStrength",
+            100,
+            filename);
+
+    cfg->ffb_damper_strength = GetPrivateProfileIntW(
+            L"dinput",
+            L"damperStrength",
+            100,
+            filename);
+
+    cfg->ffb_rumble_duration = GetPrivateProfileIntW(
+            L"dinput",
+            L"rumbleDuration",
+            1000,
+            filename);
 }
 
 void idz_xi_config_load(struct idz_xi_config *cfg, const wchar_t *filename)

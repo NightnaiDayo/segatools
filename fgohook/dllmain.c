@@ -26,6 +26,7 @@
 
 #include "hook/process.h"
 
+#include "hooklib/dll.h"
 #include "hooklib/dvd.h"
 #include "hooklib/touch.h"
 #include "hooklib/printer.h"
@@ -65,6 +66,8 @@ static DWORD CALLBACK fgo_pre_startup(void)
     /* Hook external DLL APIs */
 
     printer_hook_init(&fgo_hook_cfg.printer, 4, fgo_hook_mod);
+    dll_hook_push(fgo_hook_mod, L"C330Ausb.dll");
+    dll_hook_push(fgo_hook_mod, L"C330AFWDLusb.dll");
 
     /* Initialize emulation hooks */
 

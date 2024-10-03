@@ -199,7 +199,7 @@ struct led15093_resp_board_info {
     char chip_num[5];
     uint8_t endcode; // Always 0xFF
     uint8_t fw_ver;
-    uint8_t rx_buf;
+    uint16_t rx_buf;
 };
 
 struct led15093_resp_protocol_ver {

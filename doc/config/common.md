@@ -92,8 +92,20 @@ Controls emulation of the VFD GP1232A02A FUTABA assembly.
 
 Default: `1`
 
-Enable VFD emulation (currently just stubbed). Disable to use a real VFD
+Enable VFD emulation. Disable to use a real VFD
 GP1232A02A FUTABA assembly (COM port number varies by game).
+
+### `portNo`
+
+Default: (game specific)
+
+Sets the COM port to use for the VFD.
+
+### `utfConversion`
+
+Default: `0`
+
+Converts the strings from the VFD from their respective encoding to UTF, so console output will display as it should on non-Japanese locales.
 
 ## `[amvideo]`
 

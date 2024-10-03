@@ -34,11 +34,11 @@ static HRESULT vfs_path_hook_option(
 static HRESULT vfs_reg_read_amfs(void *bytes, uint32_t *nbytes);
 static HRESULT vfs_reg_read_appdata(void *bytes, uint32_t *nbytes);
 
-static wchar_t* hook_System_getAppRootPath();
-static wchar_t* (*next_System_getAppRootPath)();
+static __thiscall wchar_t* hook_System_getAppRootPath();
+static __thiscall wchar_t* (*next_System_getAppRootPath)();
 
-static wchar_t* hook_AppImage_getOptionMountRootPath();
-static wchar_t* (*next_AppImage_getOptionMountRootPath)();
+static __thiscall wchar_t* hook_AppImage_getOptionMountRootPath();
+static __thiscall wchar_t* (*next_AppImage_getOptionMountRootPath)();
 
 static const struct hook_symbol amdaemon_syms[] = {
     {
@@ -510,7 +510,7 @@ static HRESULT vfs_reg_read_appdata(void *bytes, uint32_t *nbytes)
     return reg_hook_read_wstr(bytes, nbytes, L"Y:\\");
 }
 
-static wchar_t* hook_System_getAppRootPath()
+static __thiscall wchar_t* hook_System_getAppRootPath()
 {
     wchar_t *path = malloc(sizeof(wchar_t) * MAX_PATH);
     wcscpy_s(path, MAX_PATH, vfs_config.appdata);
@@ -520,7 +520,7 @@ static wchar_t* hook_System_getAppRootPath()
     return path;
 }
 
-static wchar_t* hook_AppImage_getOptionMountRootPath()
+static __thiscall wchar_t* hook_AppImage_getOptionMountRootPath()
 {
     wchar_t *path = malloc(sizeof(wchar_t) * MAX_PATH);
     wcscpy_s(path, MAX_PATH, vfs_config.option);

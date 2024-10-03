@@ -21,7 +21,11 @@ struct swdc_di_config {
     bool reverse_accel_axis;
 
     // FFB configuration
-    uint16_t center_spring_strength;
+    uint8_t ffb_constant_force_strength;
+    uint8_t ffb_rumble_strength;
+    uint8_t ffb_damper_strength;
+
+    uint32_t ffb_rumble_duration;
 };
 
 struct swdc_xi_config {
