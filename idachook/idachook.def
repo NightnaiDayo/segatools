@@ -21,3 +21,8 @@ EXPORTS
     idac_io_led_set_fet_output
     idac_io_led_gs_update
     idac_io_led_set_leds
+    idac_io_ffb_init
+    idac_io_ffb_toggle
+    idac_io_ffb_constant_force
+    idac_io_ffb_rumble
+    idac_io_ffb_damper

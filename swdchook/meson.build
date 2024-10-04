@@ -28,5 +28,7 @@ shared_library(
         'io4.h',
         'zinput.c',
         'zinput.h',
+        'ffb.c',
+        'ffb.h'
     ],
 )

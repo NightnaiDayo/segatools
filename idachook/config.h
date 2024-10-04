@@ -19,6 +19,7 @@ struct idac_hook_config {
     struct aime_config aime;
     struct dvd_config dvd;
     struct io4_config io4;
+    struct ffb_config ffb;
     struct idac_dll_config dll;
     struct zinput_config zinput;
     struct led15070_config led15070;

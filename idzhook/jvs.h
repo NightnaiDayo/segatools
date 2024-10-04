@@ -4,4 +4,6 @@
 
 #include "jvs/jvs-bus.h"
 
+HRESULT idz_jvs_hook_init(void);
+
 HRESULT idz_jvs_init(struct jvs_node **root);

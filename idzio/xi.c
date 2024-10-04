@@ -18,12 +18,23 @@ static void idz_xi_jvs_read_buttons(uint8_t *gamebtn_out);
 static void idz_xi_jvs_read_shifter(uint8_t *gear);
 static void idz_xi_jvs_read_analogs(struct idz_io_analog_state *out);
 
+static HRESULT idz_xi_ffb_init(void);
+static void idz_xi_ffb_toggle(bool active);
+static void idz_xi_ffb_constant_force(uint8_t direction, uint8_t force);
+static void idz_xi_ffb_rumble(uint8_t force, uint8_t period);
+static void idz_xi_ffb_damper(uint8_t force);
+
 static HRESULT idz_xi_config_apply(const struct idz_xi_config *cfg);
 
 static const struct idz_io_backend idz_xi_backend = {
     .jvs_read_buttons   = idz_xi_jvs_read_buttons,
     .jvs_read_shifter   = idz_xi_jvs_read_shifter,
     .jvs_read_analogs   = idz_xi_jvs_read_analogs,
+    .ffb_init           = idz_xi_ffb_init,
+    .ffb_toggle         = idz_xi_ffb_toggle,
+    .ffb_constant_force = idz_xi_ffb_constant_force,
+    .ffb_rumble         = idz_xi_ffb_rumble,
+    .ffb_damper         = idz_xi_ffb_damper
 };
 
 static bool idz_xi_single_stick_steering;
@@ -209,4 +220,36 @@ static void idz_xi_jvs_read_analogs(struct idz_io_analog_state *out)
 
     out->accel = xi.Gamepad.bRightTrigger << 8;
     out->brake = xi.Gamepad.bLeftTrigger << 8;
+}
+
+static HRESULT idz_xi_ffb_init(void) {
+    return S_OK;
+}
+
+static void idz_xi_ffb_toggle(bool active) {
+    XINPUT_VIBRATION vibration;
+
+    memset(&vibration, 0, sizeof(vibration));
+
+    XInputSetState(0, &vibration);
+}
+
+static void idz_xi_ffb_constant_force(uint8_t direction, uint8_t force) {
+    return;
+}
+
+static void idz_xi_ffb_rumble(uint8_t force, uint8_t period) {
+    XINPUT_VIBRATION vibration;
+    /* XInput max strength is 65.535, so multiply the 127.0 by 516. */
+    uint16_t strength = force * 516;
+
+    memset(&vibration, 0, sizeof(vibration));
+    vibration.wLeftMotorSpeed = strength;
+    vibration.wRightMotorSpeed = strength;
+
+    XInputSetState(0, &vibration);
+}
+
+static void idz_xi_ffb_damper(uint8_t force) {
+    return;
 }

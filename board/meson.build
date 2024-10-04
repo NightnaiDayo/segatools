@@ -47,5 +47,10 @@ board_lib = static_library(
         'slider-frame.h',
         'vfd.c',
         'vfd.h',
+        'vfd-cmd.h',
+        'vfd-frame.c',
+        'vfd-frame.h',
+        'ffb.c',
+        'ffb.h'
     ],
 )

@@ -89,6 +89,7 @@ void idac_hook_config_load(
     zinput_config_load(&cfg->zinput, filename);
     dvd_config_load(&cfg->dvd, filename);
     io4_config_load(&cfg->io4, filename);
+    ffb_config_load(&cfg->ffb, filename);
     led15070_config_load(&cfg->led15070, filename);
     indrun_config_load(&cfg->indrun, filename);
 }

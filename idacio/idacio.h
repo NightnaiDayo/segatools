@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 enum {
@@ -160,3 +161,51 @@ void idac_io_led_gs_update(const uint8_t *rgb);
    Minimum API version: 0x0101 */
 
 void idac_io_led_set_leds(const uint8_t *rgb);
+
+/* Initialize FFB emulation. This function will be called before any
+   other idac_io_ffb_*() function calls.
+
+   This will always be called even if FFB board emulation is disabled to allow
+   the IO DLL to initialize any necessary resources.
+
+   Minimum API version: 0x0102 */
+
+HRESULT idac_io_ffb_init(void);
+
+/* Toggle FFB emulation. If active is true, FFB emulation should be enabled.
+   If active is false, FFB emulation should be disabled and all FFB effects
+   should be stopped and released.
+
+   Minimum API version: 0x0102 */
+
+void idac_io_ffb_toggle(bool active);
+
+/* Set a constant force FFB effect.
+   
+   Direction is 0 for right and 1 for left.
+   Force is the magnitude of the force, where 0 is no force and 127 is the
+   maximum force in a given direction.
+
+   Minimum API version: 0x0102 */
+
+void idac_io_ffb_constant_force(uint8_t direction, uint8_t force);
+
+/* Set a (sine) periodic force FFB effect.
+   
+   Period is the period of the effect in milliseconds (not sure).
+   Force is the magnitude of the force, where 0 is no force and 127 is the
+   maximum force.
+
+   Minimum API version: 0x0102 */
+
+void idac_io_ffb_rumble(uint8_t period, uint8_t force);
+
+/* Set a damper FFB effect.
+   
+   Force is the magnitude of the force, where 0 is no force and 40 is the
+   maximum force. Theoretically the maximum force is 127, but the game only
+   uses a maximum of 40.
+
+   Minimum API version: 0x0102 */
+
+void idac_io_ffb_damper(uint8_t force);

@@ -36,6 +36,21 @@ const struct dll_bind_sym idac_dll_syms[] = {
     }, {
         .sym = "idac_io_led_set_leds",
         .off = offsetof(struct idac_dll, led_set_leds),
+    }, {
+        .sym = "idac_io_ffb_init",
+        .off = offsetof(struct idac_dll, ffb_init),
+    }, {
+        .sym = "idac_io_ffb_toggle",
+        .off = offsetof(struct idac_dll, ffb_toggle),
+    }, {
+        .sym = "idac_io_ffb_constant_force",
+        .off = offsetof(struct idac_dll, ffb_constant_force),
+    }, {
+        .sym = "idac_io_ffb_rumble",
+        .off = offsetof(struct idac_dll, ffb_rumble),
+    }, {
+        .sym = "idac_io_ffb_damper",
+        .off = offsetof(struct idac_dll, ffb_damper),
     }
 };
 

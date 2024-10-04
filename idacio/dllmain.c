@@ -19,7 +19,7 @@ static bool idac_io_coin;
 
 uint16_t idac_io_get_api_version(void)
 {
-    return 0x0101;
+    return 0x0102;
 }
 
 HRESULT idac_io_init(void)
@@ -61,6 +61,8 @@ void idac_io_get_opbtns(uint8_t *opbtn_out)
     assert(opbtn_out != NULL);
 
     opbtn = 0;
+
+    /* Common operator buttons, not backend-specific */
 
     if (GetAsyncKeyState(idac_io_cfg.vk_test) & 0x8000) {
         opbtn |= IDAC_IO_OPBTN_TEST;
@@ -158,4 +160,39 @@ void idac_io_led_set_leds(const uint8_t *rgb)
 #endif
 
     return;
+}
+
+HRESULT idac_io_ffb_init(void)
+{
+    assert(idac_io_backend != NULL);
+
+    return idac_io_backend->ffb_init();
+}
+
+void idac_io_ffb_toggle(bool active)
+{
+    assert(idac_io_backend != NULL);
+    
+    idac_io_backend->ffb_toggle(active);
+}
+
+void idac_io_ffb_constant_force(uint8_t direction, uint8_t force)
+{
+    assert(idac_io_backend != NULL);
+    
+    idac_io_backend->ffb_constant_force(direction, force);
+}
+
+void idac_io_ffb_rumble(uint8_t period, uint8_t force)
+{
+    assert(idac_io_backend != NULL);
+    
+    idac_io_backend->ffb_rumble(period, force);
+}
+
+void idac_io_ffb_damper(uint8_t force)
+{
+    assert(idac_io_backend != NULL);
+    
+    idac_io_backend->ffb_damper(force);
 }

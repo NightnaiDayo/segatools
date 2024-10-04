@@ -102,7 +102,7 @@ static DWORD CALLBACK mai2_pre_startup(void)
        There seems to be an issue with other DLL hooks if `LoadLibraryW` is
        hooked earlier in the `mai2hook` initialization. */
 
-    unity_hook_init(&mai2_hook_cfg.unity, mai2_hook_mod);
+    unity_hook_init(&mai2_hook_cfg.unity, mai2_hook_mod, NULL);
 
     /* Initialize debug helpers */
 

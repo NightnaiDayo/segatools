@@ -30,5 +30,7 @@ shared_library(
         'zinput.h',
         'indrun.c',
         'indrun.h',
+        'ffb.c',
+        'ffb.h',
     ],
 )

@@ -44,7 +44,7 @@ EXPORTS
     chcusb_selectPrinter
     chcusb_selectPrinterSN
     chcusb_getPrinterInfo
-    chcusb_imageformat
+    chcusb_imageformat=chcusb_imageformat_330
     chcusb_setmtf
     chcusb_makeGamma
     chcusb_setIcctable

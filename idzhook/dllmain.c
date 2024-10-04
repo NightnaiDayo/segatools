@@ -33,6 +33,7 @@
 #include "idzhook/config.h"
 #include "idzhook/idz-dll.h"
 #include "idzhook/jvs.h"
+#include "idzhook/ffb.h"
 #include "idzhook/zinput.h"
 
 #include "platform/platform.h"
@@ -102,6 +103,12 @@ static DWORD CALLBACK idz_pre_startup(void)
         goto fail;
     }
 
+    hr = idz_jvs_hook_init();
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
     hr = amex_hook_init(&idz_hook_cfg.amex, idz_jvs_init);
 
     if (FAILED(hr)) {
@@ -109,6 +116,19 @@ static DWORD CALLBACK idz_pre_startup(void)
     }
 
     hr = sg_reader_hook_init(&idz_hook_cfg.aime, 10, 1, idz_hook_mod);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
+    hr = idz_ffb_hook_init(&idz_hook_cfg.ffb, 1);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
+    hr = led15070_hook_init(&idz_hook_cfg.led15070, idz_dll.led_init, 
+        idz_dll.led_set_fet_output, NULL, idz_dll.led_gs_update, 11, 1);
 
     if (FAILED(hr)) {
         goto fail;

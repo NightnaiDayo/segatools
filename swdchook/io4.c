@@ -15,10 +15,12 @@ static HRESULT init_mmf(void);
 static void swdc_set_gamebtns(uint16_t value);
 
 static HRESULT swdc_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT swdc_io4_write_gpio(uint8_t* payload, size_t len);
 static uint16_t coins;
 
 static const struct io4_ops swdc_io4_ops = {
-    .poll = swdc_io4_poll,
+    .poll       = swdc_io4_poll,
+    .write_gpio = swdc_io4_write_gpio
 };
 
 HRESULT swdc_io4_hook_init(const struct io4_config *cfg) {
@@ -169,6 +171,39 @@ static HRESULT swdc_io4_poll(void *ctx, struct io4_state *state) {
     state->adcs[0] = 0x8000 + analog_state.wheel;
     state->adcs[1] = analog_state.accel;
     state->adcs[2] = analog_state.brake;
+
+    return S_OK;
+}
+
+static HRESULT swdc_io4_write_gpio(uint8_t* payload, size_t len) 
+{
+    assert(swdc_dll.led_set_leds != NULL);
+
+    // Just fast fail if there aren't enough bytes in the payload
+    if (len < 3) 
+        return S_OK;
+    
+    // This command is used for lights in SWDC, but it only contains button lights,
+    // and only in the first 3 bytes of the payload; everything else is padding to
+    // make the payload 62 bytes. The rest of the cabinet lights and the side button
+    // lights are handled separately, by the 15070 lights controller.
+    uint32_t lights_data = (uint32_t) ((uint8_t)(payload[0]) << 24 |
+        (uint8_t)(payload[1]) << 16 |
+        (uint8_t)(payload[2]) << 8);
+
+    // Since Sega uses an odd ordering for the first part of the bitfield,
+    // let's normalize the data and just send over bytes for the receiver
+    // to interpret as ON/OFF values.
+    uint8_t rgb_out[6] = {
+        lights_data & SWDC_IO_LED_START ? 0xFF : 0x00,
+        lights_data & SWDC_IO_LED_VIEW_CHANGE ? 0xFF : 0x00,
+        lights_data & SWDC_IO_LED_UP ? 0xFF : 0x00,
+        lights_data & SWDC_IO_LED_DOWN ? 0xFF : 0x00,
+        lights_data & SWDC_IO_LED_RIGHT ? 0xFF : 0x00,
+        lights_data & SWDC_IO_LED_LEFT ? 0xFF : 0x00,
+    };
+
+    swdc_dll.led_set_leds(rgb_out);
 
     return S_OK;
 }

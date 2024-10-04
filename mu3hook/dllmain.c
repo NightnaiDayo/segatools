@@ -110,7 +110,7 @@ static DWORD CALLBACK mu3_pre_startup(void)
        There seems to be an issue with other DLL hooks if `LoadLibraryW` is
        hooked earlier in the `mu3hook` initialization. */
 
-    unity_hook_init(&mu3_hook_cfg.unity, mu3_hook_mod);
+    unity_hook_init(&mu3_hook_cfg.unity, mu3_hook_mod, NULL);
 
     /* Initialize debug helpers */
 
