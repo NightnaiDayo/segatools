@@ -319,8 +319,8 @@ static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count)
     }
 
     switch (src[0]) {
-    case L'e':
-    case L'E':
+    case L'd':
+    case L'D':
         redir = vfs_config.amfs;
 
         break;
@@ -502,7 +502,7 @@ static HRESULT vfs_path_hook_option(
 
 static HRESULT vfs_reg_read_amfs(void *bytes, uint32_t *nbytes)
 {
-    return reg_hook_read_wstr(bytes, nbytes, L"E:\\");
+    return reg_hook_read_wstr(bytes, nbytes, L"D:\\");
 }
 
 static HRESULT vfs_reg_read_appdata(void *bytes, uint32_t *nbytes)
