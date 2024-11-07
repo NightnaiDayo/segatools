@@ -157,10 +157,6 @@ static struct hook_symbol dns_hook_syms_ws2[] = {
         .ordinal    = 176,
         .patch      = hook_getaddrinfo,
         .link       = (void **) &next_getaddrinfo,
-    }, {
-        .name       = "send",
-        .patch      = hook_send,
-        .link       = (void **) &next_send
     },
 };
 
@@ -174,7 +170,14 @@ static const struct hook_symbol dns_hook_syms_winhttp[] = {
         .patch      = hook_WinHttpCrackUrl,
         .link       = (void **) &next_WinHttpCrackUrl,
     }
+};
 
+static struct hook_symbol http_hook_syms_ws2[] = {
+    {
+        .name       = "send",
+        .patch      = hook_send,
+        .link       = (void **) &next_send
+    },
 };
 
 static bool dns_hook_initted;
@@ -192,10 +195,6 @@ static void dns_hook_init(void)
     dns_hook_initted = true;
     InitializeCriticalSection(&dns_hook_lock);
 
-    for (size_t i = 0; i < _countof(dns_hook_syms_ws2); ++i) {
-        dns_hook_syms_ws2[i].ordinal = get_function_ordinal("ws2_32.dll", dns_hook_syms_ws2[i].name);
-    }
-
     hook_table_apply(
             NULL,
             "dnsapi.dll",
@@ -207,12 +206,24 @@ static void dns_hook_init(void)
             "ws2_32.dll",
             dns_hook_syms_ws2,
             _countof(dns_hook_syms_ws2));
-    
+
     hook_table_apply(
             NULL,
             "winhttp.dll",
             dns_hook_syms_winhttp,
             _countof(dns_hook_syms_winhttp));
+}
+
+void http_hook_init(){
+    for (size_t i = 0; i < _countof(http_hook_syms_ws2); ++i) {
+        http_hook_syms_ws2[i].ordinal = get_function_ordinal("ws2_32.dll", http_hook_syms_ws2[i].name);
+    }
+
+    hook_table_apply(
+            NULL,
+            "ws2_32.dll",
+            http_hook_syms_ws2,
+            _countof(http_hook_syms_ws2));
 }
 
 // This function match domain and subdomains like *.naominet.jp.

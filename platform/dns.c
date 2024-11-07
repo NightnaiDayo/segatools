@@ -16,6 +16,10 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
         return S_FALSE;
     }
 
+    if(cfg->replaceHost){
+        http_hook_init();
+    }
+
     hr = dns_hook_push(L"tenporouter.loc", cfg->router);
 
     if (FAILED(hr)) {

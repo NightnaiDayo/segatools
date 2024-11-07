@@ -121,6 +121,8 @@ void dns_config_load(struct dns_config *cfg, const wchar_t *filename)
             cfg->title,
             _countof(cfg->title),
             filename);
+
+    cfg->replaceHost = GetPrivateProfileIntW(L"dns", L"replaceHost", 0, filename);
 }
 
 void hwmon_config_load(struct hwmon_config *cfg, const wchar_t *filename)
