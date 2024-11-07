@@ -151,7 +151,7 @@ static const struct hook_symbol dns_hook_syms_dnsapi[] = {
     }
 };
 
-static struct hook_symbol dns_hook_syms_ws2[] = {
+static const struct hook_symbol dns_hook_syms_ws2[] = {
     {
         .name       = "getaddrinfo",
         .ordinal    = 176,
