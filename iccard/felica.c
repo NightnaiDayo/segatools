@@ -37,7 +37,7 @@ uint64_t felica_get_generic_PMm(void)
        Suica passes and other payment and transportation cards
        do not seem to be supported anymore. */
 
-    return 0x01168B868FBECBFFULL;
+    return 0x00F1000000014300;
 }
 
 HRESULT felica_transact(

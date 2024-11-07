@@ -24,11 +24,13 @@ static void idz_jvs_read_coin_counter(
         void *ctx,
         uint8_t slot_no,
         uint16_t *out);
+static void idz_jvs_write_gpio(void *ctx, uint32_t state);
 
 static const struct io3_ops idz_jvs_io3_ops = {
     .read_switches      = idz_jvs_read_switches,
     .read_analogs       = idz_jvs_read_analogs,
     .read_coin_counter  = idz_jvs_read_coin_counter,
+    .write_gpio         = idz_jvs_write_gpio
 };
 
 static const uint16_t idz_jvs_gear_signals[] = {
@@ -50,21 +52,20 @@ static const uint16_t idz_jvs_gear_signals[] = {
 
 static struct io3 idz_jvs_io3;
 
+HRESULT idz_jvs_hook_init(void)
+{
+    HRESULT hr;
+
+    assert(idz_dll.jvs_init != NULL);
+
+    return idz_dll.jvs_init();
+}
+
 HRESULT idz_jvs_init(struct jvs_node **out)
 {
     HRESULT hr;
 
     assert(out != NULL);
-    assert(idz_dll.jvs_init != NULL);
-
-    dprintf("JVS I/O: Starting Initial D Zero backend DLL\n");
-    hr = idz_dll.jvs_init();
-
-    if (FAILED(hr)) {
-        dprintf("JVS I/O: Backend error, I/O disconnected; %x\n", (int) hr);
-
-        return hr;
-    }
 
     io3_init(&idz_jvs_io3, NULL, &idz_jvs_io3_ops, NULL);
     *out = io3_to_jvs_node(&idz_jvs_io3);
@@ -174,4 +175,22 @@ static void idz_jvs_read_coin_counter(
     }
 
     idz_dll.jvs_read_coin_counter(out);
+}
+static void idz_jvs_write_gpio(void *ctx, uint32_t state) 
+{
+    assert(idz_dll.led_set_leds != NULL);
+    
+    // Since Sega uses an odd ordering for the first part of the bitfield,
+    // let's normalize the data and just send over bytes for the receiver
+    // to interpret as ON/OFF values.
+    uint8_t rgb_out[6] = {
+        state & IDZ_IO_LED_START ? 0xFF : 0x00,
+        state & IDZ_IO_LED_VIEW_CHANGE ? 0xFF : 0x00,
+        state & IDZ_IO_LED_UP ? 0xFF : 0x00,
+        state & IDZ_IO_LED_DOWN ? 0xFF : 0x00,
+        state & IDZ_IO_LED_RIGHT ? 0xFF : 0x00,
+        state & IDZ_IO_LED_LEFT ? 0xFF : 0x00,
+    };
+
+    idz_dll.led_set_leds(rgb_out);
 }

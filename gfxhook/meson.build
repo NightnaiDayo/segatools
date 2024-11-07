@@ -22,6 +22,8 @@ gfxhook_lib = static_library(
         'dxgi.h',
         'gfx.c',
         'gfx.h',
+        'gl.c',
+        'gl.h',
         'util.c',
         'util.h',
     ],

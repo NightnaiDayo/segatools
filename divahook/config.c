@@ -8,6 +8,9 @@
 #include "board/config.h"
 #include "board/sg-reader.h"
 
+#include "hooklib/config.h"
+#include "hooklib/dvd.h"
+
 #include "divahook/config.h"
 
 #include "platform/config.h"
@@ -47,6 +50,8 @@ void diva_hook_config_load(
     platform_config_load(&cfg->platform, filename);
     amex_config_load(&cfg->amex, filename);
     aime_config_load(&cfg->aime, filename);
+    dvd_config_load(&cfg->dvd, filename);
+    gfx_config_load(&cfg->gfx, filename);
     diva_dll_config_load(&cfg->dll, filename);
     slider_config_load(&cfg->slider, filename);
 }

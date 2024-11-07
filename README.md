@@ -1,6 +1,6 @@
 # Segatools
 
-Version: `2024-08-20`
+Version: `2024-09-30`
 
 Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platforms.
 
@@ -30,6 +30,8 @@ Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platfo
   * SEGA World Drivers Championship 2019
 * WACCA
   * starting from WACCA
+* Kemono Friends
+  * Kemono Friends 3: Planet Tours
 
 ## End-users
 

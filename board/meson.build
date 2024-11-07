@@ -50,5 +50,7 @@ board_lib = static_library(
         'vfd-cmd.h',
         'vfd-frame.c',
         'vfd-frame.h',
+        'ffb.c',
+        'ffb.h'
     ],
 )

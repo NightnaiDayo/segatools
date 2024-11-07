@@ -80,4 +80,6 @@ void printer_config_load(struct printer_config *cfg, const wchar_t *filename)
             cfg->printer_out_path,
             _countof(cfg->printer_out_path),
             filename);
+
+    cfg->wait_time = GetPrivateProfileIntW(L"printer", L"waitTime", 0, filename);
 }

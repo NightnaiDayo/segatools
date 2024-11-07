@@ -122,5 +122,6 @@ void fgo_hook_config_load(
     fgo_deck_config_load(&cfg->deck, filename);
     ftdi_config_load(&cfg->ftdi, filename);
     led15093_config_load(&cfg->led15093, filename);
+    gfx_config_load(&cfg->gfx, filename);
     fgo_dll_config_load(&cfg->dll, filename);
 }

@@ -19,7 +19,7 @@ static bool swdc_io_coin;
 
 uint16_t swdc_io_get_api_version(void)
 {
-    return 0x0100;
+    return 0x0102;
 }
 
 HRESULT swdc_io_init(void)
@@ -61,6 +61,8 @@ void swdc_io_get_opbtns(uint8_t *opbtn_out)
     assert(opbtn_out != NULL);
 
     opbtn = 0;
+
+    /* Common operator buttons, not backend-specific */
 
     if (GetAsyncKeyState(swdc_io_cfg.vk_test) & 0x8000) {
         opbtn |= SWDC_IO_OPBTN_TEST;
@@ -109,4 +111,80 @@ void swdc_io_get_analogs(struct swdc_io_analog_state *out)
     out->wheel = (tmp.wheel * swdc_io_cfg.restrict_) / 128;
     out->accel = tmp.accel;
     out->brake = tmp.brake;
+}
+
+HRESULT swdc_io_led_init(void)
+{
+    return S_OK;
+}
+
+void swdc_io_led_set_fet_output(const uint8_t *rgb)
+{
+#if 0
+    dprintf("SWDC LED: LEFT SEAT LED: %02X\n", rgb[0]);
+    dprintf("SWDC LED: RIGHT SEAT LED: %02X\n", rgb[1]);
+#endif
+
+    return;
+}
+
+void swdc_io_led_gs_update(const uint8_t *rgb)
+{
+#if 0
+    for (int i = 0; i < 9; i++) {
+        dprintf("SWDC LED: LED %d: %02X %02X %02X Speed: %02X\n",
+                i, rgb[i * 4], rgb[i * 4 + 1], rgb[i * 4 + 2], rgb[i * 4 + 3]);
+    }
+#endif
+
+    return;
+}
+
+void swdc_io_led_set_leds(const uint8_t *rgb)
+{
+#if 0
+    dprintf("SWDC LED: START: %02X\n", rgb[0]);
+    dprintf("SWDC LED: VIEW CHANGE: %02X\n", rgb[1]);
+    dprintf("SWDC LED: UP: %02X\n", rgb[2]);
+    dprintf("SWDC LED: DOWN: %02X\n", rgb[3]);
+    dprintf("SWDC LED: RIGHT: %02X\n", rgb[4]);
+    dprintf("SWDC LED: LEFT: %02X\n", rgb[5]);
+#endif
+
+    return;
+}
+
+HRESULT swdc_io_ffb_init(void)
+{
+    assert(swdc_io_backend != NULL);
+
+    return swdc_io_backend->ffb_init();
+}
+
+void swdc_io_ffb_toggle(bool active)
+{
+    assert(swdc_io_backend != NULL);
+    
+    swdc_io_backend->ffb_toggle(active);
+}
+
+void swdc_io_ffb_constant_force(uint8_t direction, uint8_t force)
+{
+    assert(swdc_io_backend != NULL);
+    
+    swdc_io_backend->ffb_constant_force(direction, force);
+}
+
+void swdc_io_ffb_rumble(uint8_t period, uint8_t force)
+{
+    assert(swdc_io_backend != NULL);
+    
+    swdc_io_backend->ffb_rumble(period, force);
+}
+
+void swdc_io_ffb_damper(uint8_t force)
+{
+    assert(swdc_io_backend != NULL);
+    
+    swdc_io_backend->ffb_damper(force);
 }

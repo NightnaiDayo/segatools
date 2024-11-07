@@ -5,6 +5,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+enum {
+    DIVA_IO_OPBTN_TEST = 0x01,
+    DIVA_IO_OPBTN_SERVICE = 0x02
+};
+
+enum {
+    DIVA_IO_GAMEBTN_CIRCLE = 0x01,
+    DIVA_IO_GAMEBTN_CROSS = 0x02,
+    DIVA_IO_GAMEBTN_SQUARE = 0x04,
+    DIVA_IO_GAMEBTN_TRIANGLE = 0x08,
+    DIVA_IO_GAMEBTN_START = 0x10,
+};
+
 /* Get the version of the Project Diva IO API that this DLL supports. This
    function should return a positive 16-bit integer, where the high byte is
    the major version and the low byte is the minor version (as defined by the

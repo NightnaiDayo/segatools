@@ -24,6 +24,33 @@ const struct dll_bind_sym idz_dll_syms[] = {
     }, {
         .sym = "idz_io_jvs_read_coin_counter",
         .off = offsetof(struct idz_dll, jvs_read_coin_counter),
+    }, {
+        .sym = "idz_io_led_init",
+        .off = offsetof(struct idz_dll, led_init),
+    }, {
+        .sym = "idz_io_led_set_fet_output",
+        .off = offsetof(struct idz_dll, led_set_fet_output),
+    }, {
+        .sym = "idz_io_led_gs_update",
+        .off = offsetof(struct idz_dll, led_gs_update),
+    }, {
+        .sym = "idz_io_led_set_leds",
+        .off = offsetof(struct idz_dll, led_set_leds),
+    }, {
+        .sym = "idz_io_ffb_init",
+        .off = offsetof(struct idz_dll, ffb_init),
+    }, {
+        .sym = "idz_io_ffb_toggle",
+        .off = offsetof(struct idz_dll, ffb_toggle),
+    }, {
+        .sym = "idz_io_ffb_constant_force",
+        .off = offsetof(struct idz_dll, ffb_constant_force),
+    }, {
+        .sym = "idz_io_ffb_rumble",
+        .off = offsetof(struct idz_dll, ffb_rumble),
+    }, {
+        .sym = "idz_io_ffb_damper",
+        .off = offsetof(struct idz_dll, ffb_damper),
     }
 };
 

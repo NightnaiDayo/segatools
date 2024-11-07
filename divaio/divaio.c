@@ -37,11 +37,11 @@ void diva_io_jvs_poll(uint8_t *opbtn_out, uint8_t *gamebtn_out)
     opbtn = 0;
 
     if (GetAsyncKeyState(diva_io_cfg.vk_test) & 0x8000) {
-        opbtn |= 1;
+        opbtn |= DIVA_IO_OPBTN_TEST;
     }
 
     if (GetAsyncKeyState(diva_io_cfg.vk_service) & 0x8000) {
-        opbtn |= 2;
+        opbtn |= DIVA_IO_OPBTN_SERVICE;
     }
 
     for (i = 0 ; i < _countof(diva_io_cfg.vk_buttons) ; i++) {

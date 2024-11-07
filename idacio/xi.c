@@ -1,5 +1,3 @@
-#include "idacio/xi.h"
-
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
@@ -7,22 +5,35 @@
 #include <windows.h>
 #include <xinput.h>
 
+#include "idacio/xi.h"
 #include "idacio/backend.h"
 #include "idacio/config.h"
 #include "idacio/idacio.h"
 #include "idacio/shifter.h"
+
 #include "util/dprintf.h"
 
 static void idac_xi_get_gamebtns(uint8_t *gamebtn_out);
 static void idac_xi_get_shifter(uint8_t *gear);
 static void idac_xi_get_analogs(struct idac_io_analog_state *out);
 
+static HRESULT idac_xi_ffb_init(void);
+static void idac_xi_ffb_toggle(bool active);
+static void idac_xi_ffb_constant_force(uint8_t direction, uint8_t force);
+static void idac_xi_ffb_rumble(uint8_t force, uint8_t period);
+static void idac_xi_ffb_damper(uint8_t force);
+
 static HRESULT idac_xi_config_apply(const struct idac_xi_config *cfg);
 
 static const struct idac_io_backend idac_xi_backend = {
-    .get_gamebtns = idac_xi_get_gamebtns,
-    .get_shifter = idac_xi_get_shifter,
-    .get_analogs = idac_xi_get_analogs,
+    .get_gamebtns       = idac_xi_get_gamebtns,
+    .get_shifter        = idac_xi_get_shifter,
+    .get_analogs        = idac_xi_get_analogs,
+    .ffb_init           = idac_xi_ffb_init,
+    .ffb_toggle         = idac_xi_ffb_toggle,
+    .ffb_constant_force = idac_xi_ffb_constant_force,
+    .ffb_rumble         = idac_xi_ffb_rumble,
+    .ffb_damper         = idac_xi_ffb_damper
 };
 
 static bool idac_xi_single_stick_steering;
@@ -46,7 +57,7 @@ HRESULT idac_xi_init(const struct idac_xi_config *cfg, const struct idac_io_back
         return hr;
     }
 
-    dprintf("XInput: Using XInput controller\n");
+    dprintf("IDACIO: Using XInput controller\n");
     *backend = &idac_xi_backend;
 
     return S_OK;
@@ -204,4 +215,36 @@ static void idac_xi_get_analogs(struct idac_io_analog_state *out) {
 
     out->accel = xi.Gamepad.bRightTrigger << 8;
     out->brake = xi.Gamepad.bLeftTrigger << 8;
+}
+
+static HRESULT idac_xi_ffb_init(void) {
+    return S_OK;
+}
+
+static void idac_xi_ffb_toggle(bool active) {
+    XINPUT_VIBRATION vibration;
+
+    memset(&vibration, 0, sizeof(vibration));
+
+    XInputSetState(0, &vibration);
+}
+
+static void idac_xi_ffb_constant_force(uint8_t direction, uint8_t force) {
+    return;
+}
+
+static void idac_xi_ffb_rumble(uint8_t force, uint8_t period) {
+    XINPUT_VIBRATION vibration;
+    /* XInput max strength is 65.535, so multiply the 127.0 by 516. */
+    uint16_t strength = force * 516;
+
+    memset(&vibration, 0, sizeof(vibration));
+    vibration.wLeftMotorSpeed = strength;
+    vibration.wRightMotorSpeed = strength;
+
+    XInputSetState(0, &vibration);
+}
+
+static void idac_xi_ffb_damper(uint8_t force) {
+    return;
 }

@@ -5,7 +5,8 @@
 
 #include "amex/amex.h"
 
-#include "board/sg-reader.h"
+#include "board/config.h"
+#include "board/led15070.h"
 
 #include "gfxhook/gfx.h"
 
@@ -23,6 +24,8 @@ struct idz_hook_config {
     struct dvd_config dvd;
     struct gfx_config gfx;
     struct idz_dll_config dll;
+    struct ffb_config ffb;
+    struct led15070_config led15070;
     struct zinput_config zinput;
 };
 

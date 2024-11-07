@@ -21,6 +21,33 @@ const struct dll_bind_sym swdc_dll_syms[] = {
     }, {
         .sym = "swdc_io_get_analogs",
         .off = offsetof(struct swdc_dll, get_analogs),
+    }, {
+        .sym = "swdc_io_led_init",
+        .off = offsetof(struct swdc_dll, led_init),
+    }, {
+        .sym = "swdc_io_led_set_fet_output",
+        .off = offsetof(struct swdc_dll, led_set_fet_output),
+    }, {
+        .sym = "swdc_io_led_gs_update",
+        .off = offsetof(struct swdc_dll, led_gs_update),
+    }, {
+        .sym = "swdc_io_led_set_leds",
+        .off = offsetof(struct swdc_dll, led_set_leds),
+    }, {
+        .sym = "swdc_io_ffb_init",
+        .off = offsetof(struct swdc_dll, ffb_init),
+    }, {
+        .sym = "swdc_io_ffb_toggle",
+        .off = offsetof(struct swdc_dll, ffb_toggle),
+    }, {
+        .sym = "swdc_io_ffb_constant_force",
+        .off = offsetof(struct swdc_dll, ffb_constant_force),
+    }, {
+        .sym = "swdc_io_ffb_rumble",
+        .off = offsetof(struct swdc_dll, ffb_rumble),
+    }, {
+        .sym = "swdc_io_ffb_damper",
+        .off = offsetof(struct swdc_dll, ffb_damper),
     }
 };
 

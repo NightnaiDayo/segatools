@@ -26,12 +26,15 @@
 
 #include "hook/process.h"
 
+#include "hooklib/dll.h"
 #include "hooklib/dvd.h"
 #include "hooklib/touch.h"
 #include "hooklib/printer.h"
 #include "hooklib/createprocess.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
+
+#include "gfxhook/gfx.h"
 
 #include "fgohook/config.h"
 #include "fgohook/io4.h"
@@ -49,8 +52,20 @@ static struct fgo_hook_config fgo_hook_cfg;
 static DWORD CALLBACK fgo_pre_startup(void)
 {
     HRESULT hr;
+    HMODULE dbghelp;
 
     dprintf("--- Begin fgo_pre_startup ---\n");
+
+    /* Pin dbghelp so the path hooks apply to it. */
+
+    dbghelp = LoadLibraryW(L"dbghelp.dll");
+
+    if (dbghelp != NULL) {
+        dprintf("Pinned debug helper library, hMod=%p\n", dbghelp);
+    }
+    else {
+        dprintf("Failed to load debug helper library!\n");
+    }
 
     /* Load config */
 
@@ -59,12 +74,15 @@ static DWORD CALLBACK fgo_pre_startup(void)
     /* Hook Win32 APIs */
 
     dvd_hook_init(&fgo_hook_cfg.dvd, fgo_hook_mod);
+    gfx_hook_init(&fgo_hook_cfg.gfx);
     touch_screen_hook_init(&fgo_hook_cfg.touch, fgo_hook_mod);
     serial_hook_init();
 
     /* Hook external DLL APIs */
 
     printer_hook_init(&fgo_hook_cfg.printer, 4, fgo_hook_mod);
+    dll_hook_push(fgo_hook_mod, L"C330Ausb.dll");
+    dll_hook_push(fgo_hook_mod, L"C330AFWDLusb.dll");
 
     /* Initialize emulation hooks */
 

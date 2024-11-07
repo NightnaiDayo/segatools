@@ -93,3 +93,11 @@ void vfd_config_load(struct vfd_config *cfg, const wchar_t *filename)
     cfg->port = GetPrivateProfileIntW(L"vfd", L"portNo", 0, filename);
     cfg->utf_conversion = GetPrivateProfileIntW(L"vfd", L"utfConversion", 0, filename);
 }
+
+void ffb_config_load(struct ffb_config *cfg, const wchar_t *filename)
+{
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    cfg->enable = GetPrivateProfileIntW(L"ffb", L"enable", 1, filename);
+}

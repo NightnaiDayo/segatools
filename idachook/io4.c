@@ -15,7 +15,7 @@ static HRESULT idac_io4_write_gpio(uint8_t* payload, size_t len);
 static uint16_t coins;
 
 static const struct io4_ops idac_io4_ops = {
-    .poll = idac_io4_poll,
+    .poll       = idac_io4_poll,
     .write_gpio = idac_io4_write_gpio
 };
 
@@ -133,6 +133,8 @@ static HRESULT idac_io4_poll(void *ctx, struct io4_state *state)
 
 static HRESULT idac_io4_write_gpio(uint8_t* payload, size_t len) 
 {
+    assert(idac_dll.led_set_leds != NULL);
+    
     // Just fast fail if there aren't enough bytes in the payload
     if (len < 3) 
         return S_OK;

@@ -22,6 +22,9 @@
 #include "divahook/jvs.h"
 #include "divahook/slider.h"
 
+#include "gfxhook/gfx.h"
+#include "gfxhook/gl.h"
+
 #include "hook/process.h"
 
 #include "hooklib/serial.h"
@@ -38,8 +41,20 @@ static struct diva_hook_config diva_hook_cfg;
 static DWORD CALLBACK diva_pre_startup(void)
 {
     HRESULT hr;
+    HMODULE dbghelp;
 
     dprintf("--- Begin diva_pre_startup ---\n");
+
+    /* Pin dbghelp so the path hooks apply to it. */
+
+    dbghelp = LoadLibraryW(L"dbghelp.dll");
+
+    if (dbghelp != NULL) {
+        dprintf("Pinned debug helper library, hMod=%p\n", dbghelp);
+    }
+    else {
+        dprintf("Failed to load debug helper library!\n");
+    }
 
     /* Config load */
 
@@ -47,6 +62,9 @@ static DWORD CALLBACK diva_pre_startup(void)
 
     /* Hook Win32 APIs */
 
+    dvd_hook_init(&diva_hook_cfg.dvd, diva_hook_mod);
+    gfx_hook_init(&diva_hook_cfg.gfx);
+    gfx_gl_hook_init(&diva_hook_cfg.gfx, diva_hook_mod);
     serial_hook_init();
 
     /* Initialize emulation hooks */

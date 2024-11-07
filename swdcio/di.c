@@ -45,8 +45,13 @@ static const struct swdc_di_axis swdc_di_axes[] = {
 };
 
 static const struct swdc_io_backend swdc_di_backend = {
-    .get_gamebtns   = swdc_di_get_buttons,
-    .get_analogs   = swdc_di_get_analogs,
+    .get_gamebtns       = swdc_di_get_buttons,
+    .get_analogs        = swdc_di_get_analogs,
+    .ffb_init           = swdc_di_ffb_init,
+    .ffb_toggle         = swdc_di_ffb_toggle,
+    .ffb_constant_force = swdc_di_ffb_constant_force,
+    .ffb_rumble         = swdc_di_ffb_rumble,
+    .ffb_damper         = swdc_di_ffb_damper
 };
 
 static HWND swdc_di_wnd;
@@ -67,7 +72,6 @@ static uint8_t swdc_di_wheel_yellow;
 static bool swdc_di_use_pedals;
 static bool swdc_di_reverse_brake_axis;
 static bool swdc_di_reverse_accel_axis;
-static uint16_t swdc_di_center_spring_strength;
 
 HRESULT swdc_di_init(
         const struct swdc_di_config *cfg,
@@ -160,15 +164,11 @@ HRESULT swdc_di_init(
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    hr = swdc_di_dev_start(swdc_di_dev, swdc_di_wnd);
+    hr = swdc_di_dev_init(cfg, swdc_di_dev, swdc_di_wnd);
 
     if (FAILED(hr)) {
         return hr;
     }
-
-    // Convert the strength from 0-100 to 0-10000 for DirectInput
-    swdc_di_dev_start_fx(swdc_di_dev, &swdc_di_fx,
-                         swdc_di_center_spring_strength * 100);
 
     if (cfg->pedals_name[0] != L'\0') {
         hr = IDirectInput8_EnumDevices(
@@ -320,15 +320,24 @@ static HRESULT swdc_di_config_apply(const struct swdc_di_config *cfg)
     swdc_di_reverse_brake_axis = cfg->reverse_brake_axis;
     swdc_di_reverse_accel_axis = cfg->reverse_accel_axis;
 
-    // FFB configuration
+    /* FFB configuration */
+    if (cfg->ffb_constant_force_strength < 0 || cfg->ffb_constant_force_strength > 100) {
+        dprintf("Wheel: Invalid constant force strength: %i\n", cfg->ffb_constant_force_strength);
 
-    if (cfg->center_spring_strength < 0 || cfg->center_spring_strength > 100) {
-        dprintf("Wheel: Invalid center spring strength: %i\n", cfg->center_spring_strength);
+        return E_INVALIDARG;
+    }
+    
+    if (cfg->ffb_rumble_strength < 0 || cfg->ffb_rumble_strength > 100) {
+        dprintf("Wheel: Invalid rumble strength: %i\n", cfg->ffb_rumble_strength);
 
         return E_INVALIDARG;
     }
 
-    swdc_di_center_spring_strength = cfg->center_spring_strength;
+    if (cfg->ffb_damper_strength < 0 || cfg->ffb_damper_strength > 100) {
+        dprintf("Wheel: Invalid damper strength: %i\n", cfg->ffb_damper_strength);
+
+        return E_INVALIDARG;
+    }
 
     return S_OK;
 }
