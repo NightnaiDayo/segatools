@@ -11,17 +11,17 @@ set VS_INSTALLATION=C:\Program Files\Microsoft Visual Studio\2022\Community
 
 if /I "%1"=="build" (
     call :build
-    exit
+    exit /b
 )
 if /I "%1"=="zip" (
     powershell -NoProfile -ExecutionPolicy Bypass -Command "& './package.ps1'"
-    exit
+    exit /b
 )
 
 echo %~nx0 [action]
 echo     build: Build the for both x86 and x64
 echo     zip: Make zip file
-exit
+exit /b
 
 :build (
     REM Check VC++
