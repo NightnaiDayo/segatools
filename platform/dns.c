@@ -136,7 +136,7 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
     }
     
     // WAHLAP Billing
-    hr = dns_hook_push(L"ib.sys-all.cn", cfg->billing);
+    hr = dns_hook_push(L"bl.sys-all.cn", cfg->billing);
 
     if (FAILED(hr)) {
         return hr;
