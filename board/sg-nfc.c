@@ -354,13 +354,13 @@ static HRESULT sg_nfc_poll_felica(
     felica->type = 0x20;
     felica->id_len = sizeof(felica->IDm) + sizeof(felica->PMm);
     felica->IDm = _byteswap_uint64(IDm);
-    felica->PMm = _byteswap_uint64(felica_get_generic_PMm());
+    felica->PMm = _byteswap_uint64(felica_get_amusement_ic_PMm());
 
     /* Initialize FeliCa IC emulator */
 
     nfc->felica.IDm = IDm;
-    nfc->felica.PMm = felica_get_generic_PMm();
-    nfc->felica.system_code = 0x0000;
+    nfc->felica.PMm = felica_get_amusement_ic_PMm();
+    nfc->felica.system_code = 0x88b4;
 
     return S_OK;
 }

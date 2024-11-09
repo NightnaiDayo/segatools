@@ -12,7 +12,7 @@
 /* Hook functions */
 
 static BOOL WINAPI hook_ShowWindow(HWND hWnd, int nCmdShow);
-static BOOL WINAPI hook_CreateWindowExA(
+static HWND WINAPI hook_CreateWindowExA(
     DWORD dwExStyle,
     LPCSTR lpClassName,
     LPCSTR lpWindowName,
@@ -30,7 +30,7 @@ static BOOL WINAPI hook_CreateWindowExA(
 /* Link pointers */
 
 static BOOL (WINAPI *next_ShowWindow)(HWND hWnd, int nCmdShow);
-static BOOL (WINAPI *next_CreateWindowExA)(
+static HWND (WINAPI *next_CreateWindowExA)(
     DWORD dwExStyle,
     LPCSTR lpClassName,
     LPCSTR lpWindowName,
@@ -82,7 +82,7 @@ static BOOL WINAPI hook_ShowWindow(HWND hWnd, int nCmdShow)
     return next_ShowWindow(hWnd, nCmdShow);
 }
 
-static BOOL WINAPI hook_CreateWindowExA(
+static HWND WINAPI hook_CreateWindowExA(
     DWORD dwExStyle,
     LPCSTR lpClassName,
     LPCSTR lpWindowName,
@@ -97,18 +97,32 @@ static BOOL WINAPI hook_CreateWindowExA(
     LPVOID lpParam
 )
 {
+    RECT rect;
+
     dprintf("Gfx: CreateWindowExA hook hit\n");
 
-    // Set to WS_OVERLAPPEDWINDOW to enable a window with a border and windowed style
-    if (gfx_config.windowed) {
-        dwStyle = WS_OVERLAPPEDWINDOW;
-
-        if (!gfx_config.framed) {
+    if (gfx_config.windowed)
+    {
+        if (gfx_config.framed)
+            dwStyle |= WS_BORDER | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU;
+        else
             dwStyle = WS_POPUP;
-        }
+
+        rect.left = ((X == CW_USEDEFAULT) ? 0 : X);
+        rect.top = ((Y == CW_USEDEFAULT) ? 0 : Y);
+        rect.right = rect.left + nWidth;
+        rect.bottom = rect.top + nHeight;
+
+        // Don't care if it's ok or not, since we are creating window and we can't just return a NULL
+        AdjustWindowRect(&rect, dwStyle, !!hMenu);
+
+        X = ((X == CW_USEDEFAULT) ? X : rect.left);
+        Y = ((Y == CW_USEDEFAULT) ? Y : rect.top);
+        nWidth = rect.right - rect.left;
+        nHeight = rect.bottom - rect.top;
     }
 
-    return next_CreateWindowExA(
+   return next_CreateWindowExA(
         dwExStyle,
         lpClassName,
         lpWindowName,
