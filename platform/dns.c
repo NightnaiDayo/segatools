@@ -142,7 +142,7 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
         return hr;
     }
     
-    hr = dns_hook_push(L"ib.sys-allnet.cn", cfg->billing);
+    hr = dns_hook_push(L"bl.sys-allnet.cn", cfg->billing);
 
     if (FAILED(hr)) {
         return hr;
