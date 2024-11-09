@@ -13,7 +13,6 @@ add_project_arguments(
     '-DWIN32_LEAN_AND_MEAN',
     '-D_WIN32_WINNT=_WIN32_WINNT_WIN7',
     '-DMINGW_HAS_SECURE_API=1',
-    '-Wno-unused',
     # '-ggdb',  # Add debug information
     language: 'c',
 )
@@ -24,6 +23,7 @@ if cc.get_id() != 'msvc'
     add_project_arguments(
         '-ffunction-sections',
         '-fdata-sections',
+        '-Wno-unused',
         language: 'c',
     )
 

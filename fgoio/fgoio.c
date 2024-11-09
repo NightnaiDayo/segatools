@@ -109,8 +109,8 @@ HRESULT fgo_io_poll(void)
         normalizedMagnitude = 0.0;
     }
 
-    fgo_stick_x = normalizedLX * normalizedMagnitude * 32767;
-    fgo_stick_y = normalizedLY * normalizedMagnitude * 32767;
+    fgo_stick_x = (int16_t)(normalizedLX * normalizedMagnitude * 32767);
+    fgo_stick_y = (int16_t)(normalizedLY * normalizedMagnitude * 32767);
 
     return S_OK;
 }

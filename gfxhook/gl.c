@@ -60,7 +60,7 @@ static void WINAPI hook_glutFullScreen(void)
         return;
     }
 
-    return next_glutFullScreen();
+    next_glutFullScreen();
 }
 
 static void WINAPI hook_glutInitDisplayMode(unsigned int mode)
@@ -73,5 +73,5 @@ static void WINAPI hook_glutInitDisplayMode(unsigned int mode)
         mode |= 0x0800;
     }
 
-    return next_glutInitDisplayMode(mode);
+    next_glutInitDisplayMode(mode);
 }

@@ -13,7 +13,6 @@
 
 #include "platform/config.h"
 
-#include "divahook/3mpxsc.h"
 #include "divahook/diva-dll.h"
 #include "divahook/slider.h"
 
@@ -23,7 +22,6 @@ struct diva_hook_config {
     struct aime_config aime;
     struct dvd_config dvd;
     struct gfx_config gfx;
-    struct touch3mpxsc_config touch3mpxsc;
     struct touch_screen_config touch;
     struct diva_dll_config dll;
     struct slider_config slider;
