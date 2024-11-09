@@ -278,7 +278,7 @@ static HRESULT felica_cmd_read_without_encryption(
                     goto fail;
                 }
 
-                iobuf_write_be64(res, 0x0078000000000000ull);
+                hr = iobuf_write_be64(res, 0x0078000000000000ull);
 
                 if (FAILED(hr))
                 {
@@ -286,14 +286,14 @@ static HRESULT felica_cmd_read_without_encryption(
                 }
             }
             default: {
-                iobuf_write_be64(res, 0);
+                hr = iobuf_write_be64(res, 0);
 
                 if (FAILED(hr))
                 {
                     goto fail;
                 }
 
-                iobuf_write_be64(res, 0);
+                hr = iobuf_write_be64(res, 0);
 
                 if (FAILED(hr))
                 {
