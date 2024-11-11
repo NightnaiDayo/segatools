@@ -8,17 +8,17 @@ set BUILD_DIR_ZIP=%BUILD_DIR%\zip
 set DIST_DIR=dist
 set DOC_DIR=doc
 
-REM Set Your Visual Studio install path if Visual Studio Installation can not be detected
+REM Set your Visual Studio install path if Visual Studio installation can not be detected
 set VS_INSTALLATION=C:\Program Files\Microsoft Visual Studio\2022\Community
 
 if /I "%1"=="build" (
-    call :detect-visual-Studio
+    call :detect-visual-studio
     if ERRORLEVEL 2 exit /b
     if ERRORLEVEL 1 (
         echo Failed to detect Visual Studio installation path.
         echo.
-        echo If Visual Studio is installed then Edit VS_INSTALLATION in this file
-        echo to manually specify Visual Studio Install path.
+        echo If Visual Studio is installed then edit VS_INSTALLATION in this file
+        echo to manually specify Visual Studio install path.
         exit /b
     )
 
@@ -48,7 +48,7 @@ echo     zip: Make zip file
 exit /b
 
 rem This should works for Visual Studio 2017+
-:detect-visual-Studio (
+:detect-visual-studio (
     rem Who the hell on earth is still using a 32bit Windows in 2024
     if "%ProgramFiles(x86)%"=="" (
         set VSWHERE="%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe"
