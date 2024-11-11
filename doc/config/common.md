@@ -197,6 +197,12 @@ Default: Empty string (i.e. use value from `default` setting)
 
 Overrides the target of the `aime.naominet.jp` host lookup.
 
+### `replaceHost`
+
+Default: `0`
+
+Replace the HOST field in HTTP request headers with the settings above. This may help bypass network restrictions in some regions.
+
 ## `[ds]`
 
 Controls emulation of the "DS (Dallas Semiconductor) EEPROM" chip on the AMEX
