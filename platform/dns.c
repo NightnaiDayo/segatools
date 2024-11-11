@@ -120,6 +120,12 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
         return hr;
     }
     
+    hr = dns_hook_push(L"at.sys-allnet.cn", cfg->startup);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+    
     // WAHLAP WeChat AimeDB Server
     hr = dns_hook_push(L"ai.sys-all.cn", cfg->aimedb);
 
@@ -127,8 +133,20 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
         return hr;
     }
     
+    hr = dns_hook_push(L"ai.sys-allnet.cn", cfg->aimedb);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+    
     // WAHLAP Billing
-    hr = dns_hook_push(L"ib.sys-all.cn", cfg->billing);
+    hr = dns_hook_push(L"bl.sys-all.cn", cfg->billing);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+    
+    hr = dns_hook_push(L"bl.sys-allnet.cn", cfg->billing);
 
     if (FAILED(hr)) {
         return hr;
