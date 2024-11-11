@@ -1,4 +1,6 @@
 @echo off
+setlocal enabledelayedexpansion
+
 set BUILD_DIR=build
 set BUILD_DIR_32=%BUILD_DIR%\build32
 set BUILD_DIR_64=%BUILD_DIR%\build64
@@ -6,11 +8,33 @@ set BUILD_DIR_ZIP=%BUILD_DIR%\zip
 set DIST_DIR=dist
 set DOC_DIR=doc
 
-REM Set Your Visual Studio install path if this one was wrong
+REM Set Your Visual Studio install path if Visual Studio Installation can not be detected
 set VS_INSTALLATION=C:\Program Files\Microsoft Visual Studio\2022\Community
 
 if /I "%1"=="build" (
+    call :detect-visual-Studio
+    if ERRORLEVEL 2 exit /b
+    if ERRORLEVEL 1 (
+        echo Failed to detect Visual Studio installation path.
+        echo.
+        echo If Visual Studio is installed then Edit VS_INSTALLATION in this file
+        echo to manually specify Visual Studio Install path.
+        exit /b
+    )
+
+    call :detect-meson
+    if ERRORLEVEL 1 (
+        echo Meson is not installed.
+        exit /b
+    )
+
+    set VSVARSALL=!VSVARSALL!
+    set MESON=!MESON!
+
     call :build
+
+    echo.
+    echo Build done!
     exit /b
 )
 if /I "%1"=="zip" (
@@ -23,24 +47,55 @@ echo     build: Build the for both x86 and x64
 echo     zip: Make zip file
 exit /b
 
-:build (
-    REM Check VC++
-    set VSVARALL="%VS_INSTALLATION%\VC\Auxiliary\Build\vcvarsall.bat"
-    if not exist %VSVARALL% (
-        echo Build tools for Microsoft Visual C++ 2022 is not Installed
-        echo Edit this file to change the VS_INSTALLATION if you are installed the Visual Studio in other path
-        goto end
+rem This should works for Visual Studio 2017+
+:detect-visual-Studio (
+    rem Who the hell on earth is still using a 32bit Windows in 2024
+    if "%ProgramFiles(x86)%"=="" (
+        set VSWHERE="%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe"
+    ) else (
+        set VSWHERE="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
     )
 
-    REM Check Meson
+    if exist %VSWHERE% (
+        REM get vcvarsall by using vswhere
+        set VSVARSALL=""
+        for /f "tokens=* usebackq" %%i in (`%VSWHERE% -find VC\Auxiliary\Build\vcvarsall.bat`) do set VSVARSALL="%%i"
+    ) else (
+        REM fallback to old method
+        set VSVARSALL="%VS_INSTALLATION%\VC\Auxiliary\Build\vcvarsall.bat"
+    )
+
+    :check-vcvarsall
+    if /i %VSVARSALL%=="" (
+        echo Microsoft Visual C++ Component is not installed
+        echo Install it from Visual Studio Installer
+        exit /b 2
+    )
+
+    rem if a path is returned by vswhere, then it's sure that the result path exists
+    rem if path not exists than it was assumed from VS_INSTALLATION
+    if not exist %VSVARSALL% (
+        echo vsvarsall.bat not exists in VS_INSTALLATION,
+        echo either Visual C++ Component is not installed
+        echo or VS_INSTALLATION is wrong.
+        exit /b 1
+    )
+
+    exit /b 0
+)
+
+:detect-meson (
     for /f "tokens=* usebackq" %%i in (`where meson`) do set MESON="%%i"
     if not exist %MESON% (
-        echo Meson is not Installed
-        goto end
+        exit /b 1
     )
 
+    exit /b 0
+)
+
+:build (
     :build_x64 (
-        call %VSVARALL% x64
+        call %VSVARSALL% x64
 
         if exist %BUILD_DIR_64% (
             %MESON% setup %BUILD_DIR_64% --backend vs --buildtype release --reconfigure
@@ -54,7 +109,7 @@ exit /b
     )
 
     :build_x86 (
-        call %VSVARALL% x86
+        call %VSVARSALL% x86
 
         if exist %BUILD_DIR_32% (
             %MESON% setup %BUILD_DIR_32% --backend vs --buildtype release --reconfigure
@@ -68,6 +123,6 @@ exit /b
     )
 
     :end (
-        endlocal
+        exit /b
     )
 )
