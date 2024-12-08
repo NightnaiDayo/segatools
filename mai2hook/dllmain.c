@@ -85,6 +85,13 @@ static DWORD CALLBACK mai2_pre_startup(void)
         goto fail;
     }
 
+    hr = led15070_hook_init(&mai2_hook_cfg.led15070, mai2_dll.led_init, 
+        mai2_dll.led_set_fet_output, NULL, mai2_dll.led_gs_update, 21, 3);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
     hr = mai2_dll_init(&mai2_hook_cfg.dll, mai2_hook_mod);
 
     if (FAILED(hr)) {

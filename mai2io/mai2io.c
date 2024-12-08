@@ -141,3 +141,23 @@ void mai2_io_get_gamebtns(uint16_t *player1, uint16_t *player2)
         *player2 = mai2_player2_btn;
     }
 }
+
+HRESULT mai2_io_led_init(void)
+{
+    return S_OK;
+}
+
+void mai2_io_led_set_fet_output(const uint8_t *rgb)
+{
+    return;
+}
+
+void mai2_io_led_gs_update(const uint8_t *rgb)
+{
+    return;
+}
+
+void mai2_io_led_set_leds(const uint8_t *rgb)
+{
+    return;
+}

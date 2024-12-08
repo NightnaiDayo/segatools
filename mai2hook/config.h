@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "board/config.h"
+#include "board/led15070.h"
 
 #include "hooklib/dvd.h"
 
@@ -18,6 +19,7 @@ struct mai2_hook_config {
     struct dvd_config dvd;
     struct io4_config io4;
     struct vfd_config vfd;
+    struct led15070_config led15070;
     struct mai2_dll_config dll;
     struct unity_config unity;
 };

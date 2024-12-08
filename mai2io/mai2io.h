@@ -66,3 +66,11 @@ void mai2_io_get_opbtns(uint8_t *opbtn);
    Minimum API version: 0x0100 */
 
 void mai2_io_get_gamebtns(uint16_t *player1, uint16_t *player2);
+
+HRESULT mai2_io_led_init(void);
+
+void mai2_io_led_set_fet_output(const uint8_t *rgb);
+
+void mai2_io_led_gs_update(const uint8_t *rgb);
+
+void mai2_io_led_set_leds(const uint8_t *rgb);
