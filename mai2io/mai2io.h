@@ -66,3 +66,45 @@ void mai2_io_get_opbtns(uint8_t *opbtn);
    Minimum API version: 0x0100 */
 
 void mai2_io_get_gamebtns(uint16_t *player1, uint16_t *player2);
+
+/* Initialize LED emulation. This function will be called before any
+   other mai2_io_led_*() function calls.
+
+   All subsequent calls may originate from arbitrary threads and some may
+   overlap with each other. Ensuring synchronization inside your IO DLL is
+   your responsibility. 
+   
+   Minimum API version: 0x0101 */
+
+HRESULT mai2_io_led_init(void);
+
+/* Update the FET outputs. rgb is a pointer to an array up to 3 bytes.
+
+   Set the brightness of the white light on the machine's outer shell.  
+   The program will continuously send changed values to request the blinking effect.
+
+   [0]: BodyLed
+   [1]: ExtLed
+   [2]: SideLed
+
+   The LED is truned on when the byte is 255 and turned off when the byte is 0.
+
+   Minimum API version: 0x0101 */
+
+void mai2_io_led_set_fet_output(const uint8_t *rgb);
+
+/* The effect of this command is unknown, it is triggered after LED_15070_CMD_EEPROM_READ. */
+
+void mai2_io_led_dc_update(const uint8_t *rgb);
+
+/* Update the RGB LEDs. rgb is a pointer to an array up to 32 * 4 = 128 bytes. 
+
+   The LEDs are laid out as follows:
+   [0-7]: 8 button LED
+ 
+   Each rgb value is comprised for 4 bytes in the order of R, G, B, Speed.
+   Speed is a value from 0 to 255, where 0 is the fastest speed and 255 is the slowest.
+
+   Minimum API version: 0x0101 */
+
+void mai2_io_led_gs_update(const uint8_t *rgb);

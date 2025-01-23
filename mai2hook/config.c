@@ -27,6 +27,41 @@ void mai2_dll_config_load(
             filename);
 }
 
+void led15070_config_load(struct led15070_config *cfg, const wchar_t *filename)
+{
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    wchar_t tmpstr[16];
+
+    cfg->enable = GetPrivateProfileIntW(L"led15070", L"enable", 1, filename);
+    cfg->port_no = GetPrivateProfileIntW(L"led15070", L"portNo", 0, filename);
+    cfg->fw_ver = GetPrivateProfileIntW(L"led15070", L"fwVer", 0x90, filename);
+    cfg->fw_sum = GetPrivateProfileIntW(L"led15070", L"fwSum", 0x00, filename);
+
+    GetPrivateProfileStringW(
+        L"led15070",
+        L"boardNumber",
+        L"15070-04",
+        tmpstr,
+        _countof(tmpstr),
+        filename);
+
+    size_t n = wcstombs(cfg->board_number, tmpstr, sizeof(cfg->board_number));
+    for (int i = n; i < sizeof(cfg->board_number); i++)
+    {
+        cfg->board_number[i] = ' ';
+    }
+
+    GetPrivateProfileStringW(
+        L"led15070",
+        L"eepromPath",
+        L"DEVICE",
+        cfg->eeprom_path,
+        _countof(cfg->eeprom_path),
+        filename);
+}
+
 void mai2_hook_config_load(
         struct mai2_hook_config *cfg,
         const wchar_t *filename)
@@ -40,5 +75,6 @@ void mai2_hook_config_load(
     io4_config_load(&cfg->io4, filename);
     vfd_config_load(&cfg->vfd, filename);
     mai2_dll_config_load(&cfg->dll, filename);
+    led15070_config_load(&cfg->led15070, filename);
     unity_config_load(&cfg->unity, filename);
 }
