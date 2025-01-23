@@ -308,7 +308,7 @@ static void reg_hook_init(void)
 
     reg_hook_initted = true;
     InitializeCriticalSection(&reg_hook_lock);
-    dprintf("Reg hook init\n");
+    dprintf("Reg: hook init.\n");
 
     reg_hook_insert_hooks(NULL);
 

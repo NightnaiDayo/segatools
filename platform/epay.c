@@ -189,7 +189,7 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     thinca_stub->impl1->unk220 = thinca_unk;
     thinca_stub->impl1->unk228 = thinca_unk;
     
-    dprintf("Epay: Init\n");
+    dprintf("Epay: Init.\n");
 
     return hr;
 }
