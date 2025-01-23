@@ -67,10 +67,10 @@ static DWORD CALLBACK mai2_pre_startup(void)
     /* Initialize emulation hooks */
 
     hr = platform_hook_init(
-            &mai2_hook_cfg.platform,
-            "SDEZ",
-            "ACA1",
-            mai2_hook_mod);
+        &mai2_hook_cfg.platform,
+        "SDEZ",
+        "ACA1",
+        mai2_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
@@ -79,6 +79,14 @@ static DWORD CALLBACK mai2_pre_startup(void)
     /* Initialize DLLs */
 
     hr = mai2_dll_init(&mai2_hook_cfg.dll, mai2_hook_mod);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
+    // Touch Panel uses COM3 and COM4
+
+    hr = touch_hook_init(&mai2_hook_cfg.touch);
 
     if (FAILED(hr)) {
         goto fail;

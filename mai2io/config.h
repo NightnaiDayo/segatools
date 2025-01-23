@@ -12,6 +12,8 @@ struct mai2_io_config {
     uint8_t vk_1p_btn[9];
     uint8_t vk_2p_btn[9];
     bool vk_btn_enable;
+    bool debug_input_1p;
+    bool debug_input_2p;
 };
 
 void mai2_io_config_load(

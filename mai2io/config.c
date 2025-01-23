@@ -29,6 +29,8 @@ void mai2_io_config_load(
     cfg->vk_service = GetPrivateProfileIntW(L"io4", L"service", VK_F2, filename);
     cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", VK_F3, filename);
     cfg->vk_btn_enable = GetPrivateProfileIntW(L"button", L"enable", 1, filename);
+    cfg->debug_input_1p = GetPrivateProfileIntW(L"touch", L"debug_input_1p", 0, filename);
+    cfg->debug_input_2p = GetPrivateProfileIntW(L"touch", L"debug_input_2p", 0, filename);
 
     for (i = 0 ; i < 9 ; i++) {
         swprintf_s(key, _countof(key), L"1p_btn%i", i + 1);

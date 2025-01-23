@@ -22,6 +22,24 @@ const struct dll_bind_sym mai2_dll_syms[] = {
         .sym = "mai2_io_get_gamebtns",
         .off = offsetof(struct mai2_dll, get_gamebtns),
     }, {
+        .sym = "mai2_io_touch_init",
+        .off = offsetof(struct mai2_dll, touch_init),
+    }, {
+        .sym = "mai2_io_touch_set_sens",
+        .off = offsetof(struct mai2_dll, touch_set_sens),
+    }, {
+        .sym = "mai2_io_touch_1p_start",
+        .off = offsetof(struct mai2_dll, touch_1p_start),
+    }, {
+        .sym = "mai2_io_touch_1p_stop",
+        .off = offsetof(struct mai2_dll, touch_1p_stop),
+    }, {
+        .sym = "mai2_io_touch_2p_start",
+        .off = offsetof(struct mai2_dll, touch_2p_start),
+    }, {
+        .sym = "mai2_io_touch_2p_stop",
+        .off = offsetof(struct mai2_dll, touch_2p_stop),
+    }, {
         .sym = "mai2_io_led_init",
         .off = offsetof(struct mai2_dll, led_init),
     }, {

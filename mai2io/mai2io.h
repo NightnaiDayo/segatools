@@ -67,6 +67,51 @@ void mai2_io_get_opbtns(uint8_t *opbtn);
 
 void mai2_io_get_gamebtns(uint16_t *player1, uint16_t *player2);
 
+/* Initialize touch emulation. This function will be called before any
+   other mai2_io_touch_*() function calls. */
+
+HRESULT mai2_io_touch_init();
+
+/* Send sensitivity setting data to the touch device.
+   Format:
+   bytes[0] - Header
+   bytes[1] - Target device, ASCII characters 'L' or 'R'
+   bytes[2] - Target touch point
+   bytes[3] - commandRatio identifier
+   bytes[4] - Ratio value to be set, within a fixed range
+   bytes[5] - Footer
+
+   Example function, not actually used. The sensitivity range can be determined
+   based on the Ratio set within the game. */
+
+void mai2_io_touch_set_sens(uint8_t *bytes);
+
+/* Callback function used by mai2_io_touch_1p/2p_start. 
+   The 'state' represents a complete response packet.
+   The format of the state array is as follows:
+   uint8_t state[9] = {
+      Header,
+      Touch data,
+      Footer
+   }
+   The middle 7 bytes are the touch data, with each byte storing the touch state in the lower 5 bits.
+   A value of 1 indicates that the corresponding touch area is pressed.
+   The touch areas are ordered from A1 to E8, and the binary values are stored from low to high. */
+
+typedef void (*mai2_io_touch_callback_t)(const uint8_t *state);
+
+void mai2_io_touch_1p_start(mai2_io_touch_callback_t callback);
+
+void mai2_io_touch_1p_stop(void);
+
+static unsigned int __stdcall mai2_io_touch_1p_thread_proc(void *ctx);
+
+void mai2_io_touch_2p_start(mai2_io_touch_callback_t callback);
+
+void mai2_io_touch_2p_stop(void);
+
+static unsigned int __stdcall mai2_io_touch_2p_thread_proc(void *ctx);
+
 /* Initialize LED emulation. This function will be called before any
    other mai2_io_led_*() function calls.
 

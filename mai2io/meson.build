@@ -3,6 +3,9 @@ mai2io_lib = static_library(
     name_prefix : '',
     include_directories : inc,
     implicit_include_directories : false,
+    dependencies : [
+        capnhook.get_variable('hook_dep'),
+    ],
     sources : [
         'mai2io.c',
         'mai2io.h',
