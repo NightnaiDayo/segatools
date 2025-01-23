@@ -47,6 +47,10 @@ HRESULT mai2_io_poll(void)
     } else {
         mai2_io_coin = false;
     }
+    // If sinmai has enabled DebugInput, there is no need to input buttons through hook amdaemon.
+    if (!mai2_io_cfg.vk_btn_enable) {
+        return S_OK;
+    }
 
     //Player 1
     if (GetAsyncKeyState(mai2_io_cfg.vk_1p_btn[0])) {

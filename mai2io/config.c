@@ -28,6 +28,7 @@ void mai2_io_config_load(
     cfg->vk_test = GetPrivateProfileIntW(L"io4", L"test", VK_F1, filename);
     cfg->vk_service = GetPrivateProfileIntW(L"io4", L"service", VK_F2, filename);
     cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", VK_F3, filename);
+    cfg->vk_btn_enable = GetPrivateProfileIntW(L"button", L"enable", 1, filename);
 
     for (i = 0 ; i < 9 ; i++) {
         swprintf_s(key, _countof(key), L"1p_btn%i", i + 1);
