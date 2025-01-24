@@ -15,6 +15,8 @@ static HRESULT mu3_io4_write_gpio(uint8_t* payload, size_t len);
 
 static uint16_t coins;
 
+static HWND mu3_wnd;
+
 static const struct io4_ops mu3_io4_ops = {
     .poll = mu3_io4_poll,
     .write_gpio = mu3_io4_write_gpio,
@@ -61,8 +63,22 @@ static HRESULT mu3_io4_poll(void *ctx, struct io4_state *state)
     right = 0;
     lever = 0;
 
-    mu3_dll.get_opbtns(&opbtn);
-    mu3_dll.get_gamebtns(&left, &right);
+    if(mu3_wnd == NULL) {
+        char buff[16];
+        HWND hwnd;
+
+        hwnd = GetForegroundWindow();
+        if(hwnd != NULL) {
+            GetWindowTextA(hwnd, buff, 15);
+            if(strncmp("Otoge", buff, 15) == 0) {
+                mu3_wnd = hwnd;
+            }
+        }
+    }
+    if(GetForegroundWindow() == mu3_wnd) {
+        mu3_dll.get_opbtns(&opbtn);
+        mu3_dll.get_gamebtns(&left, &right);
+    }
     mu3_dll.get_lever(&lever);
 
     if (opbtn & MU3_IO_OPBTN_TEST) {
