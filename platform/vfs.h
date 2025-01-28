@@ -12,4 +12,4 @@ struct vfs_config {
     wchar_t option[MAX_PATH];
 };
 
-HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id);
+HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id, const char* keychip_game_id, bool is_alls);

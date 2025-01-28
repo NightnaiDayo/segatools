@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "hooklib/path.h"
 #include "hooklib/reg.h"
@@ -64,6 +65,14 @@ static const size_t vfs_w10home_len = _countof(vfs_w10home) - 1;
 static const wchar_t vfs_option[] = L"C:\\Mount\\Option";
 static const size_t vfs_option_len = _countof(vfs_option) - 1;
 
+static const wchar_t vfs_amfs[] = L"D:\\amfs\\";
+static const size_t vfs_amfs_len = _countof(vfs_amfs) - 1;
+
+static wchar_t vfs_appdata[MAX_PATH];
+static size_t vfs_appdata_len;
+
+static bool use_alls_vfs;
+
 static const struct reg_hook_val vfs_reg_vals[] = {
     {
         .name   = L"AMFS",
@@ -78,7 +87,17 @@ static const struct reg_hook_val vfs_reg_vals[] = {
 
 static struct vfs_config vfs_config;
 
-HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
+static HRESULT get_appdata_hook_path() {
+    // At most cases, the hardcoded path is Y:\game_id
+    int ret = swprintf_s(vfs_appdata, MAX_PATH, L"Y:\\%ls\\", game);
+    if (ret < 0) {
+        return E_FAIL;
+    }
+    vfs_appdata_len = wcslen(vfs_appdata);
+    return S_OK;
+}
+
+HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id, const char* keychip_game_id, bool is_alls)
 {
     wchar_t temp[MAX_PATH];
     size_t nthome_len;
@@ -90,8 +109,6 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
     if (!config->enable) {
         return S_FALSE;
     }
-
-    mbstowcs(game, game_id, 4);
 
     if (config->amfs[0] == L'\0') {
         dprintf("Vfs: FATAL: AMFS path not specified in INI file\n");
@@ -121,6 +138,29 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
         dprintf("            Expanded:   \"%ls\"\n", temp);
 
         return E_FAIL;
+    }
+
+    use_alls_vfs = is_alls;
+
+    if (game_id && game_id[0] != '\0') {
+        mbstowcs(game, game_id, 4);
+    }
+
+    // Override with the manually provided game id if specified in config
+    if (keychip_game_id && keychip_game_id[0] != '\0') {
+        mbstowcs(game, keychip_game_id, 4);
+    }
+
+    if (game[0] == L'\0') {
+        dprintf("Vfs: FATAL: No game id specified\n");
+        return E_FAIL;
+    }
+
+    // Construct the appdata path from the game id and the Y: drive
+    hr = get_appdata_hook_path();
+    if (FAILED(hr)) {
+        dprintf("Vfs: FATAL: Failed to construct APPDATA path from game id\n");
+        return hr;
     }
 
     home_ok = GetEnvironmentVariableW(
@@ -323,6 +363,7 @@ static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count)
     const wchar_t *redir;
     size_t required;
     size_t redir_len;
+    size_t shift;
     size_t src_len;
 
     assert(src != NULL);
@@ -332,32 +373,63 @@ static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count)
         return S_FALSE;
     }
 
-    switch (src[0]) {
-    case L'e':
-    case L'E':
-        redir = vfs_config.amfs;
-
-        break;
-
-    case L'y':
-    case L'Y':
-        redir = vfs_config.appdata;
-
-        break;
-
-    default:
-        return S_FALSE;
+    if (use_alls_vfs)
+    {
+        if (path_compare_w(src, vfs_amfs, vfs_amfs_len) == 0) {
+            shift = path_is_separator_w(src[vfs_amfs_len]) ? 1 : 0;
+            redir = vfs_config.amfs;
+            redir_len = wcslen(redir);
+            src_len = vfs_amfs_len;
+            required = wcslen(src) - vfs_amfs_len - shift + redir_len + 1;
+        }
+        // Sometimes the game uses the appdata path provided appended with the game id, we also need to redirect that
+        else if (wcsncmp(src, vfs_appdata, vfs_appdata_len) == 0 && wcsstr(src + vfs_appdata_len, game) == src + vfs_appdata_len) {
+            shift = path_is_separator_w(src[vfs_appdata_len + wcslen(game)]) ? 1 : 0;
+            redir = vfs_config.appdata;
+            redir_len = wcslen(redir);
+            src_len = vfs_appdata_len + wcslen(game);
+            required = wcslen(src) - src_len - shift + redir_len + 1;
+        }
+        // This one is the normal appdata path returned to the game
+        else if (path_compare_w(src, vfs_appdata, vfs_appdata_len) == 0) {
+            shift = path_is_separator_w(src[vfs_appdata_len]) ? 1 : 0;
+            redir = vfs_config.appdata;
+            redir_len = wcslen(redir);
+            src_len = vfs_appdata_len;
+            required = wcslen(src) - vfs_appdata_len - shift + redir_len + 1;
+        }
+        else
+        {
+            return S_FALSE;
+        }
     }
+    else
+    {
+        switch (src[0]) {
+            case L'e':
+            case L'E':
+                redir = vfs_config.amfs;
 
-    /* GetFileAttributesW would request the src "E:", so fix the src_len in
-       in order to redirect the drive letter successfully */
+                break;
 
-    src_len = path_is_separator_w(src[2]) ? 3 : 2;
+            case L'y':
+            case L'Y':
+                redir = vfs_config.appdata;
 
-    /* Cut off <prefix>\, replace with redir path, count NUL terminator */
+                break;
 
-    redir_len = wcslen(redir);
-    required = wcslen(src) - src_len + redir_len + 1;
+            default:
+                return S_FALSE;
+        }
+
+        shift = path_is_separator_w(src[2]) ? 1 : 0;
+        src_len = 2;
+
+        /* Cut off <prefix>\, replace with redir path, count NUL terminator */
+
+        redir_len = wcslen(redir);
+        required = wcslen(src) - src_len - shift + redir_len + 1;
+    }
 
     if (dest != NULL) {
         if (required > *count) {
@@ -365,7 +437,7 @@ static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count)
         }
 
         wcscpy_s(dest, *count, redir);
-        wcscpy_s(dest + redir_len, *count - redir_len, src + src_len);
+        wcscpy_s(dest + redir_len, *count - redir_len, src + src_len + shift);
     }
 
     *count = required;
@@ -516,12 +588,12 @@ static HRESULT vfs_path_hook_option(
 
 static HRESULT vfs_reg_read_amfs(void *bytes, uint32_t *nbytes)
 {
-    return reg_hook_read_wstr(bytes, nbytes, L"E:\\");
+    return reg_hook_read_wstr(bytes, nbytes, vfs_amfs);
 }
 
 static HRESULT vfs_reg_read_appdata(void *bytes, uint32_t *nbytes)
 {
-    return reg_hook_read_wstr(bytes, nbytes, L"Y:\\");
+    return reg_hook_read_wstr(bytes, nbytes, vfs_appdata);
 }
 
 static wchar_t* hook_System_getAppRootPath()

@@ -76,7 +76,8 @@ HRESULT platform_hook_init(
         return hr;
     }
 
-    hr = vfs_hook_init(&cfg->vfs, game_id);
+    // Determine if platform_id starts with ACA
+    hr = vfs_hook_init(&cfg->vfs, game_id, cfg->nusec.game_id, strncmp(platform_id, "ACA", 3) == 0);
 
     if (FAILED(hr)) {
         return hr;
