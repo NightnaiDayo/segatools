@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shellapi.h>
 
 #include <assert.h>
 #include <stdbool.h>
@@ -135,6 +136,12 @@ static BOOL WINAPI hook_DeleteFileA(const char *lpFileName);
 
 static BOOL WINAPI hook_DeleteFileW(const wchar_t *lpFileName);
 
+static int WINAPI hook_SHCreateDirectoryExW(HWND hwnd, LPCWSTR pszPath, const SECURITY_ATTRIBUTES *psa);
+
+static int WINAPI hook_SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp);
+
+static BOOL WINAPI hook_MakeSureDirectoryPathExists(PCSTR DirPath);
+
 /* Link pointers */
 
 static BOOL (WINAPI *next_CreateDirectoryA)(
@@ -252,6 +259,12 @@ static BOOL (WINAPI *next_DeleteFileA)(const char *lpFileName);
 
 static BOOL (WINAPI *next_DeleteFileW)(const wchar_t *lpFileName);
 
+static int (WINAPI *next_SHCreateDirectoryExW)(HWND hwnd, LPCWSTR pszPath, const SECURITY_ATTRIBUTES *psa);
+
+static int (WINAPI *next_SHFileOperationW)(LPSHFILEOPSTRUCTW lpFileOp);
+
+static BOOL (WINAPI *next_MakeSureDirectoryPathExists)(PCSTR DirPath);
+
 /* Hook table */
 
 static const struct hook_symbol path_hook_syms[] = {
@@ -358,6 +371,27 @@ static const struct hook_symbol path_hook_syms[] = {
     }
 };
 
+static const struct hook_symbol path_hook_syms2[] = {
+    {
+        .name   = "SHCreateDirectoryExW",
+        .patch  = hook_SHCreateDirectoryExW,
+        .link   = (void **) &next_SHCreateDirectoryExW,
+    },
+    {
+        .name   = "SHFileOperationW",
+        .patch  = hook_SHFileOperationW,
+        .link   = (void **) &next_SHFileOperationW,
+    }
+};
+
+static const struct hook_symbol path_hook_syms3[] = {
+    {
+        .name   = "MakeSureDirectoryPathExists",
+        .patch  = hook_MakeSureDirectoryPathExists,
+        .link   = (void **) &next_MakeSureDirectoryPathExists,
+    }
+};
+
 static bool path_hook_initted;
 static CRITICAL_SECTION path_hook_lock;
 static path_hook_t *path_hook_list;
@@ -417,6 +451,18 @@ void path_hook_insert_hooks(HMODULE target)
             "kernel32.dll",
             path_hook_syms,
             _countof(path_hook_syms));
+
+    hook_table_apply(
+            target,
+            "shell32.dll",
+            path_hook_syms2,
+            _countof(path_hook_syms2));
+
+    hook_table_apply(
+            target,
+            "dbghelp.dll",
+            path_hook_syms3,
+            _countof(path_hook_syms3));
 }
 
 static BOOL path_transform_a(char **out, const char *src)
@@ -1209,5 +1255,70 @@ static BOOL WINAPI hook_DeleteFileW(const wchar_t *lpFileName)
 
     ok = next_DeleteFileW(trans ? trans: lpFileName);
 
+    return ok;
+}
+
+static int WINAPI hook_SHCreateDirectoryExW(
+        HWND hwnd,
+        LPCWSTR pszPath,
+        const SECURITY_ATTRIBUTES *psa)
+{
+    wchar_t *trans;
+    int result;
+
+    if (!path_transform_w(&trans, pszPath)) {
+        return ERROR_BAD_PATHNAME;
+    }
+
+    result = next_SHCreateDirectoryExW(
+            hwnd,
+            trans ? trans : pszPath,
+            psa);
+
+    free(trans);
+    return result;
+}
+
+static int WINAPI hook_SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
+{
+    wchar_t *transSrc;
+    wchar_t *transDst;
+    int result;
+
+    if (!path_transform_w(&transSrc, lpFileOp->pFrom)) {
+        return ERROR_BAD_PATHNAME;
+    }
+
+    if (!path_transform_w(&transDst, lpFileOp->pTo)) {
+        free(transSrc);
+        return ERROR_BAD_PATHNAME;
+    }
+
+    SHFILEOPSTRUCTW transFileOp = *lpFileOp;
+    transFileOp.pFrom = transSrc ? transSrc : lpFileOp->pFrom;
+    transFileOp.pTo = transDst ? transDst : lpFileOp->pTo;
+
+    result = next_SHFileOperationW(lpFileOp);
+
+    free(transSrc);
+    free(transDst);
+
+    return result;
+}
+
+static BOOL WINAPI hook_MakeSureDirectoryPathExists(
+        PCSTR pszDirPath)
+{
+    char *trans;
+    BOOL ok;
+
+    if (!path_transform_a(&trans, pszDirPath)) {
+        return FALSE;
+    }
+
+    ok = next_MakeSureDirectoryPathExists(
+            trans ? trans : pszDirPath);
+
+    free(trans);
     return ok;
 }
