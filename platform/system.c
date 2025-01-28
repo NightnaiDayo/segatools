@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <ntstatus.h>
 
 #include <assert.h>
 #include <stdlib.h>

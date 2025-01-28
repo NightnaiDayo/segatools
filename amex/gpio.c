@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <ntstatus.h>
 #include <winioctl.h>
 
 #include <assert.h>

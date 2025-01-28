@@ -40,6 +40,13 @@ if cc.get_id() != 'msvc'
     )
 endif
 
+if cc.get_id() == 'msvc'
+    add_project_link_arguments(
+        'ws2_32.lib',
+        language: 'c',
+    )
+endif
+
 if get_option('log_all') or get_option('log_jvs')
     add_project_arguments('-DLOG_JVS', language: 'c')
 endif

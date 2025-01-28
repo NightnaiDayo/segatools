@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 
+#include <windows.h>
 #include <pathcch.h>
 #include <psapi.h>
 
