@@ -46,6 +46,9 @@ endif
 if get_option('log_all') or get_option('log_io3')
     add_project_arguments('-DLOG_IO3', language: 'c')
 endif
+if get_option('log_all') or get_option('log_led15070')
+    add_project_arguments('-DLOG_LED15070', language: 'c')
+endif
 if get_option('log_all') or get_option('log_led15093')
     add_project_arguments('-DLOG_LED15093', language: 'c')
 endif
@@ -60,6 +63,9 @@ if get_option('log_all') or get_option('log_carol_led_bd')
 endif
 if get_option('log_all') or get_option('log_carol_touch')
     add_project_arguments('-DLOG_CAROL_TOUCH', language: 'c')
+endif
+if get_option('log_all') or get_option('log_mai2_touch')
+    add_project_arguments('-DLOG_MAI2_TOUCH', language: 'c')
 endif
 if get_option('log_all') or get_option('log_chuni_slider')
     add_project_arguments('-DLOG_CHUNI_SLIDER', language: 'c')

@@ -43,7 +43,6 @@ const char *sensor_to_str(uint8_t sensor)
 
 #define PORT_1P 3
 #define PORT_2P 4
-// #define DEBUG
 
 static CRITICAL_SECTION touch_1p_lock;
 static struct uart touch_1p_uart;
@@ -149,7 +148,7 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         return hr;
     }
 
-#ifdef DEBUG
+#if defined(LOG_MAI2_TOUCH)
     dprintf("Mai2 touch port %d WRITE:\n", uart->port_no);
     dump_iobuf(&uart->written);
 #endif
@@ -196,7 +195,7 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         break;
 
     case commandRatio:
-#ifdef DEBUG
+#if defined(LOG_MAI2_TOUCH)
         dprintf("Mai2 touch side %c: set sensor %s ratio to %d\n", src[1], sensor_to_str(src[2]), src[4]);
 #endif
         dest[0] = res_start;
@@ -210,7 +209,7 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         break;
 
     case commandSens:
-#ifdef DEBUG
+#if defined(LOG_MAI2_TOUCH)
         dprintf("Mai2 touch side %c: set sensor %s sensitivity to %d\n", src[1], sensor_to_str(src[2]), src[4]);
 #endif
         dest[0] = res_start;
@@ -227,7 +226,7 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         dprintf("Mai2 touch port %d: Unknow %02x\n", port_no, src[3]);
         break;
     }
-#ifdef DEBUG
+#if defined(LOG_MAI2_TOUCH)
     dprintf("Mai2 touch port %d READ:\n", uart->port_no);
     dump_iobuf(&uart->readable);
 #endif
