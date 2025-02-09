@@ -32,8 +32,8 @@ static const int mai2_io_2p_touch_default[] = {
 };
 
 void mai2_io_config_load(
-        struct mai2_io_config *cfg,
-        const wchar_t *filename)
+    struct mai2_io_config *cfg,
+    const wchar_t *filename)
 {
     wchar_t key[16];
     int i;
@@ -46,22 +46,21 @@ void mai2_io_config_load(
     cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", VK_F3, filename);
     cfg->vk_btn_enable = GetPrivateProfileIntW(L"button", L"enable", 1, filename);
 
-    for (i = 0 ; i < 9 ; i++) {
-        swprintf_s(key, _countof(key), L"1p_btn%i", i + 1);
+    for (i = 0; i < 9; i++)
+    {
+        swprintf_s(key, _countof(key), L"p1Btn%i", i + 1);
         cfg->vk_1p_btn[i] = GetPrivateProfileIntW(
-                L"button",
-                key,
-                mai2_io_1p_default[i],
-                filename);
-    }
+            L"button",
+            key,
+            mai2_io_1p_default[i],
+            filename);
 
-    for (i = 0 ; i < 9 ; i++) {
-        swprintf_s(key, _countof(key), L"2p_btn%i", i + 1);
+        swprintf_s(key, _countof(key), L"p2Btn%i", i + 1);
         cfg->vk_2p_btn[i] = GetPrivateProfileIntW(
-                L"button",
-                key,
-                mai2_io_2p_default[i],
-                filename);
+            L"button",
+            key,
+            mai2_io_2p_default[i],
+            filename);
     }
 
     cfg->debug_input_1p = GetPrivateProfileIntW(L"touch", L"p1DebugInput", 0, filename);
