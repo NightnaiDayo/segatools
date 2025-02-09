@@ -41,23 +41,20 @@ const char *sensor_to_str(uint8_t sensor)
     return sensor_map[sensor - 0x41];
 }
 
-#define PORT_1P 3
-#define PORT_2P 4
-
 static CRITICAL_SECTION touch_1p_lock;
 static struct uart touch_1p_uart;
 static uint8_t touch_1p_written_bytes[64];
 static uint8_t touch_1p_readable_bytes[64];
+static bool touch_1p_status = false;
 
 static CRITICAL_SECTION touch_2p_lock;
 static struct uart touch_2p_uart;
 static uint8_t touch_2p_written_bytes[64];
 static uint8_t touch_2p_readable_bytes[64];
+static bool touch_2p_status = false;
 
 HRESULT touch_hook_init(const struct touch_config *cfg)
 {
-    HRESULT hr;
-
     assert(cfg != NULL);
 
     if (!cfg->enable_1p && !cfg->enable_2p)
@@ -65,7 +62,7 @@ HRESULT touch_hook_init(const struct touch_config *cfg)
         return S_FALSE;
     }
 
-    hr = reg_hook_push_key(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", touch_reg_key, _countof(touch_reg_key));
+    HRESULT hr = reg_hook_push_key(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", touch_reg_key, _countof(touch_reg_key));
 
     if (FAILED(hr))
     {
@@ -74,10 +71,10 @@ HRESULT touch_hook_init(const struct touch_config *cfg)
 
     if (cfg->enable_1p)
     {
-        dprintf("Mai2 touch port %d: Init.\n", PORT_1P);
+        dprintf("Mai2 touch 1P: Init.\n");
 
         InitializeCriticalSection(&touch_1p_lock);
-        uart_init(&touch_1p_uart, PORT_1P);
+        uart_init(&touch_1p_uart, 3);
         touch_1p_uart.written.bytes = touch_1p_written_bytes;
         touch_1p_uart.written.nbytes = sizeof(touch_1p_written_bytes);
         touch_1p_uart.readable.bytes = touch_1p_readable_bytes;
@@ -86,10 +83,10 @@ HRESULT touch_hook_init(const struct touch_config *cfg)
 
     if (cfg->enable_2p)
     {
-        dprintf("Mai2 touch port %d: Init.\n", PORT_2P);
+        dprintf("Mai2 touch port 2P: Init.\n");
 
         InitializeCriticalSection(&touch_2p_lock);
-        uart_init(&touch_2p_uart, PORT_2P);
+        uart_init(&touch_2p_uart, 4);
         touch_2p_uart.written.bytes = touch_2p_written_bytes;
         touch_2p_uart.written.nbytes = sizeof(touch_2p_written_bytes);
         touch_2p_uart.readable.bytes = touch_2p_readable_bytes;
@@ -132,7 +129,7 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
     if (irp->op == IRP_OP_OPEN)
     {
         dprintf("Mai2 touch port %d: Starting backend\n", uart->port_no);
-        hr = mai2_dll.touch_init();
+        hr = mai2_dll.touch_init(touch_auto_scan);
 
         if (FAILED(hr))
         {
@@ -164,33 +161,39 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
 
     case commandHALT: // Enter Conditioning mode and stop sending touch data.
         dprintf("Mai2 touch port %d: Halt\n", port_no);
-        if (port_no == PORT_1P)
+        assert(mai2_dll.touch_update != NULL);
+        if (port_no == 3)
         {
-            assert(mai2_dll.touch_1p_stop != NULL);
-            LeaveCriticalSection(&touch_1p_lock);
-            mai2_dll.touch_1p_stop();
             EnterCriticalSection(&touch_1p_lock);
+            touch_1p_status = false;
+            mai2_dll.touch_update(touch_1p_status, touch_2p_status);
+            LeaveCriticalSection(&touch_1p_lock);
         }
-        else if (port_no == PORT_2P)
+        else
         {
-            assert(mai2_dll.touch_2p_stop != NULL);
-            LeaveCriticalSection(&touch_2p_lock);
-            mai2_dll.touch_2p_stop();
             EnterCriticalSection(&touch_2p_lock);
+            touch_2p_status = false;
+            mai2_dll.touch_update(touch_1p_status, touch_2p_status);
+            LeaveCriticalSection(&touch_2p_lock);
         }
         break;
 
     case commandSTAT: // Exit Conditioning mode and resume sending touch data.
         dprintf("Mai2 touch port %d: Stat\n", port_no);
-        if (port_no == PORT_1P)
+        assert(mai2_dll.touch_update != NULL);
+        if (port_no == 3)
         {
-            assert(mai2_dll.touch_1p_start != NULL);
-            mai2_dll.touch_1p_start(touch_1p_auto_scan);
+            EnterCriticalSection(&touch_1p_lock);
+            touch_1p_status = true;
+            mai2_dll.touch_update(touch_1p_status, touch_2p_status);
+            LeaveCriticalSection(&touch_1p_lock);
         }
-        else if (port_no == PORT_2P)
+        else
         {
-            assert(mai2_dll.touch_2p_start != NULL);
-            mai2_dll.touch_2p_start(touch_2p_auto_scan);
+            EnterCriticalSection(&touch_2p_lock);
+            touch_2p_status = true;
+            mai2_dll.touch_update(touch_1p_status, touch_2p_status);
+            LeaveCriticalSection(&touch_2p_lock);
         }
         break;
 
@@ -235,14 +238,11 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
     return hr;
 }
 
-static void touch_1p_auto_scan(const uint8_t *state)
+static void touch_auto_scan(const uint8_t player, const uint8_t state[7])
 {
-    memcpy(touch_1p_uart.readable.bytes, state, 9);
-    touch_1p_uart.readable.pos = 9;
-}
-
-static void touch_2p_auto_scan(const uint8_t *state)
-{
-    memcpy(touch_2p_uart.readable.bytes, state, 9);
-    touch_2p_uart.readable.pos = 9;
+    struct uart *touch_uart = player == 1 ? &touch_1p_uart : &touch_2p_uart;
+    touch_uart->readable.bytes[0] = res_start;
+    memcpy(&touch_uart->readable.bytes[1], state, 7);
+    touch_uart->readable.bytes[8] = res_end;
+    touch_uart->readable.pos = 9;
 }

@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 
 enum {
     MAI2_IO_OPBTN_TEST = 0x01,
@@ -67,10 +68,38 @@ void mai2_io_get_opbtns(uint8_t *opbtn);
 
 void mai2_io_get_gamebtns(uint16_t *player1, uint16_t *player2);
 
-/* Initialize touch emulation. This function will be called before any
-   other mai2_io_touch_*() function calls. */
+/* Callback function used by mai2_io_touch_1p/2p_thread_proc. 
 
-HRESULT mai2_io_touch_init();
+   The 'player'(1 or 2) parameter indicates which player the touch data is for.
+
+   The 'state' represents a complete response packet.
+   The format of the state array is as follows:
+   uint8_t state[7] = {
+      bytes[0] - bit(0 , 0 , 0 , A5, A4, A3, A2, A1)
+      bytes[1] - bit(0 , 0 , 0 , B2, B1, A8, A7, A6)
+      bytes[2] - bit(0 , 0 , 0 , B7, B6, B5, B4, B3)
+      bytes[3] - bit(0 , 0 , 0 , D2, D1, C2, C1, B8)
+      bytes[4] - bit(0 , 0 , 0 , D7, D6, D5, D4, D3)
+      bytes[5] - bit(0 , 0 , 0 , E4, E3, E2, E1, D8)
+      bytes[6] - bit(0 , 0 , 0 , 0 , E8, E7, E6, E5)
+   }
+   The 7 bytes are the touch data, with each byte storing the touch state in the lower 5 bits.
+   A value of 1 indicates that the corresponding touch area is pressed.
+   The touch areas are ordered from A1 to E8, and the binary values are stored from low to high. */
+
+typedef void (*mai2_io_touch_callback_t)(const uint8_t player, const uint8_t state[7]);
+
+/**
+ * @brief Initializes the touch input callback function
+ *
+ * This function accepts a callback function as a parameter and stores it in the global variable `_callback`
+ * for later handling of touch input events.
+ *
+ * @param callback The touch input callback function that takes two parameters: player number and the touch state array.
+ * @return HRESULT Returns the result of the operation, S_OK on success.
+ */
+
+HRESULT mai2_io_touch_init(mai2_io_touch_callback_t callback);
 
 /* Send sensitivity setting data to the touch device.
    Format:
@@ -86,29 +115,31 @@ HRESULT mai2_io_touch_init();
 
 void mai2_io_touch_set_sens(uint8_t *bytes);
 
-/* Callback function used by mai2_io_touch_1p/2p_start. 
-   The 'state' represents a complete response packet.
-   The format of the state array is as follows:
-   uint8_t state[9] = {
-      Header,
-      Touch data,
-      Footer
-   }
-   The middle 7 bytes are the touch data, with each byte storing the touch state in the lower 5 bits.
-   A value of 1 indicates that the corresponding touch area is pressed.
-   The touch areas are ordered from A1 to E8, and the binary values are stored from low to high. */
+/**
+ * @brief Updates the touch input acceptance state
+ *
+ * This function determines whether the game is ready to accept touch input based on the states of player 1 and player 2.
+ * If the game is ready, it creates or stops the corresponding threads to handle touch data for each player.
+ * Whether or not threads are created for each player is controlled by `mai2_io_cfg.debug_input_1p` and `mai2_io_cfg.debug_input_2p` configuration.
+ *
+ * @param player1 If `true`, indicates the game is ready to accept touch data from player 1, `false` means the game is not ready.
+ * @param player2 If `true`, indicates the game is ready to accept touch data from player 2, `false` means the game is not ready.
+ */
 
-typedef void (*mai2_io_touch_callback_t)(const uint8_t *state);
+void mai2_io_touch_update(bool player1, bool player2);
 
-void mai2_io_touch_1p_start(mai2_io_touch_callback_t callback);
-
-void mai2_io_touch_1p_stop(void);
+/**
+ * @brief Player touch input handling thread
+ *
+ * This function runs in a separate thread, continuously monitoring player touch status and passing the state data
+ * to the main thread via a callback function. Each time a touch input is detected, it updates the `state` array and calls the callback.
+ * The thread stops when `mai2_io_touch_1p/2p_stop_flag` is `true`.
+ *
+ * @param ctx The callback function context, of type `mai2_io_touch_callback_t`, used to handle the touch input events.
+ * @return The thread's return value, typically `0`.
+ */
 
 static unsigned int __stdcall mai2_io_touch_1p_thread_proc(void *ctx);
-
-void mai2_io_touch_2p_start(mai2_io_touch_callback_t callback);
-
-void mai2_io_touch_2p_stop(void);
 
 static unsigned int __stdcall mai2_io_touch_2p_thread_proc(void *ctx);
 

@@ -40,5 +40,4 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart);
 /* Called in mai2io to send touch data.
    Similar to chuni slider_res_auto_scan, but the host does not require periodic updates.
    Touch data is sent only when there is a change. */
-static void touch_1p_auto_scan(const uint8_t *state);
-static void touch_2p_auto_scan(const uint8_t *state);
+static void touch_auto_scan(const uint8_t player, const uint8_t state[7]);

@@ -34,8 +34,8 @@ void touch_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    cfg->enable_1p = GetPrivateProfileIntW(L"touch", L"enable_1p", 1, filename);
-    cfg->enable_2p = GetPrivateProfileIntW(L"touch", L"enable_2p", 1, filename);
+    cfg->enable_1p = GetPrivateProfileIntW(L"touch", L"p1Enable", 1, filename);
+    cfg->enable_2p = GetPrivateProfileIntW(L"touch", L"p2Enable", 1, filename);
 }
 
 void led15070_config_load(struct led15070_config *cfg, const wchar_t *filename)

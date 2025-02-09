@@ -28,17 +28,8 @@ const struct dll_bind_sym mai2_dll_syms[] = {
         .sym = "mai2_io_touch_set_sens",
         .off = offsetof(struct mai2_dll, touch_set_sens),
     }, {
-        .sym = "mai2_io_touch_1p_start",
-        .off = offsetof(struct mai2_dll, touch_1p_start),
-    }, {
-        .sym = "mai2_io_touch_1p_stop",
-        .off = offsetof(struct mai2_dll, touch_1p_stop),
-    }, {
-        .sym = "mai2_io_touch_2p_start",
-        .off = offsetof(struct mai2_dll, touch_2p_start),
-    }, {
-        .sym = "mai2_io_touch_2p_stop",
-        .off = offsetof(struct mai2_dll, touch_2p_stop),
+        .sym = "mai2_io_touch_update",
+        .off = offsetof(struct mai2_dll, touch_update),
     }, {
         .sym = "mai2_io_led_init",
         .off = offsetof(struct mai2_dll, led_init),
@@ -97,7 +88,7 @@ HRESULT mai2_dll_init(const struct mai2_dll_config *cfg, HINSTANCE self)
     if (get_api_version != NULL) {
         mai2_dll.api_version = get_api_version();
     } else {
-        mai2_dll.api_version = 0x0100;
+        mai2_dll.api_version = 0x0101;
         dprintf("Custom IO DLL does not expose mai2_io_get_api_version, "
                 "assuming API version 1.0.\n"
                 "Please ask the developer to update their DLL.\n");

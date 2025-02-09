@@ -1,8 +1,5 @@
-#include <windows.h>
-
 #include <process.h>
 #include <limits.h>
-#include <stdint.h>
 
 #include "mai2io/mai2io.h"
 #include "mai2io/config.h"
@@ -14,6 +11,7 @@ static uint16_t mai2_player1_btn;
 static uint16_t mai2_player2_btn;
 static struct mai2_io_config mai2_io_cfg;
 static bool mai2_io_coin;
+mai2_io_touch_callback_t _callback;
 static HANDLE mai2_io_touch_1p_thread;
 static bool mai2_io_touch_1p_stop_flag;
 static HANDLE mai2_io_touch_2p_thread;
@@ -21,7 +19,7 @@ static bool mai2_io_touch_2p_stop_flag;
 
 uint16_t mai2_io_get_api_version(void)
 {
-    return 0x0100;
+    return 0x0101;
 }
 
 HRESULT mai2_io_init(void)
@@ -153,8 +151,9 @@ void mai2_io_get_gamebtns(uint16_t *player1, uint16_t *player2)
     }
 }
 
-HRESULT mai2_io_touch_init()
+HRESULT mai2_io_touch_init(mai2_io_touch_callback_t callback)
 {
+    _callback = callback;
     return S_OK;
 }
 
@@ -166,36 +165,54 @@ void mai2_io_touch_set_sens(uint8_t *bytes)
     return;
 }
 
-void mai2_io_touch_1p_start(mai2_io_touch_callback_t callback)
+void mai2_io_touch_update(bool player1, bool player2)
 {
-    if (mai2_io_touch_1p_thread != NULL)
+    if (mai2_io_cfg.debug_input_1p)
     {
-        return;
+        if (player1 && mai2_io_touch_1p_thread == NULL)
+        {
+            mai2_io_touch_1p_thread = (HANDLE)_beginthreadex(
+                NULL,
+                0,
+                mai2_io_touch_1p_thread_proc,
+                _callback,
+                0,
+                NULL);
+        }
+        else if (!player1 && mai2_io_touch_1p_thread != NULL)
+        {
+            mai2_io_touch_1p_stop_flag = true;
+
+            WaitForSingleObject(mai2_io_touch_1p_thread, INFINITE);
+            CloseHandle(mai2_io_touch_1p_thread);
+            mai2_io_touch_1p_thread = NULL;
+
+            mai2_io_touch_1p_stop_flag = false;
+        }
     }
-
-    mai2_io_touch_1p_thread = (HANDLE)_beginthreadex(
-        NULL,
-        0,
-        mai2_io_touch_1p_thread_proc,
-        callback,
-        0,
-        NULL);
-}
-
-void mai2_io_touch_1p_stop()
-{
-    if (mai2_io_touch_1p_thread == NULL)
+    if (mai2_io_cfg.debug_input_2p)
     {
-        return;
+        if (player2 && mai2_io_touch_2p_thread == NULL)
+        {
+            mai2_io_touch_2p_thread = (HANDLE)_beginthreadex(
+                NULL,
+                0,
+                mai2_io_touch_2p_thread_proc,
+                _callback,
+                0,
+                NULL);
+        }
+        else if (!player2 && mai2_io_touch_2p_thread != NULL)
+        {
+            mai2_io_touch_2p_stop_flag = true;
+
+            WaitForSingleObject(mai2_io_touch_2p_thread, INFINITE);
+            CloseHandle(mai2_io_touch_2p_thread);
+            mai2_io_touch_2p_thread = NULL;
+
+            mai2_io_touch_2p_stop_flag = false;
+        }
     }
-
-    mai2_io_touch_1p_stop_flag = true;
-
-    WaitForSingleObject(mai2_io_touch_1p_thread, INFINITE);
-    CloseHandle(mai2_io_touch_1p_thread);
-    mai2_io_touch_1p_thread = NULL;
-
-    mai2_io_touch_1p_stop_flag = false;
 }
 
 static unsigned int __stdcall mai2_io_touch_1p_thread_proc(void *ctx)
@@ -204,97 +221,41 @@ static unsigned int __stdcall mai2_io_touch_1p_thread_proc(void *ctx)
 
     while (!mai2_io_touch_1p_stop_flag)
     {
-        uint8_t state[9] = {res_start, 0, 0, 0, 0, 0, 0, 0, res_end};
+        uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
-        if (mai2_io_cfg.debug_input_1p && GetKeyState(VK_CAPITAL) ^ 0x0001) // Caps Lock is off
+        for (int i = 0; i < 34; i++)
         {
-            for (int i = 0; i < 34; ++i)
+            if (GetAsyncKeyState(mai2_io_cfg.vk_1p_touch[i]))
             {
-                char row = sensor_map[i][0];
-                char col = sensor_map[i][1];
-
-                // virtual-key-codes
-                int rowKey = row - 'A' + 0x41; // A->0x41, B->0x42, etc.
-                int colKey = col - '1' + 0x31; // 1->0x31, 2->0x32, etc.
-
-                // To trigger the A1 touch point, press the letter 'A' and the number '1' on the keyboard.
-                // For B2, press the letter 'B' and the number '2', and so on.
-                if (GetAsyncKeyState(rowKey) & 0x8000 && GetAsyncKeyState(colKey) & 0x8000)
-                {
-                    int byteIndex = 1 + (i / 5);
-                    int bitIndex = i % 5;
-                    state[byteIndex] |= (1 << bitIndex);
-                }
+                int byteIndex = i / 5;
+                int bitIndex = i % 5;
+                state[byteIndex] |= (1 << bitIndex);
             }
         }
-        callback(state);
+        callback(1, state);
         Sleep(1);
     }
     return 0;
-}
-
-void mai2_io_touch_2p_start(mai2_io_touch_callback_t callback)
-{
-    if (mai2_io_touch_2p_thread != NULL)
-    {
-        return;
-    }
-
-    mai2_io_touch_2p_thread = (HANDLE)_beginthreadex(
-        NULL,
-        0,
-        mai2_io_touch_2p_thread_proc,
-        callback,
-        0,
-        NULL);
-}
-
-void mai2_io_touch_2p_stop()
-{
-    if (mai2_io_touch_2p_thread == NULL)
-    {
-        return;
-    }
-
-    mai2_io_touch_2p_stop_flag = true;
-
-    WaitForSingleObject(mai2_io_touch_2p_thread, INFINITE);
-    CloseHandle(mai2_io_touch_2p_thread);
-    mai2_io_touch_2p_thread = NULL;
-    
-    mai2_io_touch_2p_stop_flag = false;
 }
 
 static unsigned int __stdcall mai2_io_touch_2p_thread_proc(void *ctx)
 {
     mai2_io_touch_callback_t callback = ctx;
 
-    while (!mai2_io_touch_2p_stop_flag)
+    while (!mai2_io_touch_1p_stop_flag)
     {
-        uint8_t state[9] = {res_start, 0, 0, 0, 0, 0, 0, 0, res_end};
+        uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
-        if (mai2_io_cfg.debug_input_2p && GetKeyState(VK_CAPITAL) & 0x0001) // Caps Lock is on
+        for (int i = 0; i < 34; i++)
         {
-            for (int i = 0; i < 34; ++i)
+            if (GetAsyncKeyState(mai2_io_cfg.vk_2p_touch[i]))
             {
-                char row = sensor_map[i][0];
-                char col = sensor_map[i][1];
-
-                // virtual-key-codes
-                int rowKey = row - 'A' + 0x41; // A->0x41, B->0x42, etc.
-                int colKey = col - '1' + 0x31; // 1->0x31, 2->0x32, etc.
-
-                // To trigger the A1 touch point, press the letter 'A' and the number '1' on the keyboard.
-                // For B2, press the letter 'B' and the number '2', and so on.
-                if (GetAsyncKeyState(rowKey) & 0x8000 && GetAsyncKeyState(colKey) & 0x8000)
-                {
-                    int byteIndex = 1 + (i / 5);
-                    int bitIndex = i % 5;
-                    state[byteIndex] |= (1 << bitIndex);
-                }
+                int byteIndex = i / 5;
+                int bitIndex = i % 5;
+                state[byteIndex] |= (1 << bitIndex);
             }
         }
-        callback(state);
+        callback(2, state);
         Sleep(1);
     }
     return 0;
