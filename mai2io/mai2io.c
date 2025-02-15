@@ -242,7 +242,7 @@ static unsigned int __stdcall mai2_io_touch_2p_thread_proc(void *ctx)
 {
     mai2_io_touch_callback_t callback = ctx;
 
-    while (!mai2_io_touch_1p_stop_flag)
+    while (!mai2_io_touch_2p_stop_flag)
     {
         uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
