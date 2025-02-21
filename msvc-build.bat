@@ -52,17 +52,16 @@ exit /b
 
 rem This should works for Visual Studio 2017+
 :detect-visual-studio (
-    rem Who the hell on earth is still using a 32bit Windows in 2024
-    if "%ProgramFiles(x86)%"=="" (
-        set VSWHERE="%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe"
-    ) else (
+    rem Fall back to x86 program directory for MSVC standalone if it can't be found in x64, because even though it's x64 compilers, they install in x86 program files for whatever dumb reason
+    set VSWHERE="%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe"
+    if not exist %VSWHERE% (
         set VSWHERE="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
     )
 
     if exist %VSWHERE% (
         REM get vcvarsall by using vswhere
         set VSVARSALL=""
-        for /f "tokens=* usebackq" %%i in (`%VSWHERE% -find VC\Auxiliary\Build\vcvarsall.bat`) do set VSVARSALL="%%i"
+        for /f "tokens=* usebackq" %%i in (`%VSWHERE% -products * -find VC\Auxiliary\Build\vcvarsall.bat`) do set VSVARSALL="%%i"
     ) else (
         REM fallback to old method
         set VSVARSALL="%VS_INSTALLATION%\VC\Auxiliary\Build\vcvarsall.bat"
