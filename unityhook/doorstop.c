@@ -5,6 +5,7 @@
 // https://github.com/NeighTools/UnityDoorstop
 #include <stdbool.h>
 #include <stdlib.h>
+#include <windows.h>
 #include <wchar.h>
 
 #include <pathcch.h>

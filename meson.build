@@ -83,6 +83,7 @@ dxguid_lib = cc.find_library('dxguid')
 xinput_lib = cc.find_library('xinput')
 pathcch_lib = cc.find_library('pathcch')
 imagehlp_lib = cc.find_library('imagehlp')
+Ws2_32_lib = cc.find_library('Ws2_32')
 
 inc = include_directories('.')
 capnhook = subproject('capnhook')
