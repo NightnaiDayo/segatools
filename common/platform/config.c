@@ -337,6 +337,26 @@ void vfs_config_load(struct vfs_config *cfg, const wchar_t *filename)
             cfg->option,
             _countof(cfg->option),
             filename);
+
+    for (int i = 0; i < MAX_REDIRECTIONS; i++){
+        wchar_t key[32];
+        wsprintfW(key, L"redirection%dfrom", i);
+        GetPrivateProfileStringW(
+                    L"vfs",
+                    key,
+                    L"",
+                    cfg->redirections_from[i],
+                    _countof(cfg->redirections_from[i]),
+                    filename);
+        wsprintfW(key, L"redirection%dto", i);
+        GetPrivateProfileStringW(
+                    L"vfs",
+                    key,
+                    L"",
+                    cfg->redirections_to[i],
+                    _countof(cfg->redirections_to[i]),
+                    filename);
+    }
 }
 
 void system_config_load(struct system_config *cfg, const wchar_t *filename)

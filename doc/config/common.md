@@ -722,3 +722,16 @@ Enabling full virtualization will virtualize ALL writes to the C:\ drive. Using 
 unless you know what you're doing!
 
 The Windows directory is always excluded from virtualization.
+
+### `redirection#from`, `redirection#to`
+
+Default: Empty string
+
+Advanced feature intended for owners of real hardware. This allows arbitrary file reads to be redirected to other paths. Since serial ports are also "file" reads, this can be used to redirect hardcoded COM ports to other ports. Up to 64 redirections can be used by incrementing the number in the key: `redirection1from`, `redirection2from`, ...
+
+Example for redirecting COM 5 to COM 10:
+
+```
+redirection0from=\\.\COM5
+redirection0to=\\.\COM10
+```

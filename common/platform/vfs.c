@@ -36,6 +36,10 @@ static HRESULT vfs_path_hook_apm(
         const wchar_t *src,
         wchar_t *dest,
         size_t *count);
+static HRESULT vfs_custom_path_hook(
+        const wchar_t *src,
+        wchar_t *dest,
+        size_t *count);
 static HRESULT vfs_reg_read_amfs(void *bytes, uint32_t *nbytes);
 static HRESULT vfs_reg_read_appdata(void *bytes, uint32_t *nbytes);
 
@@ -215,6 +219,12 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
         if (FAILED(hr)) {
             return hr;
         }
+    }
+
+    hr = path_hook_push(vfs_custom_path_hook);
+
+    if (FAILED(hr)) {
+        return hr;
     }
 
     hr = reg_hook_push_key(
@@ -600,4 +610,46 @@ static wchar_t* hook_AppImage_getOptionMountRootPath()
     wcscpy_s(path, MAX_PATH, vfs_config.option);
 
     return path;
+}
+
+static HRESULT vfs_custom_path_hook(
+        const wchar_t *src,
+        wchar_t *dest,
+        size_t *count){
+
+    assert(src != NULL);
+    assert(count != NULL);
+
+    /* Case-insensitive check to see if src starts with vfs_option */
+
+    for (int i = 0; i < MAX_REDIRECTIONS; i++){
+
+        wchar_t* from = vfs_config.redirections_from[i];
+        wchar_t* to = vfs_config.redirections_to[i];
+
+        if (from[0] == '\0' || to[0] == '\0'){
+            return S_FALSE;
+        }
+
+        if (path_compare_w(src, from, wcslen(from)) != 0) {
+            continue;
+        }
+
+        size_t required = wcslen(to);
+        if (required > *count) {
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        }
+
+#if defined(LOG_CUSTOM_VFS)
+        dprintf("Vfs: Redirection matched: %S -> %S\n", from, to);
+#endif
+
+        if (dest != NULL) {
+            wcscpy_s(dest, *count, to);
+        }
+
+        break;
+    }
+
+    return S_OK;
 }

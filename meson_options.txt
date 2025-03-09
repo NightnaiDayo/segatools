@@ -83,3 +83,8 @@ option('log_ewf',
        value : false,
        description : 'Enable debug logging for file system virtualization'
 )
+option('log_custom_vfs',
+       type : 'boolean',
+       value : false,
+       description : 'Enable debug logging for custom path redirections'
+)
