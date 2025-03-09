@@ -133,8 +133,9 @@ static DWORD CALLBACK fgo_pre_startup(void)
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {17, 0};
     hr = led15093_hook_init(&fgo_hook_cfg.led15093, 
-        fgo_dll.led_init, fgo_dll.led_set_leds, 17, 1, 1, 2);
+        fgo_dll.led_init, fgo_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;

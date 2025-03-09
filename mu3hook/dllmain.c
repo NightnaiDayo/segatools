@@ -65,6 +65,14 @@ static DWORD CALLBACK mu3_pre_startup(void)
 
     /* Initialize emulation hooks */
 
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Server", L"Client"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(mu3_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
+
     hr = platform_hook_init(
             &mu3_hook_cfg.platform,
             "SDDT",
@@ -81,8 +89,9 @@ static DWORD CALLBACK mu3_pre_startup(void)
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {3, 0};
     hr = led15093_hook_init(&mu3_hook_cfg.led15093, 
-        mu3_dll.led_init, mu3_dll.led_set_leds, 3, 1, 1, 2);
+        mu3_dll.led_init, mu3_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         return hr;

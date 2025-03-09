@@ -50,6 +50,16 @@ static DWORD CALLBACK tokyo_pre_startup(void)
 
     /* Initialize emulation hooks */
 
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Server", L"Client"},
+        {L"Cabinet ID Setting", L"ON", L"OFF"},
+        {L"Cabinet ID Setting", L"ON", L"OFF"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(tokyo_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
+
     hr = platform_hook_init(
             &tokyo_hook_cfg.platform,
             "SDFV",
@@ -60,14 +70,35 @@ static DWORD CALLBACK tokyo_pre_startup(void)
         goto fail;
     }
 
+    bool *dipsw = &tokyo_hook_cfg.platform.system.dipsw[0];
+    unsigned int cabinet_id = 0;
+
+    if (dipsw[0] == 1 && dipsw[1] == 0 && dipsw[2] == 0) {
+        cabinet_id = 1; // Server 1
+    } else if (dipsw[0] == 0 && dipsw[1] == 1 && dipsw[2] == 0) {
+        cabinet_id = 2; // Client 2
+    } else if (dipsw[0] == 0 && dipsw[1] == 0 && dipsw[2] == 1) {
+        cabinet_id = 3; // Client 3
+    } else if (dipsw[0] == 0 && dipsw[1] == 1 && dipsw[2] == 1) {
+        cabinet_id = 4; // Client 4
+    } else {
+        dprintf("Error: Invalid dip switch configuration!\n");
+    }
+
+    // Print the correct Cabinet ID if valid
+    if (cabinet_id > 0) {
+        dprintf("System: Cabinet ID %d\n", cabinet_id);
+    }
+
     hr = tokyo_dll_init(&tokyo_hook_cfg.dll, tokyo_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {1, 0};
     hr = led15093_hook_init(&tokyo_hook_cfg.led15093, 
-        tokyo_dll.led_init, tokyo_dll.led_set_leds, 1, 1, 1, 2);
+        tokyo_dll.led_init, tokyo_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         return hr;

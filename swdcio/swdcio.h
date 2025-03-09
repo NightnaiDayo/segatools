@@ -123,7 +123,7 @@ HRESULT swdc_io_led_init(void);
 
    Minimum API version: 0x0101 */
 
-void swdc_io_led_set_fet_output(const uint8_t *rgb);
+void swdc_io_led_set_fet_output(uint8_t board, const uint8_t *rgb);
 
 /* Update the RGB LEDs. rgb is a pointer to an array up to 32 * 4 = 128 bytes. 
 
@@ -140,7 +140,7 @@ void swdc_io_led_set_fet_output(const uint8_t *rgb);
 
    Minimum API version: 0x0101 */
 
-void swdc_io_led_gs_update(const uint8_t *rgb);
+void swdc_io_led_gs_update(uint8_t board, const uint8_t *rgb);
 
 /* Update the cabinet button LEDs. rgb is a pointer to an array up to 6 bytes.
 
@@ -156,7 +156,7 @@ void swdc_io_led_gs_update(const uint8_t *rgb);
 
    Minimum API version: 0x0101 */
 
-void swdc_io_led_set_leds(const uint8_t *rgb);
+void swdc_io_led_set_leds(uint8_t board, const uint8_t *rgb);
 
 /* Initialize FFB emulation. This function will be called before any
    other swdc_io_ffb_*() function calls.

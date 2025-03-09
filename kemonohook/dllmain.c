@@ -1,28 +1,21 @@
-#include <windows.h>
-
 #include <stdlib.h>
+#include <windows.h>
 
 #include "board/io4.h"
 #include "board/sg-reader.h"
 #include "board/vfd.h"
-
+#include "hook/iohook.h"
 #include "hook/process.h"
 #include "hook/table.h"
-#include "hook/iohook.h"
-
 #include "hooklib/printer.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
-
 #include "kemonohook/config.h"
 #include "kemonohook/hooks.h"
 #include "kemonohook/jvs.h"
 #include "kemonohook/kemono-dll.h"
-
 #include "platform/platform.h"
-
 #include "unityhook/hook.h"
-
 #include "util/dprintf.h"
 #include "util/env.h"
 
@@ -47,29 +40,38 @@ static DWORD CALLBACK kemono_pre_startup(void) {
 
     // 2.02 does not call printer update functions
     uint16_t ret;
-    fwdlusb_updateFirmware_main(1, "UnityApp\\Parade_Data\\StreamingAssets\\Printer\\E0223100-014E-C300-MAINAPP.BIN", &ret);
-    if (ret != 0){
+    fwdlusb_updateFirmware_main(
+        1,
+        "UnityApp\\Parade_Data\\StreamingAssets\\Printer\\E0223100-014E-C300-"
+        "MAINAPP.BIN",
+        &ret);
+    if (ret != 0) {
         goto fail;
     }
-    fwdlusb_updateFirmware_dsp(2, "UnityApp\\Parade_Data\\StreamingAssets\\Printer\\E0223200-0101-C300-DSPAPP.BIN", &ret);
-    if (ret != 0){
+    fwdlusb_updateFirmware_dsp(
+        2,
+        "UnityApp\\Parade_Data\\StreamingAssets\\Printer\\E0223200-0101-C300-"
+        "DSPAPP.BIN",
+        &ret);
+    if (ret != 0) {
         goto fail;
     }
-    fwdlusb_updateFirmware_param(3, "UnityApp\\Parade_Data\\StreamingAssets\\Printer\\D0460700-0101-C300-PARAM.BIN", &ret);
-    if (ret != 0){
+    fwdlusb_updateFirmware_param(
+        3,
+        "UnityApp\\Parade_Data\\StreamingAssets\\Printer\\D0460700-0101-C300-"
+        "PARAM.BIN",
+        &ret);
+    if (ret != 0) {
         goto fail;
     }
 
     printer_hook_init(&kemono_hook_cfg.printer, 0, kemono_hook_mod);
-    printer_set_dimensions(720, 1028); // printer doesn't call setimageformat
+    printer_set_dimensions(720, 1028);  // printer doesn't call setimageformat
 
     /* Initialize emulation hooks */
 
-    hr = platform_hook_init(
-            &kemono_hook_cfg.platform,
-            "SDFL",
-            "AAW1",
-            kemono_hook_mod);
+    hr = platform_hook_init(&kemono_hook_cfg.platform, "SDFL", "AAW1",
+                            kemono_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
@@ -93,7 +95,9 @@ static DWORD CALLBACK kemono_pre_startup(void) {
         goto fail;
     }
 
-    hr = led15093_hook_init(&kemono_hook_cfg.led15093, kemono_dll.led_init, kemono_dll.led_set_leds, 10, 1, 1, 2);
+    unsigned int led_port_no[2] = {10, 0};
+    hr = led15093_hook_init(&kemono_hook_cfg.led15093, kemono_dll.led_init,
+                            kemono_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;
@@ -106,7 +110,8 @@ static DWORD CALLBACK kemono_pre_startup(void) {
        There seems to be an issue with other DLL hooks if `LoadLibraryW` is
        hooked earlier in the `kemonohook` initialization. */
 
-    unity_hook_init(&kemono_hook_cfg.unity, kemono_hook_mod, kemono_extra_hooks_load);
+    unity_hook_init(&kemono_hook_cfg.unity, kemono_hook_mod,
+                    kemono_extra_hooks_load);
 
     /* Initialize debug helpers */
 
@@ -118,7 +123,7 @@ static DWORD CALLBACK kemono_pre_startup(void) {
 
     return kemono_startup();
 
-    fail:
+fail:
     ExitProcess(EXIT_FAILURE);
 }
 
@@ -134,7 +139,7 @@ BOOL WINAPI DllMain(HMODULE mod, DWORD cause, void *ctx) {
     hr = process_hijack_startup(kemono_pre_startup, &kemono_startup);
 
     if (!SUCCEEDED(hr)) {
-        dprintf("Failed to hijack process startup: %x\n", (int) hr);
+        dprintf("Failed to hijack process startup: %x\n", (int)hr);
     }
 
     return SUCCEEDED(hr);

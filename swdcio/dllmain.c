@@ -119,7 +119,7 @@ HRESULT swdc_io_led_init(void)
     return S_OK;
 }
 
-void swdc_io_led_set_fet_output(const uint8_t *rgb)
+void swdc_io_led_set_fet_output(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("SWDC LED: LEFT SEAT LED: %02X\n", rgb[0]);
@@ -129,7 +129,7 @@ void swdc_io_led_set_fet_output(const uint8_t *rgb)
     return;
 }
 
-void swdc_io_led_gs_update(const uint8_t *rgb)
+void swdc_io_led_gs_update(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     for (int i = 0; i < 9; i++) {
@@ -141,7 +141,7 @@ void swdc_io_led_gs_update(const uint8_t *rgb)
     return;
 }
 
-void swdc_io_led_set_leds(const uint8_t *rgb)
+void swdc_io_led_set_leds(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("SWDC LED: START: %02X\n", rgb[0]);

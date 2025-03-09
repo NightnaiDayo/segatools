@@ -60,6 +60,18 @@ static DWORD CALLBACK idac_pre_startup(void)
 
     /* Initialize emulation hooks */
 
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Server", L"Client"},
+        {L"Cabinet Type", L"SWDC CVT", L"DZero CVT"},
+        {L"Single Seat", L"ON", L"OFF"},
+        {L"Seat Setting 1", L"ON", L"OFF"},
+        {L"Seat Setting 2", L"ON", L"OFF"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(idac_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
+
     hr = platform_hook_init(
             &idac_hook_cfg.platform,
             "SDGT",
@@ -70,13 +82,21 @@ static DWORD CALLBACK idac_pre_startup(void)
         goto fail;
     }
 
+    bool *dipsw = &idac_hook_cfg.platform.system.dipsw[0];
+    bool is_swdc_cvt = dipsw[1];
+
+    if (!dipsw[2]) {
+        // the next two bit are the seat number most significant bit first
+        dprintf("System: Seat Number: %d\n", ((dipsw[4] << 1) | dipsw[3]) + 1);
+    }
+
     hr = idac_dll_init(&idac_hook_cfg.dll, idac_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&idac_hook_cfg.aime, 3, 3, idac_hook_mod);
+    hr = sg_reader_hook_init(&idac_hook_cfg.aime, 3, is_swdc_cvt ? 3 : 2, idac_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
@@ -94,8 +114,9 @@ static DWORD CALLBACK idac_pre_startup(void)
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {2, 0};
     hr = led15070_hook_init(&idac_hook_cfg.led15070, idac_dll.led_init, 
-        idac_dll.led_set_fet_output, NULL, idac_dll.led_gs_update, 2, 1);
+        idac_dll.led_set_fet_output, NULL, idac_dll.led_gs_update, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;

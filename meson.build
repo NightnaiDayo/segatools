@@ -46,6 +46,9 @@ endif
 if get_option('log_all') or get_option('log_io3')
     add_project_arguments('-DLOG_IO3', language: 'c')
 endif
+if get_option('log_all') or get_option('log_led15070')
+    add_project_arguments('-DLOG_LED15070', language: 'c')
+endif
 if get_option('log_all') or get_option('log_led15093')
     add_project_arguments('-DLOG_LED15093', language: 'c')
 endif
@@ -60,6 +63,9 @@ if get_option('log_all') or get_option('log_carol_led_bd')
 endif
 if get_option('log_all') or get_option('log_carol_touch')
     add_project_arguments('-DLOG_CAROL_TOUCH', language: 'c')
+endif
+if get_option('log_all') or get_option('log_mai2_touch')
+    add_project_arguments('-DLOG_MAI2_TOUCH', language: 'c')
 endif
 if get_option('log_all') or get_option('log_chuni_slider')
     add_project_arguments('-DLOG_CHUNI_SLIDER', language: 'c')
@@ -83,7 +89,7 @@ dxguid_lib = cc.find_library('dxguid')
 xinput_lib = cc.find_library('xinput')
 pathcch_lib = cc.find_library('pathcch')
 imagehlp_lib = cc.find_library('imagehlp')
-Ws2_32_lib = cc.find_library('Ws2_32')
+ws2_32_lib = cc.find_library('ws2_32')
 
 inc = include_directories('.')
 capnhook = subproject('capnhook')

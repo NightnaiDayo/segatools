@@ -23,7 +23,8 @@ void led15070_config_load(struct led15070_config *cfg, const wchar_t *filename)
     wchar_t tmpstr[16];
 
     cfg->enable = GetPrivateProfileIntW(L"led15070", L"enable", 1, filename);
-    cfg->port_no = GetPrivateProfileIntW(L"led15070", L"portNo", 0, filename);
+    cfg->port_no[0] = GetPrivateProfileIntW(L"led15070", L"portNo1", 0, filename);
+    cfg->port_no[1] = GetPrivateProfileIntW(L"led15070", L"portNo2", 0, filename);
     cfg->fw_ver = GetPrivateProfileIntW(L"led15070", L"fwVer", 0x90, filename);
     /* TODO: Unknown, no firmware file available */
     cfg->fw_sum = GetPrivateProfileIntW(L"led15070", L"fwSum", 0x0000, filename);

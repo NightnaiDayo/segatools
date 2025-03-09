@@ -66,29 +66,60 @@ static DWORD CALLBACK mai2_pre_startup(void)
 
     /* Initialize emulation hooks */
 
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Server", L"Client"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(mai2_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
+
     hr = platform_hook_init(
-            &mai2_hook_cfg.platform,
-            "SDEZ",
-            "ACA1",
-            mai2_hook_mod);
+        &mai2_hook_cfg.platform,
+        "SDEZ",
+        "ACA1",
+        mai2_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&mai2_hook_cfg.aime, 1, 1, mai2_hook_mod);
+    /* Initialize DLLs */
+
+    hr = mai2_dll_init(&mai2_hook_cfg.dll, mai2_hook_mod);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
+    // Touch Panel uses COM3 and COM4
+
+    hr = touch_hook_init(&mai2_hook_cfg.touch);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
+    // LED board uses COM21 and COM23
+    unsigned int led_port_no[2] = {21, 23};
+    hr = led15070_hook_init(&mai2_hook_cfg.led15070,
+        mai2_dll.led_init,
+        mai2_dll.led_set_fet_output,
+        mai2_dll.led_dc_update,
+        mai2_dll.led_gs_update,
+        led_port_no);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
+    hr = sg_reader_hook_init(&mai2_hook_cfg.aime, 1, 3, mai2_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
     hr = vfd_hook_init(&mai2_hook_cfg.vfd, 2);
-
-    if (FAILED(hr)) {
-        goto fail;
-    }
-
-    hr = mai2_dll_init(&mai2_hook_cfg.dll, mai2_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;

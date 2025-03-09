@@ -114,8 +114,9 @@ static DWORD CALLBACK chuni_pre_startup(void)
     {
         dprintf("IO DLL doesn't support led_init/led_set_leds, cannot start LED15093 hook\n");
     } else {
+        unsigned int led_port_no[2] = {10, 11};
         hr = led15093_hook_init(&chuni_hook_cfg.led15093, 
-            chuni_dll.led_init, chuni_dll.led_set_leds, 10, 2, 2, 1);
+            chuni_dll.led_init, chuni_dll.led_set_leds, led_port_no);
 
         if (FAILED(hr)) {
             goto fail;

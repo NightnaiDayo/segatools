@@ -100,8 +100,9 @@ static DWORD CALLBACK swdc_pre_startup(void)
     }
 
     /* Not working, different board -04 instead of -02? */
+    unsigned int led_port_no[2] = {2, 0};
     hr = led15070_hook_init(&swdc_hook_cfg.led15070, swdc_dll.led_init, 
-        swdc_dll.led_set_fet_output, NULL, swdc_dll.led_gs_update, 2, 1);
+        swdc_dll.led_set_fet_output, NULL, swdc_dll.led_gs_update, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;

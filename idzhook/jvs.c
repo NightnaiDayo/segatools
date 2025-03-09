@@ -192,5 +192,5 @@ static void idz_jvs_write_gpio(void *ctx, uint32_t state)
         state & IDZ_IO_LED_LEFT ? 0xFF : 0x00,
     };
 
-    idz_dll.led_set_leds(rgb_out);
+    idz_dll.led_set_leds(0, rgb_out);
 }

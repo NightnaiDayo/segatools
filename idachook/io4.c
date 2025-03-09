@@ -159,7 +159,7 @@ static HRESULT idac_io4_write_gpio(uint8_t* payload, size_t len)
         lights_data & IDAC_IO_LED_LEFT ? 0xFF : 0x00,
     };
 
-    idac_dll.led_set_leds(rgb_out);
+    idac_dll.led_set_leds(0, rgb_out);
 
     return S_OK;
 }

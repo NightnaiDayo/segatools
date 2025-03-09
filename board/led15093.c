@@ -107,9 +107,13 @@ static uint8_t led15093_host_adr = 1;
 static io_led_init_t led_init;
 static io_led_set_leds_t set_leds;
 
-HRESULT led15093_hook_init(const struct led15093_config *cfg, io_led_init_t _led_init,
-    io_led_set_leds_t _set_leds, unsigned int first_port, unsigned int num_boards, uint8_t board_adr, uint8_t host_adr)
+HRESULT led15093_hook_init(
+    const struct led15093_config *cfg,
+    io_led_init_t _led_init,
+    io_led_set_leds_t _set_leds,
+    unsigned int port_no[2])
 {
+    unsigned int num_boards = 0;
 
     assert(cfg != NULL);
     assert(_led_init != NULL);
@@ -119,14 +123,24 @@ HRESULT led15093_hook_init(const struct led15093_config *cfg, io_led_init_t _led
         return S_FALSE;
     }
 
-    if (cfg->port_no != 0) {
-        first_port = cfg->port_no;
+    for (int i = 0; i < led15093_nboards; i++)
+    {  
+        if (cfg->port_no[i] != 0) {
+            port_no[i] = cfg->port_no[i];
+        }
+
+        if (port_no[i] != 0) {
+            num_boards++;
+        }
     }
+
+    assert(num_boards != 0);
+
+    led15093_board_adr = num_boards;
+    led15093_host_adr = num_boards == 2 ? 1 : 2;
 
     led_init = _led_init;
     set_leds = _set_leds;
-    led15093_board_adr = board_adr;
-    led15093_host_adr = host_adr;
 
     memcpy(led15093_board_num, cfg->board_number, sizeof(led15093_board_num));
     memcpy(led15093_chip_num, cfg->chip_number, sizeof(led15093_chip_num));
@@ -140,7 +154,7 @@ HRESULT led15093_hook_init(const struct led15093_config *cfg, io_led_init_t _led
 
         InitializeCriticalSection(&vb->lock);
 
-        uart_init(&vb->boarduart, first_port + i);
+        uart_init(&vb->boarduart, port_no[i]);
         if (cfg->high_baudrate) {
             vb->boarduart.baud.BaudRate = 460800;
         } else {
@@ -209,7 +223,6 @@ static HRESULT led15093_handle_irp_locked(int board, struct irp *irp)
     _led15093_per_board_vars *v = &led15093_per_board_vars[board];
     struct uart *boarduart = &led15093_per_board_vars[board].boarduart;
 
-    /*
     if (irp->op == IRP_OP_OPEN) {
         // Unfortunately the LED board UART gets opened and closed repeatedly
 
@@ -234,30 +247,6 @@ static HRESULT led15093_handle_irp_locked(int board, struct irp *irp)
             if (FAILED(hr)) {
                 return hr;
             }
-        }
-    }
-    */
-
-    if (irp->op == IRP_OP_OPEN) {
-        dprintf("LED 15093: Starting backend DLL\n");
-        // int res = led_init();
-        hr = led_init();
-
-        /*
-        if (res != 0) {
-            dprintf("LED 15093: Backend error, LED board disconnected: "
-                    "%d\n",
-                    res);
-
-            return E_FAIL;
-        }
-        */
-        if (FAILED(hr)) {
-            dprintf("LED 15093: Backend error, LED board disconnected: "
-                    "%x\n",
-                    (int) hr);
-
-            return hr;
         }
     }
 
@@ -687,16 +676,6 @@ static HRESULT led15093_req_set_imm_led(int board, const struct led15093_req_set
 
         return E_INVALIDARG;
     }
-
-    /*
-    if (board == 0) {
-        dprintf("board %d: red: %d, green: %d, blue: %d\n", board, req->data[0x96], req->data[0x97], req->data[0x98]);
-	}
-	else if (board == 1)
-	{
-		dprintf("board %d: red: %d, green: %d, blue: %d\n", board, req->data[0xb4], req->data[0xb5], req->data[0xb6]);
-    }
-    */
 
     // Return the current LED data, remove const qualifier
     set_leds(board, (uint8_t *) req->data);

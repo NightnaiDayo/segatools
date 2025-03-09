@@ -2,7 +2,7 @@
 
 pushd %~dp0
 
-start /min "AM Daemon" inject -d -k idzhook.dll amdaemon.exe -c configDHCP_Final_Common.json configDHCP_Final_JP.json configDHCP_Final_JP_ST1.json configDHCP_Final_JP_ST2.json configDHCP_Final_EX.json configDHCP_Final_EX_ST1.json configDHCP_Final_EX_ST2.json
+start "AM Daemon" /min inject -d -k idzhook.dll amdaemon.exe -c configDHCP_Final_Common.json configDHCP_Final_JP.json configDHCP_Final_JP_ST1.json configDHCP_Final_JP_ST2.json configDHCP_Final_EX.json configDHCP_Final_EX_ST1.json configDHCP_Final_EX_ST2.json
 
 rem Set dipsw1=0 and uncomment the ServerBox for in store battle?
 rem inject -k idzhook.dll ServerBoxD8_Nu_x64.exe

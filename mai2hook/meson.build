@@ -23,6 +23,8 @@ shared_library(
         'dllmain.c',
         'io4.c',
         'io4.h',
+        'touch.c',
+        'touch.h',
         'mai2-dll.c',
         'mai2-dll.h',
     ],

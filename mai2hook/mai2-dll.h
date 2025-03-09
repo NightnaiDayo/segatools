@@ -10,6 +10,13 @@ struct mai2_dll {
     HRESULT (*poll)(void);
     void (*get_opbtns)(uint8_t *opbtn);
     void (*get_gamebtns)(uint16_t *player1, uint16_t *player2);
+    HRESULT (*touch_init)(mai2_io_touch_callback_t callback);
+    void (*touch_set_sens)(uint8_t *bytes);
+    void (*touch_update)(bool player1, bool player2);
+    HRESULT (*led_init)(void);
+    void (*led_set_fet_output)(uint8_t board, const uint8_t *rgb);
+    void (*led_dc_update)(uint8_t board, const uint8_t *rgb);
+    void (*led_gs_update)(uint8_t board, const uint8_t *rgb);
 };
 
 struct mai2_dll_config {

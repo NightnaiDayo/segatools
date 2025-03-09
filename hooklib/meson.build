@@ -4,7 +4,7 @@ hooklib_lib = static_library(
     implicit_include_directories : false,
     dependencies : [
         capnhook.get_variable('hook_dep'),
-        Ws2_32_lib
+        ws2_32_lib
     ],
     sources : [
         'cursor.c',

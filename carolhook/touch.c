@@ -196,7 +196,7 @@ static void touch_scan_auto(const bool is_pressed, const uint16_t mouse_x, const
 
         flg = resp.touches[0].x1 != last_x1 || resp.touches[0].x2 != last_x2 || resp.touches[0].y1 != last_y1 || resp.touches[0].y2 != last_y2;
 
-#if 1
+#if 0
         if (flg)
             dprintf("Touch: Mouse down! x %02X %02X y: %02X %02X\n", resp.touches[0].x1, resp.touches[0].x2, resp.touches[0].y1, resp.touches[0].y2);
 #endif

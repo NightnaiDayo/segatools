@@ -11,7 +11,7 @@ The default file path for config file is `./segatools.ini`.
 
 You can modify environment variable `SEGATOOLS_CONFIG_PATH` to another path.
 
-For example, You can have another `start.bat` with following code in it,
+For example, You can have another `launch.bat` with following code in it,
 Then you can copy `segatools.ini` to `another_config.ini` but with different dns host in it
 ```bat
 set SEGATOOLS_CONFIG_PATH=.\another_config.ini
@@ -420,18 +420,22 @@ Default: (Varies depending on game)
 
 Override the game's four-character platform code (e.g. `AAV2` for Nu 2). This
 is actually supposed to be a separate three-character `platformId` and
-integer `modelType` setting, but they are combined here for convenience. Valid
-values include:
+integer `modelType` setting, but they are combined here for convenience.
 
-- `AAV0`: Nu 1 (Project DIVA)
-- `AAV1`: Nu 1.1 (Chunithm)
-- `AAV2`: Nu 2 (Initial D Zero)
-- `AAW0`: NuSX 1
-- `AAW1`: NuSX 1.1
-- `ACA0`: ALLS UX
-- `ACA1`: ALLS HX
-- `ACA2`: ALLS UX (without dedicated GPU)
-- `ACA4`: ALLS MX
+`platformId` is one of the following:
+- `AAV`: Nu 1/1.1/2
+- `AAW`: NuSX 1/1.1
+- `ACA`: ALLS UX/HX/MX
+
+`modelType` is one of the following:
+- `1`: Server (SV) 
+- `2`: Satalite (ST) 
+- `3`: Live (LV) 
+- `4`: Terminal (TN)
+
+It's safe to assume that every game you'll be playing with these tools will be a Satalite.
+Some games care, others don't. Some even change how they run based on this value (Wonderland Wars
+will boot into terminal mode if `modelType` is 4).
 
 ### `region`
 
@@ -468,15 +472,9 @@ the billing transactions.
 
 Default: `1`
 
-Set the billing "type" for the keychip. The type determins what kind of revenue share,
-if any, the game maker has with SEGA. Some games may be picky and require types other 
-then 1 (ex. crossbeats REV. requires billing type 2), so this option is provided if this
-is an issue. Billing types are:
-
-- 0: No billing?
-- 1: Billing type A
-- 2: Billing type B1
-- 3: Billing type B2
+Sets the billing type, a single bit value that flags the cabinet as a rental if set to `1`, or `0` otherwise.
+Certian games that were only sold officially as full purchases (that is, non-rentals) must have this value set to 0.
+NOTE: Crossbeats erroniously displays Billing modes A/B1/B2, but this value comes from the `modelType` and NOT this value!
 
 ### `systemFlag`
 
