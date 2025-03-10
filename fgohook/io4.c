@@ -87,7 +87,7 @@ static HRESULT fgo_io4_poll(void *ctx, struct io4_state *state)
         state->buttons[0] |= 1 << 1;
     }
 
-    if (gamebtn & FGO_IO_GAMEBTN_NOBLE_PHANTASHM) {
+    if (gamebtn & FGO_IO_GAMEBTN_NOBLE_PHANTASM) {
         state->buttons[0] |= 1 << 0;
     }
 
