@@ -356,6 +356,8 @@ void vfs_config_load(struct vfs_config *cfg, const wchar_t *filename)
                     cfg->redirections_to[i],
                     _countof(cfg->redirections_to[i]),
                     filename);
+
+        cfg->redirections_from_len[i] = (int)wcslen(cfg->redirections_from[i]);
     }
 }
 

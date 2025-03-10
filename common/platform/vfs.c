@@ -631,7 +631,7 @@ static HRESULT vfs_custom_path_hook(
             return S_FALSE;
         }
 
-        if (path_compare_w(src, from, wcslen(from)) != 0) {
+        if (path_compare_w(src, from, vfs_config.redirections_from_len[i]) != 0) {
             continue;
         }
 

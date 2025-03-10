@@ -13,6 +13,7 @@ struct vfs_config {
     wchar_t appdata[MAX_PATH];
     wchar_t option[MAX_PATH];
     wchar_t redirections_from[MAX_REDIRECTIONS][MAX_PATH];
+    int redirections_from_len[MAX_REDIRECTIONS];
     wchar_t redirections_to[MAX_REDIRECTIONS][MAX_PATH];
 };
 
