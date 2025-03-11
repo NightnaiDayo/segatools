@@ -14,12 +14,10 @@
 
 static void fgo_kb_get_gamebtns(uint8_t* gamebtn_out);
 static void fgo_kb_get_analogs(int16_t* x, int16_t* y);
-static HRESULT fgo_kb_poll(void);
 
 static const struct fgo_io_backend fgo_kb_backend = {
     .get_gamebtns = fgo_kb_get_gamebtns,
-    .get_analogs = fgo_kb_get_analogs,
-    .poll = fgo_kb_poll
+    .get_analogs = fgo_kb_get_analogs
 };
 
 static struct fgo_kb_config config;
@@ -32,10 +30,6 @@ HRESULT fgo_kb_init(const struct fgo_kb_config* cfg, const struct fgo_io_backend
     *backend = &fgo_kb_backend;
     config = *cfg;
 
-    return S_OK;
-}
-
-HRESULT fgo_kb_poll(void) {
     return S_OK;
 }
 

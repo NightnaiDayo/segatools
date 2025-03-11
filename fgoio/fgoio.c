@@ -70,7 +70,7 @@ HRESULT fgo_io_poll(void) {
         fgo_io_coin = false;
     }
 
-    return fgo_io_backend->poll();
+    return S_OK;
 }
 
 void fgo_io_get_opbtns(uint8_t* opbtn) {

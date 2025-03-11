@@ -14,18 +14,14 @@
 
 static void fgo_xi_get_gamebtns(uint8_t* gamebtn_out);
 static void fgo_xi_get_analogs(int16_t* x, int16_t* y);
-static HRESULT fgo_xi_poll(void);
 static HRESULT fgo_xi_config_apply(const struct fgo_xi_config* cfg);
 
 static const struct fgo_io_backend fgo_xi_backend = {
     .get_gamebtns = fgo_xi_get_gamebtns,
-    .get_analogs = fgo_xi_get_analogs,
-    .poll = fgo_xi_poll
+    .get_analogs = fgo_xi_get_analogs
 };
 
 static float fgo_xi_stick_deadzone;
-
-static XINPUT_STATE xi;
 
 const uint16_t max_stick_value = 32767;
 
@@ -61,15 +57,12 @@ static HRESULT fgo_xi_config_apply(const struct fgo_xi_config* cfg) {
     return S_OK;
 }
 
-HRESULT fgo_xi_poll(void) {
-    memset(&xi, 0, sizeof(xi));
-    XInputGetState(0, &xi);
-
-    return S_OK;
-}
-
 static void fgo_xi_get_gamebtns(uint8_t* gamebtn_out) {
     assert(gamebtn_out != NULL);
+
+    XINPUT_STATE xi;
+    memset(&xi, 0, sizeof(xi));
+    XInputGetState(0, &xi);
 
     uint8_t gamebtn = 0;
     WORD xb = xi.Gamepad.wButtons;
@@ -98,11 +91,11 @@ static void fgo_xi_get_gamebtns(uint8_t* gamebtn_out) {
 }
 
 static void fgo_xi_get_analogs(int16_t* x, int16_t* y) {
-    XINPUT_STATE xi;
 
     assert(x != NULL);
     assert(y != NULL);
 
+    XINPUT_STATE xi;
     memset(&xi, 0, sizeof(xi));
     XInputGetState(0, &xi);
 
