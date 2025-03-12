@@ -67,6 +67,14 @@ void gfx_hook_init(const struct gfx_config *cfg)
         return;
     }
 
+    if (cfg->dpiAware) {
+        if (SetProcessDPIAware()) {
+            dprintf("Gfx: Game process set to DPI aware.\n");
+        } else {
+            dprintf("Gfx: Failed to set process DPI aware\n");
+        }
+    }
+
     memcpy(&gfx_config, cfg, sizeof(*cfg));
     hook_table_apply(NULL, "user32.dll", gfx_hooks, _countof(gfx_hooks));
 }

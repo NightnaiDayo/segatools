@@ -74,8 +74,6 @@ static DWORD CALLBACK carol_pre_startup(void)
     HMODULE dbghelp;
 
     dprintf("--- Begin carol_pre_startup ---\n");
-    if ( !SetProcessDPIAware() )
-        dprintf("Failed to set process DPI awareness level!\n");
     
     /* Pin the D3D shader compiler. This makes startup much faster. */
 
