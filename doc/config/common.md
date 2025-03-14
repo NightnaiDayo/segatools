@@ -354,7 +354,7 @@ Enables graphic hooks.
 
 Default: `0`
 
-Enables graphic hooks.
+Force the game to run windowed.
 
 ### `framed`
 
