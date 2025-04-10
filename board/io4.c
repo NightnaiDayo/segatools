@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "board/config.h"
 #include "board/guid.h"

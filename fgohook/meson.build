@@ -4,7 +4,6 @@ shared_library(
     include_directories : inc,
     implicit_include_directories : false,
     vs_module_defs : 'fgohook.def',
-    c_pch : '../precompiled.h',
     dependencies : [
         capnhook.get_variable('hook_dep'),
         capnhook.get_variable('hooklib_dep'),
@@ -13,6 +12,7 @@ shared_library(
     link_with : [
         aimeio_lib,
         board_lib,
+        gfxhook_lib,
         hooklib_lib,
         fgoio_lib,
         platform_lib,

@@ -5,7 +5,7 @@ $(BUILD_DIR_ZIP)/chuni.zip:
 	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_32)/chunihook/chunihook.dll \
 		$(DIST_DIR)/chuni/segatools.ini \
-		$(DIST_DIR)/chuni/start.bat \
+		$(DIST_DIR)/chuni/launch.bat \
 		$(BUILD_DIR_ZIP)/chuni
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -20,7 +20,7 @@ $(BUILD_DIR_ZIP)/cxb.zip:
 	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_32)/cxbhook/cxbhook.dll \
 		$(DIST_DIR)/cxb/segatools.ini \
-		$(DIST_DIR)/cxb/start.bat \
+		$(DIST_DIR)/cxb/launch.bat \
 		$(BUILD_DIR_ZIP)/cxb
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -35,7 +35,7 @@ $(BUILD_DIR_ZIP)/diva.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_64)/divahook/divahook.dll \
 		$(DIST_DIR)/diva/segatools.ini \
-		$(DIST_DIR)/diva/start.bat \
+		$(DIST_DIR)/diva/launch.bat \
 		$(BUILD_DIR_ZIP)/diva
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -50,7 +50,7 @@ $(BUILD_DIR_ZIP)/carol.zip:
 	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_32)/carolhook/carolhook.dll \
 		$(DIST_DIR)/carol/segatools.ini \
-		$(DIST_DIR)/carol/start.bat \
+		$(DIST_DIR)/carol/launch.bat \
 		$(BUILD_DIR_ZIP)/carol
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -65,7 +65,7 @@ $(BUILD_DIR_ZIP)/idz.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_64)/idzhook/idzhook.dll \
 		$(DIST_DIR)/idz/segatools.ini \
-		$(DIST_DIR)/idz/start.bat \
+		$(DIST_DIR)/idz/launch.bat \
     	$(BUILD_DIR_ZIP)/idz
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -80,7 +80,7 @@ $(BUILD_DIR_ZIP)/fgo.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_64)/fgohook/fgohook.dll \
 		$(DIST_DIR)/fgo/segatools.ini \
-		$(DIST_DIR)/fgo/start.bat \
+		$(DIST_DIR)/fgo/launch.bat \
     	$(BUILD_DIR_ZIP)/fgo
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -96,7 +96,7 @@ $(BUILD_DIR_ZIP)/idac.zip:
 		$(BUILD_DIR_64)/idachook/idachook.dll \
 		$(DIST_DIR)/idac/segatools.ini \
 		$(DIST_DIR)/idac/config_hook.json \
-		$(DIST_DIR)/idac/start.bat \
+		$(DIST_DIR)/idac/launch.bat \
     	$(BUILD_DIR_ZIP)/idac
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -112,7 +112,7 @@ $(BUILD_DIR_ZIP)/swdc.zip:
 		$(BUILD_DIR_64)/swdchook/swdchook.dll \
 		$(DIST_DIR)/swdc/segatools.ini \
 		$(DIST_DIR)/swdc/config_hook.json \
-		$(DIST_DIR)/swdc/start.bat \
+		$(DIST_DIR)/swdc/launch.bat \
     	$(BUILD_DIR_ZIP)/swdc
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -127,7 +127,7 @@ $(BUILD_DIR_ZIP)/mercury.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_64)/mercuryhook/mercuryhook.dll \
 		$(DIST_DIR)/mercury/segatools.ini \
-		$(DIST_DIR)/mercury/start.bat \
+		$(DIST_DIR)/mercury/launch.bat \
     	$(BUILD_DIR_ZIP)/mercury
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -141,7 +141,7 @@ $(BUILD_DIR_ZIP)/chusan.zip:
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/chusan/DEVICE
 	$(V)cp $(DIST_DIR)/chusan/segatools.ini \
 		$(DIST_DIR)/chusan/config_hook.json \
-		$(DIST_DIR)/chusan/start.bat \
+		$(DIST_DIR)/chusan/launch.bat \
 		$(BUILD_DIR_ZIP)/chusan
 	$(V)cp $(BUILD_DIR_32)/chusanhook/chusanhook.dll \
 		$(BUILD_DIR_ZIP)/chusan/chusanhook_x86.dll
@@ -164,7 +164,7 @@ $(BUILD_DIR_ZIP)/mu3.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_64)/mu3hook/mu3hook.dll \
 		$(DIST_DIR)/mu3/segatools.ini \
-		$(DIST_DIR)/mu3/start.bat \
+		$(DIST_DIR)/mu3/launch.bat \
     	$(BUILD_DIR_ZIP)/mu3
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -179,7 +179,7 @@ $(BUILD_DIR_ZIP)/mai2.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_64)/mai2hook/mai2hook.dll \
 		$(DIST_DIR)/mai2/segatools.ini \
-		$(DIST_DIR)/mai2/start.bat \
+		$(DIST_DIR)/mai2/launch.bat \
     	$(BUILD_DIR_ZIP)/mai2
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -195,7 +195,7 @@ $(BUILD_DIR_ZIP)/cm.zip:
 		$(BUILD_DIR_64)/cmhook/cmhook.dll \
 		$(DIST_DIR)/cm/config_hook.json \
 		$(DIST_DIR)/cm/segatools.ini \
-		$(DIST_DIR)/cm/start.bat \
+		$(DIST_DIR)/cm/launch.bat \
     	$(BUILD_DIR_ZIP)/cm
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -211,7 +211,7 @@ $(BUILD_DIR_ZIP)/tokyo.zip:
 		$(BUILD_DIR_64)/tokyohook/tokyohook.dll \
 		$(DIST_DIR)/tokyo/config_hook.json \
 		$(DIST_DIR)/tokyo/segatools.ini \
-		$(DIST_DIR)/tokyo/start.bat \
+		$(DIST_DIR)/tokyo/launch.bat \
     	$(BUILD_DIR_ZIP)/tokyo
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
@@ -224,7 +224,7 @@ $(BUILD_DIR_ZIP)/kemono.zip:
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/kemono
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/kemono/DEVICE
 	$(V)cp $(DIST_DIR)/kemono/segatools.ini \
-		$(DIST_DIR)/kemono/start.bat \
+		$(DIST_DIR)/kemono/launch.bat \
 		$(BUILD_DIR_ZIP)/kemono
 	$(V)cp $(BUILD_DIR_32)/kemonohook/kemonohook.dll \
 		$(BUILD_DIR_ZIP)/kemono/kemonohook_x86.dll

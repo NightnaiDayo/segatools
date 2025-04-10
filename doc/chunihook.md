@@ -44,7 +44,7 @@ option=../../option
 1. In the `[dns]` section, set `default=` to your computer's hostname or LAN IP. Do not put
 `127.0.0.1` here, the game specifically checks for and rejects loopback addresses. This setting
 controls the address of the network services server
-1. Right click `start.bat` in `app/bin` and run it as Administrator. I think you need to run it as
+1. Right click `launch.bat` in `app/bin` and run it as Administrator. I think you need to run it as
 admin at least once, but once you have done that you can run the game as a regular user
 1. A sequence of several start-up screens will be displayed. You should also see a bunch of debug
 output in a command line window; if you're seeing hex dumps here then that's a good sign. There

@@ -40,6 +40,7 @@
 
 #include "util/dprintf.h"
 #include "util/lib.h"
+#include "util/env.h"
 
 static HMODULE idz_hook_mod;
 static process_entry_t idz_startup;
@@ -55,7 +56,7 @@ static DWORD CALLBACK idz_pre_startup(void)
 
     /* Config load */
 
-    idz_hook_config_load(&idz_hook_cfg, L".\\segatools.ini");
+    idz_hook_config_load(&idz_hook_cfg, get_config_path());
     
     module_path = module_file_name(NULL);
 
@@ -127,8 +128,9 @@ static DWORD CALLBACK idz_pre_startup(void)
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {11, 0};
     hr = led15070_hook_init(&idz_hook_cfg.led15070, idz_dll.led_init, 
-        idz_dll.led_set_fet_output, NULL, idz_dll.led_gs_update, 11, 1);
+        idz_dll.led_set_fet_output, NULL, idz_dll.led_gs_update, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;
@@ -136,7 +138,7 @@ static DWORD CALLBACK idz_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  idz_pre_startup ---\n");
 

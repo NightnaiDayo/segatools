@@ -12,9 +12,9 @@ struct idz_dll {
     void (*jvs_read_shifter)(uint8_t *gear);
     void (*jvs_read_coin_counter)(uint16_t *total);
     HRESULT (*led_init)(void);
-    void (*led_set_fet_output)(const uint8_t *rgb);
-    void (*led_gs_update)(const uint8_t *rgb);
-    void (*led_set_leds)(const uint8_t *rgb);
+    void (*led_set_fet_output)(uint8_t board, const uint8_t *rgb);
+    void (*led_gs_update)(uint8_t board, const uint8_t *rgb);
+    void (*led_set_leds)(uint8_t board, const uint8_t *rgb);
     HRESULT (*ffb_init)(void);
     void (*ffb_toggle)(bool active);
     void (*ffb_constant_force)(uint8_t direction, uint8_t force);

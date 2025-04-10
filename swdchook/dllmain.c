@@ -36,6 +36,7 @@
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE swdc_hook_mod;
 static process_entry_t swdc_startup;
@@ -49,7 +50,7 @@ static DWORD CALLBACK swdc_pre_startup(void)
 
     /* Config load */
 
-    swdc_hook_config_load(&swdc_hook_cfg, L".\\segatools.ini");
+    swdc_hook_config_load(&swdc_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
@@ -99,8 +100,9 @@ static DWORD CALLBACK swdc_pre_startup(void)
     }
 
     /* Not working, different board -04 instead of -02? */
+    unsigned int led_port_no[2] = {2, 0};
     hr = led15070_hook_init(&swdc_hook_cfg.led15070, swdc_dll.led_init, 
-        swdc_dll.led_set_fet_output, NULL, swdc_dll.led_gs_update, 2, 1);
+        swdc_dll.led_set_fet_output, NULL, swdc_dll.led_gs_update, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;
@@ -112,7 +114,7 @@ static DWORD CALLBACK swdc_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  swdc_pre_startup ---\n");
 

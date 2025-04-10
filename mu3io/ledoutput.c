@@ -70,14 +70,14 @@ struct _ongeki_led_data_buf_t* escape_led_data(struct _ongeki_led_data_buf_t* un
 {
     struct _ongeki_led_data_buf_t* out_struct = &mu3_led_escaped_buf[unescaped->board];
     
-    byte* in_buf = unescaped->data;
-    byte* out_buf = out_struct->data;
+    uint8_t* in_buf = unescaped->data;
+    uint8_t* out_buf = out_struct->data;
     int i = 0;
     int o = 0;
     
     while (i < unescaped->data_len)
     {
-        byte b = in_buf[i++];
+        uint8_t b = in_buf[i++];
         if (b == LED_PACKET_FRAMING || b == LED_PACKET_ESCAPE)
         {
             out_buf[o++] = LED_PACKET_ESCAPE;
@@ -91,7 +91,7 @@ struct _ongeki_led_data_buf_t* escape_led_data(struct _ongeki_led_data_buf_t* un
     return out_struct;
 }
 
-void mu3_led_output_update(int board, const byte* rgb)
+void mu3_led_output_update(int board, const uint8_t* rgb)
 {
     if (board < 0 || board > 1 || !mu3_led_any_outputs_enabled)
     {

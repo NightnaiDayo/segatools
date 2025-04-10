@@ -38,6 +38,7 @@
 #include "unityhook/hook.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE mu3_hook_mod;
 static process_entry_t mu3_startup;
@@ -51,7 +52,7 @@ static DWORD CALLBACK mu3_pre_startup(void)
 
     /* Load config */
 
-    mu3_hook_config_load(&mu3_hook_cfg, L".\\segatools.ini");
+    mu3_hook_config_load(&mu3_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
@@ -63,6 +64,14 @@ static DWORD CALLBACK mu3_pre_startup(void)
     serial_hook_init();
 
     /* Initialize emulation hooks */
+
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Server", L"Client"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(mu3_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
 
     hr = platform_hook_init(
             &mu3_hook_cfg.platform,
@@ -80,8 +89,9 @@ static DWORD CALLBACK mu3_pre_startup(void)
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {3, 0};
     hr = led15093_hook_init(&mu3_hook_cfg.led15093, 
-        mu3_dll.led_init, mu3_dll.led_set_leds, 3, 1, 1, 2);
+        mu3_dll.led_init, mu3_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         return hr;
@@ -114,7 +124,7 @@ static DWORD CALLBACK mu3_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  mu3_pre_startup ---\n");
 

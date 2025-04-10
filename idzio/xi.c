@@ -188,10 +188,10 @@ static int16_t calculate_norm_steering(int16_t axis, uint16_t deadzone, bool lin
 
     // apply non-linear transform to the axis
     if (!linear_steering) {
-        return norm_axis * pow(norm_magnitude, 3.0) * max_wheel_value;
+        return (int16_t)(norm_axis * powf(norm_magnitude, 3.0f) * max_wheel_value);
     }
 
-    return norm_axis * norm_magnitude * max_wheel_value;
+    return (int16_t)(norm_axis * norm_magnitude * max_wheel_value);
 }
 
 static void idz_xi_jvs_read_analogs(struct idz_io_analog_state *out)
@@ -212,7 +212,7 @@ static void idz_xi_jvs_read_analogs(struct idz_io_analog_state *out)
     left = calculate_norm_steering(left, idz_xi_left_stick_deadzone, idz_xi_linear_steering);
     right = calculate_norm_steering(right, idz_xi_right_stick_deadzone, idz_xi_linear_steering);
 
-    if(idz_xi_single_stick_steering) {
+    if (idz_xi_single_stick_steering) {
         out->wheel = left;
     } else {
         out->wheel = (left + right) / 2;

@@ -13,7 +13,6 @@ add_project_arguments(
     '-DWIN32_LEAN_AND_MEAN',
     '-D_WIN32_WINNT=_WIN32_WINNT_WIN7',
     '-DMINGW_HAS_SECURE_API=1',
-    '-Wno-unused',
     # '-ggdb',  # Add debug information
     language: 'c',
 )
@@ -24,6 +23,7 @@ if cc.get_id() != 'msvc'
     add_project_arguments(
         '-ffunction-sections',
         '-fdata-sections',
+        '-Wno-unused',
         language: 'c',
     )
 
@@ -34,6 +34,7 @@ if cc.get_id() != 'msvc'
         '-static-libgcc',
         # '-ggdb',  # Add debug information
         '-lcrypt32', # Bcrypt needed for prashook
+        '-lws2_32', # WSAHtons / WSANtohs needed for porthook
         # '-Wl,-s',  # Strip debug symbols
         language: 'c',
     )
@@ -44,6 +45,9 @@ if get_option('log_all') or get_option('log_jvs')
 endif
 if get_option('log_all') or get_option('log_io3')
     add_project_arguments('-DLOG_IO3', language: 'c')
+endif
+if get_option('log_all') or get_option('log_led15070')
+    add_project_arguments('-DLOG_LED15070', language: 'c')
 endif
 if get_option('log_all') or get_option('log_led15093')
     add_project_arguments('-DLOG_LED15093', language: 'c')
@@ -59,6 +63,9 @@ if get_option('log_all') or get_option('log_carol_led_bd')
 endif
 if get_option('log_all') or get_option('log_carol_touch')
     add_project_arguments('-DLOG_CAROL_TOUCH', language: 'c')
+endif
+if get_option('log_all') or get_option('log_mai2_touch')
+    add_project_arguments('-DLOG_MAI2_TOUCH', language: 'c')
 endif
 if get_option('log_all') or get_option('log_chuni_slider')
     add_project_arguments('-DLOG_CHUNI_SLIDER', language: 'c')
@@ -81,6 +88,8 @@ dinput8_lib = cc.find_library('dinput8')
 dxguid_lib = cc.find_library('dxguid')
 xinput_lib = cc.find_library('xinput')
 pathcch_lib = cc.find_library('pathcch')
+imagehlp_lib = cc.find_library('imagehlp')
+ws2_32_lib = cc.find_library('ws2_32')
 
 inc = include_directories('.')
 capnhook = subproject('capnhook')

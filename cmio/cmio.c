@@ -6,6 +6,7 @@
 
 #include "cmio/cmio.h"
 #include "cmio/config.h"
+#include "util/env.h"
 
 static uint8_t cm_opbtn;
 static struct cm_io_config cm_io_cfg;
@@ -18,7 +19,7 @@ uint16_t cm_io_get_api_version(void)
 
 HRESULT cm_io_init(void)
 {
-    cm_io_config_load(&cm_io_cfg, L".\\segatools.ini");
+    cm_io_config_load(&cm_io_cfg, get_config_path());
     return S_OK;
 }
 

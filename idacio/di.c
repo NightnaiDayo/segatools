@@ -1,8 +1,10 @@
 #include <windows.h>
 #include <dinput.h>
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 #include "idacio/backend.h"

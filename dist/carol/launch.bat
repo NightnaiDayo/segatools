@@ -2,8 +2,10 @@
 
 pushd %~dp0
 
-start /min inject -d -k chunihook.dll aimeReaderHost.exe -p 12
-inject -d -k chunihook.dll chuniApp.exe
+start /min inject -d -k carolhook.dll aimeReaderHost.exe -p 10
+
+inject -d -k carolhook.dll carol_nu.exe
+
 taskkill /f /im aimeReaderHost.exe > nul 2>&1
 
 echo.

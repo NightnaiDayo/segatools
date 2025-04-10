@@ -35,6 +35,7 @@
 #include "unityhook/hook.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE cm_hook_mod;
 static process_entry_t cm_startup;
@@ -48,7 +49,7 @@ static DWORD CALLBACK cm_pre_startup(void)
 
     /* Load config */
 
-    cm_hook_config_load(&cm_hook_cfg, L".\\segatools.ini");
+    cm_hook_config_load(&cm_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
@@ -61,6 +62,14 @@ static DWORD CALLBACK cm_pre_startup(void)
     printer_hook_init(&cm_hook_cfg.printer, 0, cm_hook_mod);
 
     /* Initialize emulation hooks */
+
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Client", L"Server"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(cm_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
 
     hr = platform_hook_init(
             &cm_hook_cfg.platform,
@@ -105,7 +114,7 @@ static DWORD CALLBACK cm_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  cm_pre_startup ---\n");
 

@@ -4,12 +4,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "chuniio/chuniio.h"
 #include "chuniio/config.h"
 #include "chuniio/ledoutput.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static unsigned int __stdcall chuni_io_slider_thread_proc(void *ctx);
 
@@ -27,7 +29,7 @@ uint16_t chuni_io_get_api_version(void)
 
 HRESULT chuni_io_jvs_init(void)
 {
-    chuni_io_config_load(&chuni_io_cfg, L".\\segatools.ini");
+    chuni_io_config_load(&chuni_io_cfg, get_config_path());
     
     led_init_mutex = CreateMutex(
         NULL,              // default security attributes
@@ -92,7 +94,7 @@ void chuni_io_jvs_poll(uint8_t *opbtn, uint8_t *beams)
     } else {
         // Use actual AIR
         for (i = 0; i < 6; i++) {
-            if(GetAsyncKeyState(chuni_io_cfg.vk_ir[i]) & 0x8000) {
+            if (GetAsyncKeyState(chuni_io_cfg.vk_ir[i]) & 0x8000) {
                 *beams |= (1 << i);
             } else {
                 *beams &= ~(1 << i);
@@ -172,6 +174,20 @@ HRESULT chuni_io_led_init(void)
 }
 
 void chuni_io_led_set_colors(uint8_t board, uint8_t *rgb)
-{ 
+{
+#if 0
+    if (board == 0) {
+        dprintf("CHUNI LED: Left Air 1: red: %d, green: %d, blue: %d\n", rgb[0x96], rgb[0x97], rgb[0x98]);
+        dprintf("CHUNI LED: Left Air 2: red: %d, green: %d, blue: %d\n", rgb[0x99], rgb[0x9A], rgb[0x9B]);
+        dprintf("CHUNI LED: Left Air 3: red: %d, green: %d, blue: %d\n", rgb[0x9C], rgb[0x9D], rgb[0x9E]);
+	}
+	else if (board == 1)
+	{
+		dprintf("CHUNI LED: Right Air 1: red: %d, green: %d, blue: %d\n", rgb[0xB4], rgb[0xB5], rgb[0xB6]);
+        dprintf("CHUNI LED: Right Air 2: red: %d, green: %d, blue: %d\n", rgb[0xB7], rgb[0xB8], rgb[0xB9]);
+        dprintf("CHUNI LED: Right Air 3: red: %d, green: %d, blue: %d\n", rgb[0xBA], rgb[0xBB], rgb[0xBC]);
+    }
+#endif
+
     led_output_update(board, rgb);
 }

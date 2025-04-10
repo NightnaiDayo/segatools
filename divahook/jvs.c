@@ -63,33 +63,33 @@ static void diva_jvs_read_switches(void *ctx, struct io3_switch_state *out)
 
     diva_dll.jvs_poll(&opbtn, &gamebtn);
 
-    if (gamebtn & 0x01) {
+    if (gamebtn & DIVA_IO_GAMEBTN_CIRCLE) {
         out->p1 |= 1 << 6;
     }
 
-    if (gamebtn & 0x02) {
+    if (gamebtn & DIVA_IO_GAMEBTN_CROSS) {
         out->p1 |= 1 << 7;
     }
 
-    if (gamebtn & 0x04) {
+    if (gamebtn & DIVA_IO_GAMEBTN_SQUARE) {
         out->p1 |= 1 << 8;
     }
 
-    if (gamebtn & 0x08) {
+    if (gamebtn & DIVA_IO_GAMEBTN_TRIANGLE) {
         out->p1 |= 1 << 9;
     }
 
-    if (gamebtn & 0x10) {
+    if (gamebtn & DIVA_IO_GAMEBTN_START) {
         out->p1 |= 1 << 15;
     }
 
-    if (opbtn & 0x01) {
+    if (opbtn & DIVA_IO_OPBTN_TEST) {
         out->system = 0x80;
     } else {
         out->system = 0;
     }
 
-    if (opbtn & 0x02) {
+    if (opbtn & DIVA_IO_OPBTN_SERVICE) {
         out->p1 |= 1 << 14;
     }
 }

@@ -47,7 +47,7 @@ static struct sg_led sg_reader_led;
 
 HRESULT sg_reader_hook_init(
         const struct aime_config *cfg,
-        unsigned int port_no,
+        unsigned int default_port_no,
         unsigned int gen,
         HINSTANCE self)
 {
@@ -64,6 +64,11 @@ HRESULT sg_reader_hook_init(
 
     if (FAILED(hr)) {
         return hr;
+    }
+
+    unsigned int port_no = cfg->port_no;
+    if (port_no == 0){
+        port_no = default_port_no;
     }
 
     if (cfg->gen != 0) {
@@ -85,6 +90,7 @@ HRESULT sg_reader_hook_init(
         sg_reader_uart.baud.BaudRate = 38400;
     }
 
+    dprintf("NFC Assembly: enabling (port=%d)\n", port_no);
     uart_init(&sg_reader_uart, port_no);
     sg_reader_uart.written.bytes = sg_reader_written_bytes;
     sg_reader_uart.written.nbytes = sizeof(sg_reader_written_bytes);

@@ -21,3 +21,6 @@ subprojects/capnhook
 
 # For enabling debug logging on local builds
 MesonLocalOptions.mk
+
+# Some meson cache thing
+.meson-subproject-wrap-hash.txt

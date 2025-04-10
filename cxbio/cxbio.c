@@ -8,6 +8,7 @@
 #include "cxbio/config.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static bool cxb_io_coin;
 static int cxb_io_coins;
@@ -21,7 +22,7 @@ uint16_t cxb_io_get_api_version(void)
 HRESULT cxb_io_revio_init(void)
 {
     dprintf("CXB IO: REVIO init\n");
-    cxb_io_config_load(&cxb_io_cfg, L".\\segatools.ini");
+    cxb_io_config_load(&cxb_io_cfg, get_config_path());
 
     return S_OK;
 }

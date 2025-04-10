@@ -7,6 +7,7 @@
 
 #include "kemonoio/kemonoio.h"
 #include "kemonoio/config.h"
+#include "util/env.h"
 
 static uint8_t kemono_opbtn;
 static uint16_t kemono_pbtn;
@@ -19,7 +20,7 @@ uint16_t kemono_io_get_api_version(void) {
 }
 
 HRESULT kemono_io_init(void) {
-    kemono_io_config_load(&kemono_io_cfg, L".\\segatools.ini");
+    kemono_io_config_load(&kemono_io_cfg, get_config_path());
 
     kemono_io_coins = 0;
 

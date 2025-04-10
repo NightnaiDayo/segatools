@@ -1,10 +1,11 @@
 #include <windows.h>
 #include <devioctl.h>
-#include <ntdddisk.h>
+#include <winioctl.h>
 
 #include <assert.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "amex/ds.h"
@@ -19,13 +20,11 @@
 #include "util/dprintf.h"
 #include "util/str.h"
 
-#pragma pack(push, 1)
+#define DS_IOCTL_GET_ABI_VERSION CTL_CODE(0x8000, 0x800, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define DS_IOCTL_SETUP           CTL_CODE(0x8000, 0x801, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define DS_IOCTL_READ_SECTOR     CTL_CODE(0x8000, 0x804, METHOD_BUFFERED, FILE_READ_ACCESS)
 
-enum {
-    DS_IOCTL_GET_ABI_VERSION = 0x80006000,
-    DS_IOCTL_SETUP           = 0x80006004,
-    DS_IOCTL_READ_SECTOR     = 0x80006010,
-};
+#pragma pack(push, 1)
 
 struct ds_eeprom {
     uint32_t crc32;

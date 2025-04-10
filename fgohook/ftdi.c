@@ -16,8 +16,10 @@
 
 #include <windows.h>
 #include <setupapi.h>
-#include <stdint.h>
+
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "fgohook/ftdi.h"
@@ -116,7 +118,7 @@ static const struct hook_symbol reg_syms[] = {
         }
 };
 
-#define device_fake_key 0xDEADBEEF
+const size_t device_fake_key = 0xDEADBEEF;
 
 static HANDLE ftdi_fd;
 static char port_name[8];

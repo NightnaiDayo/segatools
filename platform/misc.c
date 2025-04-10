@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "hook/table.h"

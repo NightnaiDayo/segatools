@@ -4,7 +4,6 @@ shared_library(
     include_directories : inc,
     implicit_include_directories : false,
     vs_module_defs : 'divahook.def',
-    c_pch : '../precompiled.h',
     dependencies : [
         capnhook.get_variable('hook_dep'),
         capnhook.get_variable('hooklib_dep'),
@@ -14,6 +13,7 @@ shared_library(
         amex_lib,
         board_lib,
         divaio_lib,
+        gfxhook_lib,
         hooklib_lib,
         jvs_lib,
         platform_lib,

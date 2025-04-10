@@ -12,6 +12,7 @@
 
 #include "util/dprintf.h"
 #include "util/str.h"
+#include "util/env.h"
 
 static struct swdc_io_config swdc_io_cfg;
 static const struct swdc_io_backend *swdc_io_backend;
@@ -38,7 +39,7 @@ HRESULT swdc_io_init(void)
         return hr;
     }
 
-    swdc_io_config_load(&swdc_io_cfg, L".\\segatools.ini");
+    swdc_io_config_load(&swdc_io_cfg, get_config_path());
 
     if (wstr_ieq(swdc_io_cfg.mode, L"dinput")) {
         hr = swdc_di_init(&swdc_io_cfg.di, inst, &swdc_io_backend);
@@ -118,7 +119,7 @@ HRESULT swdc_io_led_init(void)
     return S_OK;
 }
 
-void swdc_io_led_set_fet_output(const uint8_t *rgb)
+void swdc_io_led_set_fet_output(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("SWDC LED: LEFT SEAT LED: %02X\n", rgb[0]);
@@ -128,7 +129,7 @@ void swdc_io_led_set_fet_output(const uint8_t *rgb)
     return;
 }
 
-void swdc_io_led_gs_update(const uint8_t *rgb)
+void swdc_io_led_gs_update(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     for (int i = 0; i < 9; i++) {
@@ -140,7 +141,7 @@ void swdc_io_led_gs_update(const uint8_t *rgb)
     return;
 }
 
-void swdc_io_led_set_leds(const uint8_t *rgb)
+void swdc_io_led_set_leds(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("SWDC LED: START: %02X\n", rgb[0]);

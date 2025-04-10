@@ -2,11 +2,13 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <process.h>
 
 #include "mercuryio/mercuryio.h"
 #include "mercuryio/config.h"
 #include "mercuryhook/elisabeth.h"
+#include "util/env.h"
 
 static unsigned int __stdcall mercury_io_touch_thread_proc(void *ctx);
 
@@ -23,7 +25,7 @@ uint16_t mercury_io_get_api_version(void)
 
 HRESULT mercury_io_init(void)
 {
-    mercury_io_config_load(&mercury_io_cfg, L".\\segatools.ini");
+    mercury_io_config_load(&mercury_io_cfg, get_config_path());
 
     return S_OK;
 }

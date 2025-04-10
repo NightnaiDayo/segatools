@@ -73,14 +73,14 @@ struct _chuni_led_data_buf_t* escape_led_data(struct _chuni_led_data_buf_t* unes
 {
     struct _chuni_led_data_buf_t* out_struct = &led_escaped_buf[unescaped->board];
     
-    byte* in_buf = unescaped->data;
-    byte* out_buf = out_struct->data;
+    uint8_t* in_buf = unescaped->data;
+    uint8_t* out_buf = out_struct->data;
     int i = 0;
     int o = 0;
     
     while (i < unescaped->data_len)
     {
-        byte b = in_buf[i++];
+        uint8_t b = in_buf[i++];
         if (b == LED_PACKET_FRAMING || b == LED_PACKET_ESCAPE)
         {
             out_buf[o++] = LED_PACKET_ESCAPE;
@@ -94,7 +94,7 @@ struct _chuni_led_data_buf_t* escape_led_data(struct _chuni_led_data_buf_t* unes
     return out_struct;
 }
 
-void led_output_update(uint8_t board, const byte* rgb)
+void led_output_update(uint8_t board, const uint8_t* rgb)
 {
     if (board < 0 || board > 2 || !any_outputs_enabled)
     {

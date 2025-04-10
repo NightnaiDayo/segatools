@@ -37,9 +37,9 @@ HRESULT swdc_di_dev_init(
 }
 
 HRESULT swdc_di_dev_poll(
-        IDirectInputDevice8W *dev,
-        HWND wnd,
-        union swdc_di_state *out)
+    IDirectInputDevice8W *dev,
+    HWND wnd,
+    union swdc_di_state *out)
 {
     HRESULT hr;
     MSG msg;
@@ -59,16 +59,13 @@ HRESULT swdc_di_dev_poll(
     }
 
     hr = IDirectInputDevice8_GetDeviceState(
-            dev,
-            sizeof(out->st),
-            &out->st);
+        dev,
+        sizeof(out->st),
+        &out->st);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: GetDeviceState error: %08x\n", (int) hr);
+        dprintf("DirectInput: GetDeviceState error: %08x\n", (int)hr);
     }
-
-    /* JVS lacks a protocol for reporting hardware errors from poll command
-       responses, so this ends up returning zeroed input state instead. */
 
     return hr;
 }
@@ -80,29 +77,26 @@ HRESULT swdc_di_dev_start(IDirectInputDevice8W *dev, HWND wnd) {
     assert(wnd != NULL);
 
     hr = IDirectInputDevice8_SetCooperativeLevel(
-            dev,
-            wnd,
-            DISCL_BACKGROUND | DISCL_EXCLUSIVE);
+        dev,
+        wnd,
+        DISCL_BACKGROUND | DISCL_EXCLUSIVE);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: SetCooperativeLevel failed: %08x\n", (int) hr);
-
+        dprintf("DirectInput: SetCooperativeLevel failed: %08x\n", (int)hr);
         return hr;
     }
 
     hr = IDirectInputDevice8_SetDataFormat(dev, &c_dfDIJoystick);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: SetDataFormat failed: %08x\n", (int) hr);
-
+        dprintf("DirectInput: SetDataFormat failed: %08x\n", (int)hr);
         return hr;
     }
 
     hr = IDirectInputDevice8_Acquire(dev);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: Acquire failed: %08x\n", (int) hr);
-
+        dprintf("DirectInput: Acquire failed: %08x\n", (int)hr);
         return hr;
     }
 
@@ -168,7 +162,6 @@ void swdc_di_ffb_constant_force(uint8_t direction_ffb, uint8_t force)
     cf.lMagnitude = (direction_ffb == 0) ? -magnitude : magnitude;
 
     axis = DIJOFS_X;
-    /* Irrelevant as magnitude descripbes the direction */
     direction = 0;
 
     memset(&fx, 0, sizeof(fx));
@@ -184,38 +177,38 @@ void swdc_di_ffb_constant_force(uint8_t direction_ffb, uint8_t force)
     fx.cbTypeSpecificParams = sizeof(cf);
     fx.lpvTypeSpecificParams = &cf;
 
+    /* Check if the effect already exists */
     if (swdc_di_fx != NULL) {
-        // Try to update the existing effect
         hr = IDirectInputEffect_SetParameters(swdc_di_fx, &fx, DIEP_TYPESPECIFICPARAMS);
-        
         if (SUCCEEDED(hr)) {
-            return;
-        } else {
+            return; // Successfully updated existing effect
+        }
+        else {
             dprintf("DirectInput: Failed to update constant force feedback, recreating effect: %08x\n", (int)hr);
-            // Stop and release the current effect if updating fails
             IDirectInputEffect_Stop(swdc_di_fx);
             IDirectInputEffect_Release(swdc_di_fx);
-            swdc_di_fx = NULL;
+            swdc_di_fx = NULL; // Reset the pointer
         }
     }
 
-    // Create a new constant force effect
+    /* Create a new constant force effect */
     IDirectInputEffect *obj;
     hr = IDirectInputDevice8_CreateEffect(
-            swdc_di_dev,
-            &GUID_ConstantForce,
-            &fx,
-            &obj,
-            NULL);
+        swdc_di_dev,
+        &GUID_ConstantForce,
+        &fx,
+        &obj,
+        NULL);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: Constant force feedback creation failed: %08x\n", (int) hr);
+        dprintf("DirectInput: Constant force feedback creation failed: %08x\n", (int)hr);
         return;
     }
 
+    /* Start the effect */
     hr = IDirectInputEffect_Start(obj, INFINITE, 0);
     if (FAILED(hr)) {
-        dprintf("DirectInput: Constant force feedback start failed: %08x\n", (int) hr);
+        dprintf("DirectInput: Constant force feedback start failed: %08x\n", (int)hr);
         IDirectInputEffect_Release(obj);
         return;
     }
@@ -239,9 +232,6 @@ void swdc_di_ffb_rumble(uint8_t force, uint8_t period)
     DIPERIODIC pe;
     HRESULT hr;
 
-    /* Duration in microseconds,
-       Might be totally wrong as especially on FANATEC wheels as this code will
-       crash the game. TODO: Figure out why this effect will crash on FANATEC! */
     DWORD duration = (DWORD)((double)force * ffb_duration);
 
     memset(&pe, 0, sizeof(pe));
@@ -256,7 +246,7 @@ void swdc_di_ffb_rumble(uint8_t force, uint8_t period)
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
     fx.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-    fx.dwDuration = duration;
+    fx.dwDuration = INFINITE;
     fx.dwGain = DI_FFNOMINALMAX;
     fx.dwTriggerButton = DIEB_NOTRIGGER;
     fx.dwTriggerRepeatInterval = INFINITE;
@@ -266,37 +256,38 @@ void swdc_di_ffb_rumble(uint8_t force, uint8_t period)
     fx.cbTypeSpecificParams = sizeof(pe);
     fx.lpvTypeSpecificParams = &pe;
 
+    /* Check if the effect already exists */
     if (swdc_di_fx_rumble != NULL) {
-        // Try to update the existing effect
         hr = IDirectInputEffect_SetParameters(swdc_di_fx_rumble, &fx, DIEP_TYPESPECIFICPARAMS);
-        
         if (SUCCEEDED(hr)) {
             return;
-        } else {
-            dprintf("DirectInput: Failed to update periodic force feedback, recreating effect: %08x\n", (int)hr);
-            // Stop and release the current effect if updating fails
+        }
+        else {
+            dprintf("DirectInput: Failed to update rumble feedback, recreating effect: %08x\n", (int)hr);
             IDirectInputEffect_Stop(swdc_di_fx_rumble);
             IDirectInputEffect_Release(swdc_di_fx_rumble);
             swdc_di_fx_rumble = NULL;
         }
     }
 
+    /* Create a new rumble effect */
     IDirectInputEffect *obj;
     hr = IDirectInputDevice8_CreateEffect(
-            swdc_di_dev,
-            &GUID_Sine,
-            &fx,
-            &obj,
-            NULL);
+        swdc_di_dev,
+        &GUID_Sine,
+        &fx,
+        &obj,
+        NULL);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: Periodic force feedback creation failed: %08x\n", (int) hr);
+        dprintf("DirectInput: Rumble effect creation failed: %08x\n", (int)hr);
         return;
     }
 
+    /* Start the effect */
     hr = IDirectInputEffect_Start(obj, INFINITE, 0);
     if (FAILED(hr)) {
-        dprintf("DirectInput: Periodic force feedback start failed: %08x\n", (int) hr);
+        dprintf("DirectInput: Rumble effect start failed: %08x\n", (int)hr);
         IDirectInputEffect_Release(obj);
         return;
     }
@@ -343,38 +334,35 @@ void swdc_di_ffb_damper(uint8_t force)
     fx.cbTypeSpecificParams = sizeof(cond);
     fx.lpvTypeSpecificParams = &cond;
 
+    /* Check if the damper effect already exists */
     if (swdc_di_fx_damper != NULL) {
-        // Try to update the existing effect
         hr = IDirectInputEffect_SetParameters(swdc_di_fx_damper, &fx, DIEP_TYPESPECIFICPARAMS);
-        
         if (SUCCEEDED(hr)) {
             return;
-        } else {
-            dprintf("DirectInput: Failed to update damper force feedback, recreating effect: %08x\n", (int)hr);
-            // Stop and release the current effect if updating fails
+        }
+        else {
             IDirectInputEffect_Stop(swdc_di_fx_damper);
             IDirectInputEffect_Release(swdc_di_fx_damper);
             swdc_di_fx_damper = NULL;
         }
     }
 
-    // Create a new damper force effect
+    /* Create a new damper effect */
     IDirectInputEffect *obj;
     hr = IDirectInputDevice8_CreateEffect(
-            swdc_di_dev,
-            &GUID_Damper,
-            &fx,
-            &obj,
-            NULL);
+        swdc_di_dev,
+        &GUID_Damper,
+        &fx,
+        &obj,
+        NULL);
 
     if (FAILED(hr)) {
-        dprintf("DirectInput: Damper force feedback creation failed: %08x\n", (int) hr);
         return;
     }
 
-    hr = IDirectInputEffect_Start(obj, INFINITE, 0);
+    /* Start the effect */
+    hr = IDirectInputEffect_Start(obj, fx.dwDuration, 0);
     if (FAILED(hr)) {
-        dprintf("DirectInput: Damper force feedback start failed: %08x\n", (int) hr);
         IDirectInputEffect_Release(obj);
         return;
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <stdbool.h>
 
 #include "aimeio/aimeio.h"
 

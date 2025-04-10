@@ -17,4 +17,4 @@
 extern HANDLE mu3_led_init_mutex;
 
 HRESULT mu3_led_output_init(struct mu3_io_config* const cfg);
-void mu3_led_output_update(int board, const byte* rgb);
+void mu3_led_output_update(int board, const uint8_t* rgb);

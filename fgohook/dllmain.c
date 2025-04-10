@@ -34,6 +34,8 @@
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 
+#include "gfxhook/gfx.h"
+
 #include "fgohook/config.h"
 #include "fgohook/io4.h"
 #include "fgohook/fgo-dll.h"
@@ -42,6 +44,7 @@
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE fgo_hook_mod;
 static process_entry_t fgo_startup;
@@ -50,24 +53,39 @@ static struct fgo_hook_config fgo_hook_cfg;
 static DWORD CALLBACK fgo_pre_startup(void)
 {
     HRESULT hr;
+    HMODULE dbghelp;
 
     dprintf("--- Begin fgo_pre_startup ---\n");
 
+    /* Pin dbghelp so the path hooks apply to it. */
+
+    dbghelp = LoadLibraryW(L"dbghelp.dll");
+
+    if (dbghelp != NULL) {
+        dprintf("Pinned debug helper library, hMod=%p\n", dbghelp);
+    }
+    else {
+        dprintf("Failed to load debug helper library!\n");
+    }
+
     /* Load config */
 
-    fgo_hook_config_load(&fgo_hook_cfg, L".\\segatools.ini");
+    fgo_hook_config_load(&fgo_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
     dvd_hook_init(&fgo_hook_cfg.dvd, fgo_hook_mod);
+    gfx_hook_init(&fgo_hook_cfg.gfx);
     touch_screen_hook_init(&fgo_hook_cfg.touch, fgo_hook_mod);
     serial_hook_init();
 
     /* Hook external DLL APIs */
 
     printer_hook_init(&fgo_hook_cfg.printer, 4, fgo_hook_mod);
-    dll_hook_push(fgo_hook_mod, L"C330Ausb.dll");
-    dll_hook_push(fgo_hook_mod, L"C330AFWDLusb.dll");
+    if (fgo_hook_cfg.printer.enable) {
+        dll_hook_push(fgo_hook_mod, L"C330Ausb.dll");
+        dll_hook_push(fgo_hook_mod, L"C330AFWDLusb.dll");
+    }
 
     /* Initialize emulation hooks */
 
@@ -117,8 +135,9 @@ static DWORD CALLBACK fgo_pre_startup(void)
         goto fail;
     }
 
+    unsigned int led_port_no[2] = {17, 0};
     hr = led15093_hook_init(&fgo_hook_cfg.led15093, 
-        fgo_dll.led_init, fgo_dll.led_set_leds, 17, 1, 1, 2);
+        fgo_dll.led_init, fgo_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;
@@ -132,7 +151,7 @@ static DWORD CALLBACK fgo_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  fgo_pre_startup ---\n");
 

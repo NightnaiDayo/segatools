@@ -2,9 +2,9 @@ util_lib = static_library(
     'util',
     include_directories : inc,
     implicit_include_directories : false,
-    c_pch : '../precompiled.h',
     dependencies : [
         capnhook.get_variable('hook_dep'),
+        imagehlp_lib,
     ],
     sources : [
         'async.c',
@@ -17,11 +17,15 @@ util_lib = static_library(
         'dprintf.h',
         'dump.c',
         'dump.h',
+        'get_function_ordinal.c',
+        'get_function_ordinal.h',
         'lib.c',
         'lib.h',
         'slurp.c',
         'slurp.h',
         'str.c',
         'str.h',
+        'env.c',
+        'env.h',
     ],
 )

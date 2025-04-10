@@ -8,6 +8,7 @@
 #include "carolio/carolio.h"
 #include "carolio/config.h"
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static unsigned int __stdcall carol_io_touch_thread_proc(void *ctx);
 
@@ -25,7 +26,7 @@ uint16_t carol_io_get_api_version(void)
 
 HRESULT carol_io_jvs_init(void)
 {
-    carol_io_config_load(&carol_io_cfg, L".\\segatools.ini");
+    carol_io_config_load(&carol_io_cfg, get_config_path());
 
     return S_OK;
 }

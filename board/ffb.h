@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 struct ffb_config {
     bool enable;

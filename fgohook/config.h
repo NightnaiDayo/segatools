@@ -9,6 +9,8 @@
 #include "hooklib/touch.h"
 #include "hooklib/printer.h"
 
+#include "gfxhook/config.h"
+
 #include "fgohook/deck.h"
 #include "fgohook/ftdi.h"
 #include "fgohook/fgo-dll.h"
@@ -26,6 +28,7 @@ struct fgo_hook_config {
     struct deck_config deck;
     struct ftdi_config ftdi;
     struct led15093_config led15093;
+    struct gfx_config gfx;
     struct fgo_dll_config dll;
 };
 

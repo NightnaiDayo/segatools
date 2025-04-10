@@ -13,6 +13,8 @@
 
 #include <windows.h>
 
+#include <stdlib.h>
+
 #include "board/io4.h"
 #include "board/sg-reader.h"
 #include "board/vfd.h"
@@ -34,6 +36,7 @@
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE mercury_hook_mod;
 static process_entry_t mercury_startup;
@@ -49,7 +52,7 @@ static DWORD CALLBACK mercury_pre_startup(void)
 
     /* Load config */
 
-    mercury_hook_config_load(&mercury_hook_cfg, L".\\segatools.ini");
+    mercury_hook_config_load(&mercury_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
@@ -60,6 +63,14 @@ static DWORD CALLBACK mercury_pre_startup(void)
     gfx_d3d11_hook_init(&mercury_hook_cfg.gfx, mercury_hook_mod);
 
     /* Initialize emulation hooks */
+
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"Delivery Server", L"Server", L"Client"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(mercury_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
 
     hr = platform_hook_init(
             &mercury_hook_cfg.platform,
@@ -102,7 +113,7 @@ static DWORD CALLBACK mercury_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  mercury_pre_startup ---\n");
 

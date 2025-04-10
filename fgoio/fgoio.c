@@ -8,6 +8,7 @@
 #include "fgoio/fgoio.h"
 #include "fgoio/config.h"
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static uint8_t fgo_opbtn;
 static uint8_t fgo_gamebtn;
@@ -23,7 +24,7 @@ uint16_t fgo_io_get_api_version(void)
 
 HRESULT fgo_io_init(void)
 {
-    fgo_io_config_load(&fgo_io_cfg, L".\\segatools.ini");
+    fgo_io_config_load(&fgo_io_cfg, get_config_path());
 
     return S_OK;
 }
@@ -109,8 +110,8 @@ HRESULT fgo_io_poll(void)
         normalizedMagnitude = 0.0;
     }
 
-    fgo_stick_x = normalizedLX * normalizedMagnitude * 32767;
-    fgo_stick_y = normalizedLY * normalizedMagnitude * 32767;
+    fgo_stick_x = (int16_t)(normalizedLX * normalizedMagnitude * 32767);
+    fgo_stick_y = (int16_t)(normalizedLY * normalizedMagnitude * 32767);
 
     return S_OK;
 }

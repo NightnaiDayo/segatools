@@ -203,7 +203,7 @@ static HRESULT swdc_io4_write_gpio(uint8_t* payload, size_t len)
         lights_data & SWDC_IO_LED_LEFT ? 0xFF : 0x00,
     };
 
-    swdc_dll.led_set_leds(rgb_out);
+    swdc_dll.led_set_leds(0, rgb_out);
 
     return S_OK;
 }

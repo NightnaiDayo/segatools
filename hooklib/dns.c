@@ -8,12 +8,14 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "hook/hr.h"
 #include "hook/table.h"
 
 #include "util/dprintf.h"
+#include "util/get_function_ordinal.h"
 
 #include "hooklib/dns.h"
 
@@ -81,6 +83,17 @@ static bool WINAPI hook_WinHttpCrackUrl(
         DWORD dwFlags,
         LPURL_COMPONENTS lpUrlComponents);
 
+static DWORD WINAPI hook_send(
+        SOCKET s,
+        const char* buf,
+        int len,
+        int flags);
+
+static int WINAPI hook_connect(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen);
+
 /* Link pointers */
 
 static DNS_STATUS (WINAPI *next_DnsQuery_A)(
@@ -122,6 +135,17 @@ static bool (WINAPI *next_WinHttpCrackUrl)(
         DWORD dwFlags,
         LPURL_COMPONENTS lpUrlComponents);
 
+static DWORD (WINAPI *next_send)(
+        SOCKET s,
+        const char* buf,
+        int len,
+        int flags);
+
+static int (__stdcall *next_connect)(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen);
+
 static const struct hook_symbol dns_hook_syms_dnsapi[] = {
     {
         .name       = "DnsQuery_A",
@@ -144,7 +168,7 @@ static const struct hook_symbol dns_hook_syms_ws2[] = {
         .ordinal    = 176,
         .patch      = hook_getaddrinfo,
         .link       = (void **) &next_getaddrinfo,
-    }
+    },
 };
 
 static const struct hook_symbol dns_hook_syms_winhttp[] = {
@@ -157,7 +181,22 @@ static const struct hook_symbol dns_hook_syms_winhttp[] = {
         .patch      = hook_WinHttpCrackUrl,
         .link       = (void **) &next_WinHttpCrackUrl,
     }
+};
 
+static struct hook_symbol http_hook_syms_ws2[] = {
+    {
+        .name       = "send",
+        .patch      = hook_send,
+        .link       = (void **) &next_send
+    },
+};
+
+static struct hook_symbol port_hook_syms_ws2[] = {
+    {
+        .name       = "connect",
+        .patch      = hook_connect,
+        .link       = (void **) &next_connect
+    },
 };
 
 static bool dns_hook_initted;
@@ -165,6 +204,9 @@ static CRITICAL_SECTION dns_hook_lock;
 static struct dns_hook_entry *dns_hook_entries;
 static size_t dns_hook_nentries;
 static char received_title_url[255];
+static unsigned short startup_port;
+static unsigned short billing_port;
+static unsigned short aimedb_port;
 
 static void dns_hook_init(void)
 {
@@ -196,6 +238,33 @@ void dns_hook_apply_hooks(HMODULE mod){
             "winhttp.dll",
             dns_hook_syms_winhttp,
             _countof(dns_hook_syms_winhttp));
+}
+
+void http_hook_init(){
+    for (size_t i = 0; i < _countof(http_hook_syms_ws2); ++i) {
+        http_hook_syms_ws2[i].ordinal = get_function_ordinal("ws2_32.dll", http_hook_syms_ws2[i].name);
+    }
+
+    hook_table_apply(
+            NULL,
+            "ws2_32.dll",
+            http_hook_syms_ws2,
+            _countof(http_hook_syms_ws2));
+}
+
+void port_hook_init(unsigned short _startup_port, unsigned short _billing_port, unsigned short _aimedb_port){
+    startup_port = _startup_port;
+    billing_port = _billing_port;
+    aimedb_port = _aimedb_port;
+    for (size_t i = 0; i < _countof(port_hook_syms_ws2); ++i) {
+        port_hook_syms_ws2[i].ordinal = get_function_ordinal("ws2_32.dll", port_hook_syms_ws2[i].name);
+    }
+
+    hook_table_apply(
+            NULL,
+            "ws2_32.dll",
+            port_hook_syms_ws2,
+            _countof(port_hook_syms_ws2));
 }
 
 // This function match domain and subdomains like *.naominet.jp.
@@ -253,7 +322,7 @@ HRESULT dns_hook_push(const wchar_t *from_src, const wchar_t *to_src)
         goto end;
     }
 
-    if(to_src != NULL) {
+    if (to_src != NULL) {
         to = _wcsdup(to_src);
 
         if (to == NULL) {
@@ -333,7 +402,7 @@ static DNS_STATUS WINAPI hook_DnsQuery_A(
         pos = &dns_hook_entries[i];
 
         if (match_domain(wstr, pos->from)) {
-            if(pos->to == NULL) {
+            if (pos->to == NULL) {
                 LeaveCriticalSection(&dns_hook_lock);
                 hr = HRESULT_FROM_WIN32(DNS_ERROR_RCODE_NAME_ERROR);
 
@@ -397,7 +466,7 @@ static DNS_STATUS WINAPI hook_DnsQuery_W(
         pos = &dns_hook_entries[i];
 
         if (match_domain(pszName, pos->from)) {
-            if(pos->to == NULL) {
+            if (pos->to == NULL) {
                 LeaveCriticalSection(&dns_hook_lock);
                 return HRESULT_FROM_WIN32(DNS_ERROR_RCODE_NAME_ERROR);
             }
@@ -441,7 +510,7 @@ static DNS_STATUS WINAPI hook_DnsQueryEx(
         pos = &dns_hook_entries[i];
 
         if (match_domain(pRequest->QueryName, pos->from)) {
-            if(pos->to == NULL) {
+            if (pos->to == NULL) {
                 LeaveCriticalSection(&dns_hook_lock);
                 return HRESULT_FROM_WIN32(DNS_ERROR_RCODE_NAME_ERROR);
             }
@@ -508,7 +577,7 @@ static int WSAAPI hook_getaddrinfo(
         pos = &dns_hook_entries[i];
 
         if (match_domain(wstr, pos->from)) {
-            if(pos->to == NULL) {
+            if (pos->to == NULL) {
                 LeaveCriticalSection(&dns_hook_lock);
                 result = EAI_NONAME;
 
@@ -562,7 +631,7 @@ static HINTERNET WINAPI hook_WinHttpConnect(
         pos = &dns_hook_entries[i];
 
         if (match_domain(pwszServerName, pos->from)) {
-            if(pos->to == NULL) {
+            if (pos->to == NULL) {
                 LeaveCriticalSection(&dns_hook_lock);
                 return NULL;
             }
@@ -596,8 +665,8 @@ static bool WINAPI hook_WinHttpCrackUrl(
         if (match_domain(pwszUrl, pos->from)) {
             wchar_t* toAddr = pos->to;
             wchar_t titleBuffer[255];
-            
-            if(wcscmp(toAddr, L"title") == 0) {
+
+            if (wcscmp(toAddr, L"title") == 0) {
                 size_t wstr_c;
                 mbstowcs_s(&wstr_c, titleBuffer, 255, received_title_url, strlen(received_title_url));
                 toAddr = titleBuffer;
@@ -621,4 +690,94 @@ static bool WINAPI hook_WinHttpCrackUrl(
         dwFlags,
         lpUrlComponents
     );
+}
+
+int WINAPI hook_connect(SOCKET s, const struct sockaddr *name, int namelen) {
+    const struct sockaddr_in *n;
+    struct sockaddr_in new_name;
+    unsigned ip;
+    unsigned short port, new_port;
+
+    EnterCriticalSection(&dns_hook_lock);
+
+    n = (const struct sockaddr_in *)name;
+    ip = n->sin_addr.S_un.S_addr;
+    if (WSANtohs(s, n->sin_port, &port)) return SOCKET_ERROR;
+
+    if (port == 80 && startup_port) {
+        new_port = startup_port;
+    } else if (port == 8443 && billing_port) {
+        new_port = billing_port;
+    } else if (port == 22345 && aimedb_port) {
+        new_port = aimedb_port;
+    } else { // No match
+        dprintf("TCP Connect: %u.%u.%u.%u:%hu\n", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff, port);
+
+        LeaveCriticalSection(&dns_hook_lock);
+        return next_connect(
+            s,
+            name,
+            namelen
+        );
+    }
+
+    // matched
+    new_name = *n;
+    if (WSAHtons(s, new_port, &new_name.sin_port)) return SOCKET_ERROR;
+
+    dprintf("TCP Connect: %u.%u.%u.%u:%hu, mapped to port %hu\n", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff, port, new_port);
+
+    LeaveCriticalSection(&dns_hook_lock);
+    return next_connect(
+        s,
+        (const struct sockaddr *)&new_name,
+        sizeof(new_name)
+    );
+}
+
+DWORD WINAPI hook_send(SOCKET s, const char* buf, int len, int flags) {
+    if (strstr(buf, "HTTP/") != NULL) {
+        char *new_buf = malloc(len + 1);
+        if (new_buf == NULL) return SOCKET_ERROR;
+
+        memcpy(new_buf, buf, len);
+        new_buf[len] = '\0';
+
+        char *host_start = strstr(new_buf, "Host: ");
+        if (host_start != NULL) {
+            char *host_end = strstr(host_start, "\r\n");
+            if (host_end != NULL) {
+                host_end += 2;
+                int host_len = host_end - host_start;
+
+                char *host_value_start = host_start + 6;
+                char *host_value_end = strstr(host_value_start, "\r\n");
+                if (host_value_end != NULL) {
+                    int value_len = host_value_end - host_value_start;
+                    char* host_value = (char*)malloc(value_len + 1);
+                    strncpy(host_value, host_value_start, value_len);
+                    host_value[value_len] = '\0';
+
+                    for (struct dns_hook_entry *entry = dns_hook_entries; entry && entry->from; entry++) {
+                        char from_value[256];
+                        wcstombs(from_value, entry->from, sizeof(from_value));
+
+                        if (strcmp(host_value, from_value) == 0) {
+                            char to_value[256];
+                            wcstombs(to_value, entry->to, sizeof(to_value));
+                            snprintf(host_start, len - (host_start - new_buf), "Host: %s\r\n", to_value);
+                            break;
+                        }
+                    }
+                    free(host_value);
+                }
+                len = (int)strlen(new_buf);
+            }
+        }
+        DWORD result = next_send(s, new_buf, len, flags);
+        free(new_buf);
+        return result;
+    }
+
+    return next_send(s, buf, len, flags);
 }

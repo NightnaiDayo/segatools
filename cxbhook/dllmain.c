@@ -23,6 +23,7 @@
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE cxb_hook_mod;
 static process_entry_t cxb_startup;
@@ -58,7 +59,7 @@ static DWORD CALLBACK cxb_pre_startup(void)
 
     /* Config load */
 
-    cxb_hook_config_load(&cxb_hook_cfg, L".\\segatools.ini");
+    cxb_hook_config_load(&cxb_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
@@ -110,7 +111,7 @@ static DWORD CALLBACK cxb_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  cxb_pre_startup ---\n");
 

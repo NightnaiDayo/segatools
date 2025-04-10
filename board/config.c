@@ -72,6 +72,7 @@ void aime_config_load(struct aime_config *cfg, const wchar_t *filename)
 
     aime_dll_config_load(&cfg->dll, filename);
     cfg->enable = GetPrivateProfileIntW(L"aime", L"enable", 1, filename);
+    cfg->port_no = GetPrivateProfileIntW(L"aime", L"portNo", 0, filename);
     cfg->high_baudrate = GetPrivateProfileIntW(L"aime", L"highBaud", 1, filename);
     cfg->gen = GetPrivateProfileIntW(L"aime", L"gen", 0, filename);
     cfg->proxy_flag = GetPrivateProfileIntW(L"aime", L"proxyFlag", 2, filename);
@@ -99,7 +100,7 @@ void vfd_config_load(struct vfd_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"vfd", L"enable", 1, filename);
-    cfg->port = GetPrivateProfileIntW(L"vfd", L"portNo", 0, filename);
+    cfg->port_no = GetPrivateProfileIntW(L"vfd", L"portNo", 0, filename);
     cfg->utf_conversion = GetPrivateProfileIntW(L"vfd", L"utfConversion", 0, filename);
 }
 

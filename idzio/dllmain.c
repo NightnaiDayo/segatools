@@ -12,6 +12,7 @@
 
 #include "util/dprintf.h"
 #include "util/str.h"
+#include "util/env.h"
 
 static struct idz_io_config idz_io_cfg;
 static const struct idz_io_backend *idz_io_backend;
@@ -39,7 +40,7 @@ HRESULT idz_io_jvs_init(void)
         return hr;
     }
 
-    idz_io_config_load(&idz_io_cfg, L".\\segatools.ini");
+    idz_io_config_load(&idz_io_cfg, get_config_path());
 
     if (wstr_ieq(idz_io_cfg.mode, L"dinput")) {
         hr = idz_di_init(&idz_io_cfg.di, inst, &idz_io_backend);
@@ -129,7 +130,7 @@ HRESULT idz_io_led_init(void)
     return S_OK;
 }
 
-void idz_io_led_set_fet_output(const uint8_t *rgb)
+void idz_io_led_set_fet_output(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("IDZ LED: LEFT SEAT LED: %02X\n", rgb[0]);
@@ -139,7 +140,7 @@ void idz_io_led_set_fet_output(const uint8_t *rgb)
     return;
 }
 
-void idz_io_led_gs_update(const uint8_t *rgb)
+void idz_io_led_gs_update(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     for (int i = 0; i < 9; i++) {
@@ -151,7 +152,7 @@ void idz_io_led_gs_update(const uint8_t *rgb)
     return;
 }
 
-void idz_io_led_set_leds(const uint8_t *rgb)
+void idz_io_led_set_leds(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("IDZ LED: START: %02X\n", rgb[0]);

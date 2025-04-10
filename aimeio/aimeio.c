@@ -12,6 +12,7 @@
 
 #include "util/crc.h"
 #include "util/dprintf.h"
+#include "util/env.h"
 
 struct aime_io_config {
     wchar_t aime_path[MAX_PATH];
@@ -222,7 +223,7 @@ uint16_t aime_io_get_api_version(void)
 
 HRESULT aime_io_init(void)
 {
-    aime_io_config_read(&aime_io_cfg, L".\\segatools.ini");
+    aime_io_config_read(&aime_io_cfg, get_config_path());
 
     return S_OK;
 }

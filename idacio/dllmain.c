@@ -12,6 +12,7 @@
 
 #include "util/dprintf.h"
 #include "util/str.h"
+#include "util/env.h"
 
 static struct idac_io_config idac_io_cfg;
 static const struct idac_io_backend *idac_io_backend;
@@ -38,7 +39,7 @@ HRESULT idac_io_init(void)
         return hr;
     }
 
-    idac_io_config_load(&idac_io_cfg, L".\\segatools.ini");
+    idac_io_config_load(&idac_io_cfg, get_config_path());
 
     if (wstr_ieq(idac_io_cfg.mode, L"dinput")) {
         hr = idac_di_init(&idac_io_cfg.di, inst, &idac_io_backend);
@@ -126,7 +127,7 @@ HRESULT idac_io_led_init(void)
     return S_OK;
 }
 
-void idac_io_led_set_fet_output(const uint8_t *rgb)
+void idac_io_led_set_fet_output(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("IDAC LED: LEFT SEAT LED: %02X\n", rgb[0]);
@@ -136,7 +137,7 @@ void idac_io_led_set_fet_output(const uint8_t *rgb)
     return;
 }
 
-void idac_io_led_gs_update(const uint8_t *rgb)
+void idac_io_led_gs_update(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     for (int i = 0; i < 9; i++) {
@@ -148,7 +149,7 @@ void idac_io_led_gs_update(const uint8_t *rgb)
     return;
 }
 
-void idac_io_led_set_leds(const uint8_t *rgb)
+void idac_io_led_set_leds(uint8_t board, const uint8_t *rgb)
 {
 #if 0
     dprintf("IDAC LED: START: %02X\n", rgb[0]);

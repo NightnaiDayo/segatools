@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "board/config.h"
 #include "board/vfd.h"
@@ -50,7 +51,7 @@ HRESULT vfd_handle_create_char2(struct const_iobuf* reader, struct iobuf* writer
 
 static bool utf_enabled;
 
-HRESULT vfd_hook_init(struct vfd_config *cfg, int default_port)
+HRESULT vfd_hook_init(struct vfd_config *cfg, unsigned int default_port_no)
 {
     if (!cfg->enable){
         return S_FALSE;
@@ -58,13 +59,13 @@ HRESULT vfd_hook_init(struct vfd_config *cfg, int default_port)
 
     utf_enabled = cfg->utf_conversion;
 
-    int port = cfg->port;
-    if (port == 0){
-        port = default_port;
+    unsigned int port_no = cfg->port_no;
+    if (port_no == 0){
+        port_no = default_port_no;
     }
 
-    dprintf("VFD: enabling (port=%d)\n", port);
-    uart_init(&vfd_uart, port);
+    dprintf("VFD: enabling (port=%d)\n", port_no);
+    uart_init(&vfd_uart, port_no);
     vfd_uart.written.bytes = vfd_written;
     vfd_uart.written.nbytes = sizeof(vfd_written);
     vfd_uart.readable.bytes = vfd_readable;

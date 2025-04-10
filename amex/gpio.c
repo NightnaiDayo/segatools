@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <ntstatus.h>
+#include <winioctl.h>
 
 #include <assert.h>
 #include <string.h>
@@ -13,12 +13,10 @@
 #include "util/dprintf.h"
 #include "util/str.h"
 
-enum {
-    GPIO_IOCTL_SET_LEDS     = 0x8000A004,
-    GPIO_IOCTL_GET_PSW      = 0x80006008,
-    GPIO_IOCTL_GET_DIPSW    = 0x8000600C,
-    GPIO_IOCTL_DESCRIBE     = 0x80006014,
-};
+#define GPIO_IOCTL_SET_LEDS   CTL_CODE(0x8000, 0x801, METHOD_BUFFERED, FILE_WRITE_ACCESS)
+#define GPIO_IOCTL_GET_PSW    CTL_CODE(0x8000, 0x802, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define GPIO_IOCTL_GET_DIPSW  CTL_CODE(0x8000, 0x803, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define GPIO_IOCTL_DESCRIBE   CTL_CODE(0x8000, 0x805, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 enum {
     GPIO_TYPE_NONE  = 0,

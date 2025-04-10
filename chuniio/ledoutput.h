@@ -16,4 +16,4 @@
 
 extern HANDLE led_init_mutex;
 HRESULT led_output_init(struct chuni_io_config* const cfg);
-void led_output_update(uint8_t board, const byte* rgb);
+void led_output_update(uint8_t board, const uint8_t* rgb);

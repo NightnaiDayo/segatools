@@ -4,7 +4,6 @@ shared_library(
     include_directories : inc,
     implicit_include_directories : false,
     vs_module_defs : 'mai2hook.def',
-    c_pch : '../precompiled.h',
     dependencies : [
         capnhook.get_variable('hook_dep'),
         capnhook.get_variable('hooklib_dep'),
@@ -24,6 +23,8 @@ shared_library(
         'dllmain.c',
         'io4.c',
         'io4.h',
+        'touch.c',
+        'touch.h',
         'mai2-dll.c',
         'mai2-dll.h',
     ],

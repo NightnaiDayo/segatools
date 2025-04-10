@@ -53,6 +53,7 @@
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE carol_hook_mod;
 static process_entry_t carol_startup;
@@ -100,7 +101,7 @@ static DWORD CALLBACK carol_pre_startup(void)
 
     /* Config load */
 
-    carol_hook_config_load(&carol_hook_cfg, L".\\segatools.ini");
+    carol_hook_config_load(&carol_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
@@ -164,7 +165,7 @@ static DWORD CALLBACK carol_pre_startup(void)
     }
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  carol_pre_startup ---\n");
 

@@ -7,7 +7,7 @@
 
 struct led15070_config {
     bool enable;
-    unsigned int port_no;
+    unsigned int port_no[2];
     char board_number[8];
     uint8_t fw_ver;
     uint16_t fw_sum;
@@ -15,9 +15,9 @@ struct led15070_config {
 };
 
 typedef HRESULT (*io_led_init_t)(void);
-typedef void (*io_led_set_fet_output_t)(const uint8_t *rgb);
-typedef void (*io_led_dc_update_t)(const uint8_t *rgb);
-typedef void (*io_led_gs_update_t)(const uint8_t *rgb);
+typedef void (*io_led_set_fet_output_t)(uint8_t board, const uint8_t *rgb);
+typedef void (*io_led_dc_update_t)(uint8_t board, const uint8_t *rgb);
+typedef void (*io_led_gs_update_t)(uint8_t board, const uint8_t *rgb);
 
 HRESULT led15070_hook_init(
         const struct led15070_config *cfg,
@@ -25,5 +25,4 @@ HRESULT led15070_hook_init(
         io_led_set_fet_output_t _led_set_fet_output,
         io_led_dc_update_t _led_dc_update,
         io_led_gs_update_t _led_gs_update,
-        unsigned int first_port,
-        unsigned int num_boards);
+        unsigned int port_no[2]);

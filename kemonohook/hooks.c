@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "hook/iohook.h"
 #include "hook/procaddr.h"
 #include "hook/table.h"

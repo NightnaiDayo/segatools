@@ -22,6 +22,9 @@
 #include "divahook/jvs.h"
 #include "divahook/slider.h"
 
+#include "gfxhook/gfx.h"
+#include "gfxhook/gl.h"
+
 #include "hook/process.h"
 
 #include "hooklib/serial.h"
@@ -30,6 +33,7 @@
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static HMODULE diva_hook_mod;
 static process_entry_t diva_startup;
@@ -38,15 +42,30 @@ static struct diva_hook_config diva_hook_cfg;
 static DWORD CALLBACK diva_pre_startup(void)
 {
     HRESULT hr;
+    HMODULE dbghelp;
 
     dprintf("--- Begin diva_pre_startup ---\n");
 
+    /* Pin dbghelp so the path hooks apply to it. */
+
+    dbghelp = LoadLibraryW(L"dbghelp.dll");
+
+    if (dbghelp != NULL) {
+        dprintf("Pinned debug helper library, hMod=%p\n", dbghelp);
+    }
+    else {
+        dprintf("Failed to load debug helper library!\n");
+    }
+
     /* Config load */
 
-    diva_hook_config_load(&diva_hook_cfg, L".\\segatools.ini");
+    diva_hook_config_load(&diva_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
 
+    dvd_hook_init(&diva_hook_cfg.dvd, diva_hook_mod);
+    gfx_hook_init(&diva_hook_cfg.gfx);
+    gfx_gl_hook_init(&diva_hook_cfg.gfx, diva_hook_mod);
     serial_hook_init();
 
     /* Initialize emulation hooks */
@@ -87,7 +106,7 @@ static DWORD CALLBACK diva_pre_startup(void)
 
     /* Initialize debug helpers */
 
-    spike_hook_init(L".\\segatools.ini");
+    spike_hook_init(get_config_path());
 
     dprintf("---  End  diva_pre_startup ---\n");
 

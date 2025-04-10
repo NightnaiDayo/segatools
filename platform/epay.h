@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #pragma pack(push,1)
 struct epay_config {

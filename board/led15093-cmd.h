@@ -88,7 +88,7 @@ struct led15093_req_reset {
 struct led15093_req_set_timeout {
     struct led15093_req_hdr hdr;
     uint8_t cmd;
-    uint8_t count;
+    uint16_t count;
 };
 
 struct led15093_req_set_disable_response {

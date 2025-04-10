@@ -179,7 +179,7 @@ static int16_t calculate_norm_steering(int16_t axis, uint16_t deadzone, bool lin
 
         // optionally normalize the magnitude with respect to its expected range
         // giving a magnitude value of 0.0 to 1.0
-        norm_magnitude = magnitude / (max_stick_value - deadzone);
+        norm_magnitude = (int16_t)(magnitude / (max_stick_value - deadzone));
     } else // if the controller is in the deadzone zero out the magnitude
     {
         magnitude = 0.0;
@@ -188,10 +188,10 @@ static int16_t calculate_norm_steering(int16_t axis, uint16_t deadzone, bool lin
 
     // apply non-linear transform to the axis
     if (!linear_steering) {
-        return norm_axis * pow(norm_magnitude, 3.0) * max_wheel_value;
+        return (int16_t)(norm_axis * powf(norm_magnitude, 3.0f) * max_wheel_value);
     }
 
-    return norm_axis * norm_magnitude * max_wheel_value;
+    return (int16_t)(norm_axis * norm_magnitude * max_wheel_value);
 }
 
 static void swdc_xi_get_analogs(struct swdc_io_analog_state *out)

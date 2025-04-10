@@ -14,6 +14,7 @@
 #include "platform/nusec.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static process_entry_t app_startup;
 
@@ -26,10 +27,10 @@ static DWORD CALLBACK app_pre_startup(void)
 
     dprintf("--- Begin %s ---\n", __func__);
 
-    clock_config_load(&clock_cfg, L".\\segatools.ini");
-    ds_config_load(&ds_cfg, L".\\segatools.ini");
-    nusec_config_load(&nusec_cfg, L".\\segatools.ini");
-    spike_hook_init(L".\\segatools.ini");
+    clock_config_load(&clock_cfg, get_config_path());
+    ds_config_load(&ds_cfg, get_config_path());
+    nusec_config_load(&nusec_cfg, get_config_path());
+    spike_hook_init(get_config_path());
 
     hr = clock_hook_init(&clock_cfg);
 

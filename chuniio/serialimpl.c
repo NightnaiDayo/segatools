@@ -98,7 +98,7 @@ void led_serial_update(struct _chuni_led_data_buf_t* data)
     ReleaseMutex(serial_write_mutex);
 }
 
-void led_serial_update_openithm(const byte* rgb)
+void led_serial_update_openithm(const uint8_t* rgb)
 {
     if (serial_port != INVALID_HANDLE_VALUE)
     {

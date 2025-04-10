@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 wchar_t *module_file_name(HMODULE module)
 {

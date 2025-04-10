@@ -12,6 +12,7 @@
 
 #include "util/dprintf.h"
 #include "util/str.h"
+#include "util/env.h"
 
 static struct tokyo_io_config tokyo_io_cfg;
 static const struct tokyo_io_backend *tokyo_io_backend;
@@ -38,7 +39,7 @@ HRESULT tokyo_io_init(void)
         return hr;
     }
 
-    tokyo_io_config_load(&tokyo_io_cfg, L".\\segatools.ini");
+    tokyo_io_config_load(&tokyo_io_cfg, get_config_path());
 
     if (wstr_ieq(tokyo_io_cfg.mode, L"keyboard")) {
         hr = tokyo_kb_init(&tokyo_io_cfg.kb, &tokyo_io_backend);

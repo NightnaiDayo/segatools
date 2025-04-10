@@ -3,12 +3,14 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "mu3io/mu3io.h"
 #include "mu3io/config.h"
 #include "mu3io/ledoutput.h"
 
 #include "util/dprintf.h"
+#include "util/env.h"
 
 static uint8_t mu3_opbtn;
 static uint8_t mu3_left_btn;
@@ -28,7 +30,7 @@ uint16_t mu3_io_get_api_version(void)
 
 HRESULT mu3_io_init(void)
 {
-    mu3_io_config_load(&mu3_io_cfg, L".\\segatools.ini");
+    mu3_io_config_load(&mu3_io_cfg, get_config_path());
 
     dprintf("XInput: --- Begin configuration ---\n");
     dprintf("XInput: Mouse lever emulation : %i\n", mu3_io_cfg.use_mouse);

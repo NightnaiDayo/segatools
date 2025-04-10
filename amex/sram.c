@@ -6,7 +6,7 @@
 #include <winnt.h>
 #endif
 #include <devioctl.h>
-#include <ntdddisk.h>
+#include <winioctl.h>
 
 #include <assert.h>
 
@@ -20,9 +20,7 @@
 #include "util/dprintf.h"
 #include "util/str.h"
 
-enum {
-    SRAM_IOCTL_GET_ABI_VERSION = 0x80006000,
-};
+#define SRAM_IOCTL_GET_ABI_VERSION CTL_CODE(0x8000, 0x800, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 static HRESULT sram_handle_irp(struct irp *irp);
 static HRESULT sram_handle_open(struct irp *irp);

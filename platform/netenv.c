@@ -1,9 +1,15 @@
 #include <windows.h>
+#include <winsock2.h>
 #include <iphlpapi.h>
+#include <iptypes.h>
+#include <winternl.h>
+#include <assert.h>
+#include <icmpapi.h>
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 

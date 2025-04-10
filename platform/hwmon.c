@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include <assert.h>
+#include <winioctl.h>
 #include <string.h>
 
 #include "hook/iohook.h"
@@ -10,9 +11,7 @@
 #include "util/dprintf.h"
 #include "util/str.h"
 
-enum {
-    HWMON_IOCTL_READ_CPU_TEMP = 0x80006000,
-};
+#define HWMON_IOCTL_READ_CPU_TEMP CTL_CODE(0x8000, 0x800, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 static HRESULT hwmon_handle_irp(struct irp *irp);
 static HRESULT hwmon_handle_open(struct irp *irp);

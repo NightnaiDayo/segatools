@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "hook/table.h"
 #include "hook/procaddr.h"

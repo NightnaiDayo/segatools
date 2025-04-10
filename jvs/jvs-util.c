@@ -10,6 +10,7 @@
 #include "jvs/jvs-util.h"
 
 #include "util/dprintf.h"
+#include "util/dump.h"
 
 typedef HRESULT (*jvs_dispatch_fn_t)(
         void *ctx,

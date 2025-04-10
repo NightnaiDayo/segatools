@@ -3,7 +3,6 @@ chuniio_lib = static_library(
     name_prefix : '',
     include_directories : inc,
     implicit_include_directories : false,
-    c_pch : '../precompiled.h',
 
     sources : [
         'chu2to3.c',

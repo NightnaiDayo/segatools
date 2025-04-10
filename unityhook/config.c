@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "config.h"
 
 void unity_config_load(struct unity_config *cfg, const wchar_t *filename) {

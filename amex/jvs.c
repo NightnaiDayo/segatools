@@ -4,6 +4,7 @@
 #include <winternl.h>
 
 #include <ntstatus.h>
+#include <winioctl.h>
 
 #include <assert.h>
 #include <stddef.h>
@@ -21,11 +22,9 @@
 #include "util/dump.h"
 #include "util/str.h"
 
-enum {
-    JVS_IOCTL_HELLO     = 0x80006004,
-    JVS_IOCTL_SENSE     = 0x8000600C,
-    JVS_IOCTL_TRANSACT  = 0x8000E008,
-};
+#define JVS_IOCTL_HELLO    CTL_CODE(0x8000, 0x801, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define JVS_IOCTL_TRANSACT CTL_CODE(0x8000, 0x802, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define JVS_IOCTL_SENSE    CTL_CODE(0x8000, 0x803, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 static HRESULT jvs_handle_irp(struct irp *irp);
 static HRESULT jvs_handle_open(struct irp *irp);

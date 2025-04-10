@@ -58,6 +58,7 @@ static int32_t MTF[9];
 /* Printer status */
 
 static uint8_t STATUS = 0;
+static ULONGLONG finishTime = 0;
 
 /* C3XXFWDLusb API hooks */
 
@@ -97,7 +98,7 @@ int WINAPI chcusb_imageformat_330(
         uint16_t width,
         uint16_t height,
         uint16_t *rResult);
-int __thiscall chcusb_setmtf(int32_t *mtf);
+int __fastcall chcusb_setmtf(int32_t *mtf);
 int WINAPI chcusb_makeGamma(uint16_t k, uint8_t *intoneR, uint8_t *intoneG, uint8_t *intoneB);
 int WINAPI chcusb_setIcctable(
     LPCSTR icc1,
@@ -1244,6 +1245,10 @@ void printer_hook_insert_hooks(HMODULE target) {
     proc_addr_table_push(target, "C300FWDLusb.dll", C3XXFWDLusb_hooks, _countof(C3XXFWDLusb_hooks));
 }
 
+static inline bool check_for_wait_time(){
+    return finishTime > 0 && GetTickCount64() < finishTime;
+}
+
 static void generate_rfid(void) {
     for (int i = 0; i < sizeof(cardRFID); i++)
         cardRFID[i] = rand();
@@ -1629,7 +1634,7 @@ int WINAPI fwdlusb_open(uint16_t *rResult) {
     return 1;
 }
 
-void fwdlusb_close() {}
+void WINAPI fwdlusb_close() {}
 
 int WINAPI fwdlusb_listupPrinter(uint8_t *rIdArray) {
     dprintf("Printer: C3XXFWDLusb: %s\n", __func__);
@@ -2110,7 +2115,7 @@ int WINAPI chcusb_open(uint16_t *rResult) {
     return 1;
 }
 
-void chcusb_close() {
+void WINAPI chcusb_close() {
     dprintf("Printer: C3XXusb: %s\n", __func__);
 }
 
@@ -2329,7 +2334,7 @@ int WINAPI chcusb_imageformat_330(
     return 1;
 }
 
-int __thiscall chcusb_setmtf(int32_t *mtf) {
+int __fastcall chcusb_setmtf(int32_t *mtf) {
     dprintf("Printer: C3XXusb: %s\n", __func__);
 
     memcpy(MTF, mtf, sizeof(MTF));
@@ -2403,7 +2408,11 @@ int WINAPI chcusb_copies(uint16_t copies, uint16_t *rResult) {
 
 int WINAPI chcusb_status(uint16_t *rResult) {
     // dprintf("Printer: C3XXusb: %s\n", __func__);
-    *rResult = 0;
+    if (check_for_wait_time()) {
+        *rResult = 2203;
+    } else {
+        *rResult = 0;
+    }
     return 1;
 }
 
@@ -2439,6 +2448,10 @@ int WINAPI chcusb_startpage_300(uint16_t postCardState, uint16_t *rResult) {
 int WINAPI chcusb_endpage(uint16_t *rResult) {
     dprintf("Printer: C3XXusb: %s\n", __func__);
 
+    if (printer_config.wait_time > 0){
+        finishTime = GetTickCount64() + printer_config.wait_time;
+        dprintf("Printer: Waiting for %dms...\n", printer_config.wait_time);
+    }
     awaitingCardExit = true;
 
     *rResult = 0;
@@ -2622,13 +2635,12 @@ int WINAPI chcusb_getPrintIDStatus(uint16_t pageId, uint8_t *rBuffer, uint16_t *
     // dprintf("Printer: C3XXusb: %s\n", __func__);
     memset(rBuffer, 0, 8);
 
-    if (STATUS > 1)
-    {
+    if (check_for_wait_time()) {
+        *((uint16_t*)(rBuffer + 6)) = 2203;
+    } else if (STATUS > 1) {
         STATUS = 0;
         *((uint16_t*)(rBuffer + 6)) = 2212;
-    }
-    else
-    {
+    } else {
         *((uint16_t*)(rBuffer + 6)) = 2300;
     }
 
@@ -2658,6 +2670,7 @@ int WINAPI chcusb_setPrintStandby_300(uint16_t *rResult) {
     *rResult = 0;
     if (awaitingCardExit){ // 300 does not use exitCard, so reset this for getPrinterInfo.
         awaitingCardExit = false;
+        finishTime = 0;
         STATUS = 1;
     }
     if (STATUS == 0)
@@ -2677,8 +2690,14 @@ int WINAPI chcusb_testCardFeed(uint16_t mode, uint16_t times, uint16_t *rResult)
 int WINAPI chcusb_exitCard(uint16_t *rResult) {
     dprintf("Printer: C3XXusb: %s\n", __func__);
 
-    awaitingCardExit = false;
-    generate_rfid();
+    if (check_for_wait_time()) {
+        *rResult = 2203;
+        return 0;
+    } else {
+        awaitingCardExit = false;
+        finishTime = 0;
+        generate_rfid();
+    }
 
     *rResult = 0;
     return 1;

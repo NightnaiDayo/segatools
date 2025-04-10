@@ -13,10 +13,10 @@
 
 // This struct is used to send data related to the slider and billboard LEDs
 struct _chuni_led_data_buf_t {
-    byte framing; // Sync byte
+    uint8_t framing; // Sync byte
     uint8_t board; // LED output the data is for (0-1: billboard, 2: slider)
-    byte data[LED_OUTPUT_DATA_SIZE_MAX]; // Buffer for LEDs
-    byte data_len; // How many bytes to output from the buffer
+    uint8_t data[LED_OUTPUT_DATA_SIZE_MAX]; // Buffer for LEDs
+    uint8_t data_len; // How many bytes to output from the buffer
 };
 
-static byte chuni_led_board_data_lens[LED_BOARDS_TOTAL] = {53*3, 63*3, 31*3};
+static uint8_t chuni_led_board_data_lens[LED_BOARDS_TOTAL] = {53*3, 63*3, 31*3};

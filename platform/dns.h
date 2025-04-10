@@ -12,6 +12,10 @@ struct dns_config {
     wchar_t billing[128];
     wchar_t aimedb[128];
     wchar_t title[128];
+    bool replaceHost;
+    unsigned short startupPort;
+    unsigned short billingPort;
+    unsigned short aimedbPort;
 };
 
 HRESULT dns_platform_hook_init(const struct dns_config *cfg);

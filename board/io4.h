@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define IO4_REPORT_OUT_PAYLOAD_LEN 62
 

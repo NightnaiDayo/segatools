@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include <assert.h>
+#include <winioctl.h>
 #include <string.h>
 
 #include "hook/iohook.h"
@@ -10,9 +11,7 @@
 #include "util/dprintf.h"
 #include "util/str.h"
 
-enum {
-    HWRESET_IOCTL_RESTART = 0x80002000,
-};
+#define HWRESET_IOCTL_RESTART CTL_CODE(0x8000, 0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 static HRESULT hwreset_handle_irp(struct irp *irp);
 static HRESULT hwreset_handle_open(struct irp *irp);

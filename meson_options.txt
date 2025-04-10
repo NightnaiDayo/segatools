@@ -13,6 +13,11 @@ option('log_io3',
     value : false,
     description : 'Enable debug logging for JVS'
 )
+option('log_led15070',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the 15070 LED board emulation'
+)
 option('log_led15093',
     type : 'boolean',
     value : false,
@@ -37,6 +42,11 @@ option('log_carol_touch',
     type : 'boolean',
     value : false,
     description : 'Enable debug logging for the Carlo Touchscreen'
+)
+option('log_mai2_touch',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the mai2 TouchPanel'
 )
 option('log_chuni_slider',
     type : 'boolean',

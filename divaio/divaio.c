@@ -7,6 +7,7 @@
 
 #include "divaio/divaio.h"
 #include "divaio/config.h"
+#include "util/env.h"
 
 static unsigned int __stdcall diva_io_slider_thread_proc(void *ctx);
 
@@ -23,7 +24,7 @@ uint16_t diva_io_get_api_version(void)
 
 HRESULT diva_io_jvs_init(void)
 {
-    diva_io_config_load(&diva_io_cfg, L".\\segatools.ini");
+    diva_io_config_load(&diva_io_cfg, get_config_path());
 
     return S_OK;
 }
@@ -37,11 +38,11 @@ void diva_io_jvs_poll(uint8_t *opbtn_out, uint8_t *gamebtn_out)
     opbtn = 0;
 
     if (GetAsyncKeyState(diva_io_cfg.vk_test) & 0x8000) {
-        opbtn |= 1;
+        opbtn |= DIVA_IO_OPBTN_TEST;
     }
 
     if (GetAsyncKeyState(diva_io_cfg.vk_service) & 0x8000) {
-        opbtn |= 2;
+        opbtn |= DIVA_IO_OPBTN_SERVICE;
     }
 
     for (i = 0 ; i < _countof(diva_io_cfg.vk_buttons) ; i++) {
