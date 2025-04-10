@@ -11,5 +11,10 @@ fgoio_lib = static_library(
         'fgoio.h',
         'config.c',
         'config.h',
+        'backend.h',
+        'keyboard.c',
+        'keyboard.h',
+        'xi.c',
+        'xi.h',
     ],
 )
