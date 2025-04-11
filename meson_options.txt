@@ -69,7 +69,12 @@ option('log_mercury_slider',
     description : 'Enable debug logging for the WACCA Slider'
 )
 option('log_clock',
-    type : 'boolean',
-    value : false,
-    description : 'Enable debug logging for clock APIs'
+       type : 'boolean',
+       value : false,
+       description : 'Enable debug logging for clock APIs'
+)
+option('log_vfs',
+       type : 'boolean',
+       value : false,
+       description : 'Enable debug logging for file system redirections'
 )

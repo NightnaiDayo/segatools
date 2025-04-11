@@ -1,3 +1,4 @@
+#include <stdbool.h>
 /*
  * 'slurp' reads the file identified by 'path' into a character buffer
  * pointed at by 'buf', optionally adding a terminating NUL if

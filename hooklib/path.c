@@ -11,6 +11,8 @@
 
 #include "hooklib/path.h"
 
+#include <util/dprintf.h>
+
 /* Helpers */
 
 static void path_hook_init(void);
@@ -532,6 +534,12 @@ static BOOL path_transform_w(wchar_t **out, const wchar_t *src)
 
             goto end;
         }
+
+#if LOG_VFS
+        if (!wcsstr(src, L"AppUser")) {
+            dprintf("Path: %ls -> %ls\n", src, dest);
+        }
+#endif
 
         break;
     }

@@ -619,16 +619,16 @@ minor over-the-air content updates.
 
 ## `[epay]`
 
-Configure Thinca Payment hooks.
+Configure Thinca Payment (E-Money) emulation and hooks.
 
 ### `enable`
 
 Default: `1`
 
-Enables the Thinca emulation. This will apply registry hooks.
+Enables the Thinca emulation. This will allow you to enable E-Money on compatible servers.
 
 ### `hook`
 
-Default: `1`
+Default: `0`
 
-Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. To use a real E-Money server, set this to 0. (see doc/emoney.md)
+Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.

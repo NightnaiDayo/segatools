@@ -82,6 +82,9 @@ endif
 if get_option('log_all') or get_option('log_clock')
     add_project_arguments('-DLOG_CLOCK', language: 'c')
 endif
+if get_option('log_all') or get_option('log_vfs')
+    add_project_arguments('-DLOG_VFS', language: 'c')
+endif
 
 shlwapi_lib = cc.find_library('shlwapi')
 dinput8_lib = cc.find_library('dinput8')

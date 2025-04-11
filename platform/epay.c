@@ -12,6 +12,8 @@
 
 #include "platform/epay.h"
 
+#include <hooklib/path.h>
+
 #include "util/dprintf.h"
 
 static HRESULT misc_read_thinca_adapter(void *bytes, uint32_t *nbytes);
@@ -175,11 +177,25 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
 
     dprintf("EPay: Registry initialized\n");
 
-    // HACK:(?) thincahttpclient.dll is loaded dynamically so we just preload it and apply DNS hooks to it
+    // HACK:(?) the DLLs are loaded dynamically so we just preload it and apply DNS and VFS hooks to it
     HMODULE thincahttpclient = LoadLibraryA("thincahttpclient.dll");
     if (thincahttpclient != NULL){
         dns_hook_apply_hooks(thincahttpclient);
-        dprintf("EPay: DNS hooked\n");
+        path_hook_insert_hooks(thincahttpclient);
+    } else {
+        dprintf("EPay: WARNING: thincahttpclient.dll does not exist!\n");
+    }
+    HMODULE thincapayment = LoadLibraryA("ThincaPayment.dll");
+    if (thincapayment != NULL){
+        path_hook_insert_hooks(thincapayment);
+    } else {
+        dprintf("EPay: WARNING: ThincaPayment.dll does not exist!\n");
+    }
+    HMODULE thincatcapclient = LoadLibraryA("thincatcapclient.dll");
+    if (thincatcapclient != NULL){
+        path_hook_insert_hooks(thincatcapclient);
+    } else {
+        dprintf("EPay: WARNING: thincatcapclient.dll does not exist!\n");
     }
 
     if (cfg->hook) {
