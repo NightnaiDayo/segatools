@@ -182,20 +182,14 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     if (thincahttpclient != NULL){
         dns_hook_apply_hooks(thincahttpclient);
         path_hook_insert_hooks(thincahttpclient);
-    } else {
-        dprintf("EPay: WARNING: thincahttpclient.dll does not exist!\n");
     }
     HMODULE thincapayment = LoadLibraryA("ThincaPayment.dll");
     if (thincapayment != NULL){
         path_hook_insert_hooks(thincapayment);
-    } else {
-        dprintf("EPay: WARNING: ThincaPayment.dll does not exist!\n");
     }
     HMODULE thincatcapclient = LoadLibraryA("thincatcapclient.dll");
     if (thincatcapclient != NULL){
         path_hook_insert_hooks(thincatcapclient);
-    } else {
-        dprintf("EPay: WARNING: thincatcapclient.dll does not exist!\n");
     }
 
     if (cfg->hook) {
