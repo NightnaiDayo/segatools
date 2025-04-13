@@ -13,26 +13,19 @@ by Haruka Akechi
 
 5) Replace the two URLs in tfps-res-pro\resource.xml to your servers'. This is to ensure the Host header will match the certificate's.
 
-6) In segatools.ini add
-```
-[epay]
-enable=1
-hook=0
-```
+6) Where amdaemon.exe is located, there should be a "ca.pem". Replace this file with either [this](https://curl.se/ca/cacert.pem) for the most common CA's (including Let's Encrypt), or whatever CA the server is using (your server will provide this).
 
-7) Where amdaemon.exe is located, there should be a "ca.pem". Replace this file with either [this](https://curl.se/ca/cacert.pem) for the most common CA's (including Let's Encrypt), or whatever CA the server is using.
+7) Run your game and enter the test menu, and navigate to E-Money Settings.
 
-8) Run your game and enter the test menu, and navigate to E-Money Settings.
+8) Select "Terminal Authentication"
 
-9) Select "Terminal Authentication"
+9) Hold your key for scanning a card (default: RETURN)
 
-10) Hold your key for scanning a card (default: RETURN)
-
-11) If your shop name shows up, everything was done succesfully. Otherwise, check the VFD.
+10) If your shop name shows up, everything was done succesfully. Otherwise, check the VFD.
 
 ### TECHNICAL INFO
 
-For debugging anything e-money related, I highly recommend setting "emoney.log.level" to 4 in your game's amdaemon config.json. This should create a `<appdata>\<gameid>\emoney_log\thincapayment.log`.
+For debugging anything e-money related, I highly recommend setting "emoney.log.level" to 4 in your game's amdaemon config.json. This should create a `<amfs>\emoney_log\thincapayment.log`.
 
 When terminal authentication is started from the test menu, the game will check for an Aime reader of at least generation 3. If that is not fulfilled, the VFD will display "unsupported card reader" and abort. If the card reader is good, the VFD will prompt for a card to be touched, and the reader will start scanning for a MIFARE card, which from this point we call "Thinca Authentication Card". This card contains one unencrypted block (3) which contains:
 
@@ -141,7 +134,7 @@ The client certificate itself must be signed with the same key than the server's
 
 The client AND server certificate must have it's CA included in the "ca.pem" file in amdaemon's directory. You can freely replace this file with https://curl.se/ca/cacert.pem to allow Let's Encrypt and whatever else.
 
-At this point, "ThincaPayment::setClientCertificate(). ErrCode 203" means that the downloaded file couldn't be found.
+At this point, "ThincaPayment::setClientCertificate(). ErrCode 203" means that the downloaded file couldn't be found, or the certificate password is wrong.
 
 [Warn ] TCAP communicate error 06514086 means the ca.pem has no entry for the given server CA.
 
