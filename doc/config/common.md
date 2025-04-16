@@ -354,6 +354,38 @@ Nu chassis DIP switch settings:
     - `111`: 1920x1080
 - Switch 8: Game-specific. Not used in any shipping game.
 
+## `[gfx]`
+
+### `enable`
+
+Default: `1`
+
+Enables graphic hooks.
+
+### `windowed`
+
+Default: `0`
+
+Force the game to run windowed.
+
+### `framed`
+
+Default: `0`
+
+Add a frame to the game window if running windowed.
+
+### `monitor`
+
+Default: `0`
+
+Select the monitor to run the game on. (Fullscreen only, 0 = primary screen)
+
+### `dpiAware`
+
+Default: `1`
+
+Sets the game to be DPI-aware. This prevents Windows automatically scaling the game window by your desktop's scaling factor, which may cause blurry graphics.
+
 ## `[hwmon]`
 
 Configure stub implementation of the platform hardware monitor driver. The
