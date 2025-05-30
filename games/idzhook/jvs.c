@@ -12,6 +12,7 @@
 #include "idzhook/jvs.h"
 
 #include "jvs/jvs-bus.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 
@@ -126,13 +127,13 @@ static void idz_jvs_read_switches(void *ctx, struct io3_switch_state *out)
 
     /* Update test/service buttons */
 
-    if (opbtn & IDZ_IO_OPBTN_TEST) {
+    if (opbtn & IDZ_IO_OPBTN_TEST || api_get_and_clear_test()) {
         out->system = 0x80;
     } else {
         out->system = 0;
     }
 
-    if (opbtn & IDZ_IO_OPBTN_SERVICE) {
+    if (opbtn & IDZ_IO_OPBTN_SERVICE ||api_get_and_clear_service()) {
         out->p1 |= 1 << 14;
     }
 }

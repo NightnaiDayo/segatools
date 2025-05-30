@@ -23,6 +23,7 @@
 #include "jvs/jvs-bus.h"
 #include "jvs/jvs-cmd.h"
 #include "jvs/jvs-util.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 #include "util/dump.h"
@@ -147,6 +148,9 @@ static uint8_t io3_features[] = {
     0x00,
 };
 
+static bool io3_input_block = false;
+static uint16_t io3_api_coins = 0;
+
 static struct io3_switch_state prev_state = {0};
 
 void io3_init(
@@ -188,6 +192,13 @@ static void io3_transact(
     io3 = CONTAINING_RECORD(node, struct io3, jvs);
 
     jvs_crack_request(bytes, nbytes, resp, io3->addr, io3_cmd, io3);
+
+    if (api_is_initialized()) {
+        if (api_has_input_block_state()) {
+            io3_input_block = api_get_input_block_state_and_clear();
+        }
+        io3_api_coins += api_get_and_clear_credits();
+    }
 }
 
 static bool io3_sense(struct jvs_node *node)
@@ -425,7 +436,7 @@ static HRESULT io3_cmd_read_switches(
 
     memset(&state, 0, sizeof(state));
 
-    if (io3->ops != NULL) {
+    if (io3->ops != NULL && !io3_input_block) {
         fgdet_poll();
         if (fgdet_in_foreground()) { // returns true if fgdet is not enabled
             io3->ops->read_switches(io3->ops_ctx, &state);
@@ -491,7 +502,7 @@ static HRESULT io3_cmd_read_coin(
     /* Write slot detail */
 
     for (i = 0 ; i < req.nslots ; i++) {
-        ncoins = 0;
+        ncoins = io3_api_coins;
 
         if (io3->ops->read_coin_counter != NULL) {
             io3->ops->read_coin_counter(io3->ops_ctx, i, &ncoins);
@@ -545,7 +556,7 @@ static HRESULT io3_cmd_read_analogs(
 
     memset(analogs, 0, sizeof(analogs));
 
-    if (io3->ops->read_analogs != NULL) {
+    if (io3->ops->read_analogs != NULL && !io3_input_block) {
         io3->ops->read_analogs(io3->ops_ctx, analogs, req.nanalogs);
     }
 
@@ -599,7 +610,7 @@ static HRESULT io3_cmd_read_rotarys(
 
     memset(rotarys, 0, sizeof(rotarys));
 
-    if (io3->ops->read_rotarys != NULL) {
+    if (io3->ops->read_rotarys != NULL && !io3_input_block) {
         io3->ops->read_rotarys(io3->ops_ctx, rotarys, req.nrotarys);
     }
 

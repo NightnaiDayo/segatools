@@ -3,6 +3,9 @@ aimeio_lib = static_library(
     name_prefix : '',
     include_directories: inc,
     implicit_include_directories : false,
+    dependencies : [
+        segapi.get_variable('api_dep'),
+    ],
     link_with : [
         util_lib,
     ],

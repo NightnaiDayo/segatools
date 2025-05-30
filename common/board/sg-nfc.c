@@ -14,6 +14,7 @@
 
 #include "iccard/aime.h"
 #include "iccard/felica.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 #include "util/dump.h"
@@ -203,9 +204,16 @@ static HRESULT sg_nfc_dispatch(
     case SG_NFC_CMD_MIFARE_SELECT_TAG:
     case SG_NFC_CMD_MIFARE_SET_KEY_AIME:
     case SG_NFC_CMD_MIFARE_SET_KEY_BANA:
+    case SG_NFC_CMD_TO_UPDATE_MODE:
+        return sg_nfc_cmd_dummy(nfc, &req->simple, &res->simple);
     case SG_NFC_CMD_RADIO_ON:
     case SG_NFC_CMD_RADIO_OFF:
-    case SG_NFC_CMD_TO_UPDATE_MODE:
+        // TODO: move this to aimeio?
+        if (api_is_initialized()) {
+            uint8_t data[1];
+            data[0] = req->simple.hdr.cmd == SG_NFC_CMD_RADIO_ON;
+            api_send(PACKET_31_SET_CARD_READING_STATE, 1, data);
+        }
         return sg_nfc_cmd_dummy(nfc, &req->simple, &res->simple);
 
     default:

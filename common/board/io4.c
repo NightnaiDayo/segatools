@@ -17,6 +17,7 @@
 #include "hook/iohook.h"
 
 #include "hooklib/setupapi.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/async.h"
 #include "util/dprintf.h"
@@ -101,6 +102,7 @@ static uint8_t io4_system_status;
 static const struct io4_ops *io4_ops;
 static void *io4_ops_ctx;
 static struct io4_state prev_state;
+static bool io4_input_block = false;
 
 HRESULT io4_hook_init(
     const struct io4_config *cfg,
@@ -342,8 +344,16 @@ static HRESULT io4_async_poll(void *ctx, struct irp *irp)
     /* Call into ops to poll the underlying inputs */
 
     fgdet_poll();
-    if (fgdet_in_foreground()) { // returns true if fgdet is not enabled
+
+    if (api_is_initialized()) {
+        if (api_has_input_block_state()) {
+            io4_input_block = api_get_input_block_state_and_clear();
+        }
+    }
+
+    if (!io4_input_block && fgdet_in_foreground()) {
         memset(&state, 0, sizeof(state));
+
         hr = io4_ops->poll(io4_ops_ctx, &state);
 
         if (FAILED(hr)) {
@@ -375,6 +385,12 @@ static HRESULT io4_async_poll(void *ctx, struct irp *irp)
 
     for (i = 0 ; i < 2 ; i++) {
         in.buttons[i] = state.buttons[i];
+    }
+
+    if (api_is_initialized()) {
+        // FIXME: This is not guaranteed to be like this for every game, is it?
+        // This may need moving to the individual xxxio projects.
+        in.chutes[0] = (api_get_and_clear_credits() << 8) + in.chutes[0];
     }
 
     return iobuf_write(&irp->read, &in, sizeof(in));

@@ -7,6 +7,7 @@
 #include "board/io4.h"
 
 #include "idachook/idac-dll.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 
@@ -75,11 +76,11 @@ static HRESULT idac_io4_poll(void* ctx, struct io4_state* state) {
     idac_dll.get_shifter(&gear);
     idac_dll.get_analogs(&analog_state);
 
-    if (opbtn & IDAC_IO_OPBTN_TEST) {
+    if (opbtn & IDAC_IO_OPBTN_TEST || api_get_and_clear_test()) {
         state->buttons[0] |= IO4_BUTTON_TEST;
     }
 
-    if (opbtn & IDAC_IO_OPBTN_SERVICE) {
+    if (opbtn & IDAC_IO_OPBTN_SERVICE || api_get_and_clear_service()) {
         state->buttons[0] |= IO4_BUTTON_SERVICE;
     }
 

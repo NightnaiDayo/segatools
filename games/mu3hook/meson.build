@@ -7,6 +7,7 @@ shared_library(
     dependencies : [
         capnhook.get_variable('hook_dep'),
         capnhook.get_variable('hooklib_dep'),
+        segapi.get_variable('api_dep'),
         xinput_lib,
     ],
     link_with : [

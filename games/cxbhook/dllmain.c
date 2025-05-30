@@ -21,6 +21,7 @@
 #include "hooklib/spike.h"
 
 #include "platform/platform.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 #include "util/env.h"
@@ -119,6 +120,12 @@ static DWORD CALLBACK cxb_pre_startup(void)
     spike_hook_init(get_config_path());
 
     dprintf("---  End  cxb_pre_startup ---\n");
+
+    hr = api_init(get_config_path());
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
 
     /* Jump to EXE start address */
 

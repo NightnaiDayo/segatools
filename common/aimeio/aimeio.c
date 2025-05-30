@@ -10,6 +10,7 @@
 
 #include "aimeio/aimeio.h"
 
+#include "subprojects/segapi/api/api.h"
 #include "util/crc.h"
 #include "util/dprintf.h"
 #include "util/env.h"
@@ -242,6 +243,23 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no)
     aime_io_aime_id_present = false;
     aime_io_felica_id_present = false;
 
+    if (api_is_initialized()) {
+        const uint8_t* mifare = api_get_and_clear_card_mifare();
+        if (mifare != NULL) {
+            aime_io_aime_id_present = true;
+            memcpy(aime_io_aime_id, mifare, min(sizeof(mifare), sizeof(aime_io_aime_id)));
+            return S_OK;
+        }
+
+        const uint8_t* felica = api_get_and_clear_card_felica();
+        if (felica != NULL) {
+            aime_io_felica_id_present = true;
+            memcpy(aime_io_felica_id, felica, min(sizeof(felica), sizeof(aime_io_felica_id)));
+            return S_OK;
+        }
+
+    }
+
     /* Don't do anything more if the scan key is not held */
 
     sense = GetAsyncKeyState(aime_io_cfg.vk_scan) & 0x8000;
@@ -349,5 +367,12 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm)
     return S_OK;
 }
 
-void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b)
-{}
+void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b) {
+    if (api_is_initialized()) {
+        uint8_t data[3];
+        data[0] = r;
+        data[1] = g;
+        data[2] = b;
+        api_send(PACKET_33_AIME_RGB, 3, data);
+    }
+}

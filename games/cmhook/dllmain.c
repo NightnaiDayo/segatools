@@ -31,6 +31,7 @@
 #include "cmhook/cm-dll.h"
 
 #include "platform/platform.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "unityhook/hook.h"
 
@@ -115,6 +116,13 @@ static DWORD CALLBACK cm_pre_startup(void)
     /* Initialize debug helpers */
 
     spike_hook_init(get_config_path());
+
+    hr = api_init(get_config_path());
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+
 
     dprintf("---  End  cm_pre_startup ---\n");
 

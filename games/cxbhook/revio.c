@@ -12,6 +12,7 @@
 #include "hook/procaddr.h"
 
 #include "hook/table.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 #include "util/fg-detect.h"
@@ -33,6 +34,7 @@ int amp_volume[] = {20, 20, 20};
 int last_triggers = 0;
 int last_is_mouse_down = false;
 int prev_out = 0;
+int revio_api_coins = 0;
 
 static struct hook_symbol revio_syms[] = {
     {
@@ -120,6 +122,9 @@ static long my_cCommIo_GetCoin()
     long coins;
     cxb_dll.revio_get_coins(&coins);
 
+    revio_api_coins += api_get_and_clear_credits();
+    coins += revio_api_coins;
+
     return coins;
 }
 
@@ -145,11 +150,11 @@ static int my_cCommIo_GetTrigger()
     if (fgdet_in_foreground()) {
         cxb_dll.revio_poll(&btns);
 
-        if (btns & 0x01) {
+        if (btns & 0x01 || api_get_and_clear_test()) {
             out |= 1 << 4; // test
         }
 
-        if (btns & 0x02) {
+        if (btns & 0x02 || api_get_and_clear_service()) {
             out |= 1 << 5; // service?
         }
 

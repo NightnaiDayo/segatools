@@ -7,6 +7,7 @@
 #include "board/io4.h"
 
 #include "mai2hook/mai2-dll.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 
@@ -63,11 +64,11 @@ static HRESULT mai2_io4_poll(void* ctx, struct io4_state* state) {
     mai2_dll.get_opbtns(&opbtn);
     mai2_dll.get_gamebtns(&player1, &player2);
 
-    if (opbtn & MAI2_IO_OPBTN_TEST) {
+    if (opbtn & MAI2_IO_OPBTN_TEST || api_get_and_clear_test()) {
         state->buttons[0] |= IO4_BUTTON_TEST;
     }
 
-    if (opbtn & MAI2_IO_OPBTN_SERVICE) {
+    if (opbtn & MAI2_IO_OPBTN_SERVICE || api_get_and_clear_service()) {
         state->buttons[0] |= IO4_BUTTON_SERVICE;
     }
 

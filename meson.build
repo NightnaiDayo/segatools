@@ -100,6 +100,7 @@ bcrypt_lib = cc.find_library('bcrypt')
 
 inc = include_directories('common', 'games')
 capnhook = subproject('capnhook')
+segapi = subproject('segapi')
 
 subdir('common/amex')
 subdir('common/iccard')

@@ -7,6 +7,7 @@
 #include "board/io4.h"
 
 #include "chusanhook/chuni-dll.h"
+#include "subprojects/segapi/api/api.h"
 #include "util/dprintf.h"
 
 struct chunithm_jvs_ir_mask {
@@ -82,11 +83,11 @@ static HRESULT chusan_io4_poll(void* ctx, struct io4_state* state) {
         masks = chunithm_jvs_ir_masks_v1;
     }
 
-    if (opbtn & CHUNI_IO_OPBTN_TEST) {
+    if (opbtn & CHUNI_IO_OPBTN_TEST || api_get_and_clear_test()) {
         state->buttons[0] |= IO4_BUTTON_TEST;
     }
 
-    if (opbtn & CHUNI_IO_OPBTN_SERVICE) {
+    if (opbtn & CHUNI_IO_OPBTN_SERVICE || api_get_and_clear_service()) {
         state->buttons[0] |= IO4_BUTTON_SERVICE;
     }
 

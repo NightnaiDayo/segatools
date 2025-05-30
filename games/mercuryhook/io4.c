@@ -8,6 +8,7 @@
 #include "board/io4.h"
 
 #include "mercuryhook/mercury-dll.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 
@@ -57,11 +58,11 @@ static HRESULT mercury_io4_poll(void* ctx, struct io4_state* state) {
     mercury_dll.get_opbtns(&opbtn);
     mercury_dll.get_gamebtns(&gamebtn);
 
-    if (opbtn & MERCURY_IO_OPBTN_TEST) {
+    if (opbtn & MERCURY_IO_OPBTN_TEST || api_get_and_clear_test()) {
         state->buttons[0] |= IO4_BUTTON_TEST;
     }
 
-    if (opbtn & MERCURY_IO_OPBTN_SERVICE) {
+    if (opbtn & MERCURY_IO_OPBTN_SERVICE || api_get_and_clear_service()) {
         state->buttons[0] |= IO4_BUTTON_SERVICE;
     }
 

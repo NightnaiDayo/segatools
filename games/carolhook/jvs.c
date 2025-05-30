@@ -12,6 +12,7 @@
 #include "carolhook/carol-dll.h"
 
 #include "jvs/jvs-bus.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 
@@ -83,13 +84,13 @@ static void carol_jvs_read_switches(void *ctx, struct io3_switch_state *out)
         out->p1 |= 1 << 15;
     }
 
-    if (opbtn & 0x01) {
+    if (opbtn & 0x01 || api_get_and_clear_test()) {
         out->system = 0x80;
     } else {
         out->system = 0;
     }
 
-    if (opbtn & 0x02) {
+    if (opbtn & 0x02 || api_get_and_clear_service()) {
         out->p1 |= 1 << 14;
     }
 }

@@ -6,6 +6,8 @@
 
 #include "amex/gpio.h"
 
+#include "subprojects/segapi/api/api.h"
+
 #include "hook/iohook.h"
 
 #include "hooklib/setupapi.h"
@@ -194,11 +196,11 @@ static HRESULT gpio_ioctl_get_psw(struct irp *irp)
     /* Bit 0 == SW1 == Alt. Test */
     /* Bit 1 == SW2 == Alt. Service */
 
-    if (GetAsyncKeyState(gpio_config.vk_sw1) & 0x8000) {
+    if ((GetAsyncKeyState(gpio_config.vk_sw1) & 0x8000) || api_get_and_clear_test()) {
         result |= 1 << 0;
     }
 
-    if (GetAsyncKeyState(gpio_config.vk_sw2) & 0x8000) {
+    if ((GetAsyncKeyState(gpio_config.vk_sw2) & 0x8000) || api_get_and_clear_service()) {
         result |= 1 << 1;
     }
 

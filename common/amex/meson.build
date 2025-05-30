@@ -4,6 +4,7 @@ amex_lib = static_library(
     implicit_include_directories : false,
     dependencies : [
         capnhook.get_variable('hook_dep'),
+        segapi.get_variable('api_dep'),
     ],
     sources : [
         'amex.c',

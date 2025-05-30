@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "subprojects/segapi/api/api.h"
+
 #include "board/config.h"
 #include "board/vfd.h"
 #include "board/vfd-cmd.h"
@@ -251,6 +253,10 @@ HRESULT vfd_handle_reset(struct const_iobuf* reader, struct iobuf* writer, struc
 HRESULT vfd_handle_clear_screen(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
     dprintf("VFD: Clear Screen\n");
 
+    if (api_is_initialized()) {
+        api_send_vfd("", 0);
+    }
+
     return S_FALSE;
 }
 HRESULT vfd_handle_set_brightness(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
@@ -357,6 +363,13 @@ HRESULT vfd_handle_write_text(struct const_iobuf* reader, struct iobuf* writer, 
     iobuf_read(reader, str, len);
 
     print_vfd_text(str, len);
+    if (api_is_initialized()) {
+        if (encoding == VFD_ENC_SHIFT_JIS) {
+            api_send_vfd_sj(str, len);
+        } else {
+            api_send_vfd(str, len);
+        }
+    }
     free(str);
 
     return S_FALSE;

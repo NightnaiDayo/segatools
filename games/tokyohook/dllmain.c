@@ -24,6 +24,7 @@
 #include "tokyohook/tokyo-dll.h"
 
 #include "platform/platform.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 #include "util/env.h"
@@ -113,6 +114,12 @@ static DWORD CALLBACK tokyo_pre_startup(void)
     /* Initialize debug helpers */
 
     spike_hook_init(get_config_path());
+
+    hr = api_init(get_config_path());
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
 
     dprintf("---  End  tokyo_pre_startup ---\n");
 

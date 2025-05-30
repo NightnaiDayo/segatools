@@ -12,6 +12,7 @@
 #include "kemonohook/kemono-dll.h"
 
 #include "jvs/jvs-bus.h"
+#include "subprojects/segapi/api/api.h"
 
 #include "util/dprintf.h"
 
@@ -76,11 +77,11 @@ static void kemono_jvs_read_switches(void *ctx, struct io3_switch_state *out)
     out->p1 = 0x0000;
     out->p2 = 0x0000;
 
-    if (opbtn & KEMONO_IO_OPBTN_TEST) {
+    if (opbtn & KEMONO_IO_OPBTN_TEST || api_get_and_clear_test()) {
         out->system |= 1 << 7;
     }
 
-    if (opbtn & KEMONO_IO_OPBTN_SERVICE) {
+    if (opbtn & KEMONO_IO_OPBTN_SERVICE || api_get_and_clear_service()) {
         out->p1 |= 1 << 14;
     }
 
