@@ -147,6 +147,8 @@ $(BUILD_DIR_ZIP)/mercury.zip:
 $(BUILD_DIR_ZIP)/chusan.zip:
 	$(V)echo ... $@
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/chusan
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/chusan/amdaemon.exe.local
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/chusan/chusanApp.exe.local
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/chusan/DEVICE
 	$(V)cp $(DIST_DIR)/chusan/segatools.ini \
 		$(DIST_DIR)/chusan/config_hook.json \
@@ -157,11 +159,13 @@ $(BUILD_DIR_ZIP)/chusan.zip:
 	$(V)cp $(BUILD_DIR_GAMES_64)/chusanhook/chusanhook.dll \
 		$(BUILD_DIR_ZIP)/chusan/chusanhook_x64.dll
 	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
-		$(BUILD_DIR_32)/subprojects/segapi/api/segapi.dll \
 		$(BUILD_DIR_ZIP)/chusan/inject_x86.exe
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
-		$(BUILD_DIR_64)/subprojects/segapi/api/segapi.dll \
 		$(BUILD_DIR_ZIP)/chusan/inject_x64.exe
+	$(V)cp $(BUILD_DIR_32)/subprojects/segapi/api/segapi.dll \
+		$(BUILD_DIR_ZIP)/chusan/chusanApp.exe.local/segapi.dll
+	$(V)cp $(BUILD_DIR_64)/subprojects/segapi/api/segapi.dll \
+		$(BUILD_DIR_ZIP)/chusan/amdaemon.exe.local/segapi.dll
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
 		$(BUILD_DIR_ZIP)/chusan/DEVICE
@@ -238,6 +242,8 @@ $(BUILD_DIR_ZIP)/kemono.zip:
 	$(V)echo ... $@
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/kemono
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/kemono/DEVICE
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/kemono/amdaemon.exe.local
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/kemono/UnityApp/Parade.exe.local
 	$(V)cp $(DIST_DIR)/kemono/segatools.ini \
 		$(DIST_DIR)/kemono/launch.bat \
 		$(BUILD_DIR_ZIP)/kemono
@@ -246,11 +252,13 @@ $(BUILD_DIR_ZIP)/kemono.zip:
 	$(V)cp $(BUILD_DIR_GAMES_64)/kemonohook/kemonohook.dll \
 		$(BUILD_DIR_ZIP)/kemono/kemonohook_x64.dll
 	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
-		$(BUILD_DIR_32)/subprojects/segapi/api/segapi.dll \
 		$(BUILD_DIR_ZIP)/kemono/inject_x86.exe
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
-		$(BUILD_DIR_64)/subprojects/segapi/api/segapi.dll \
 		$(BUILD_DIR_ZIP)/kemono/inject_x64.exe
+	$(V)cp $(BUILD_DIR_32)/subprojects/segapi/api/segapi.dll \
+		$(BUILD_DIR_ZIP)/kemono/UnityApp/Parade.exe.local/segapi.dll
+	$(V)cp $(BUILD_DIR_64)/subprojects/segapi/api/segapi.dll \
+		$(BUILD_DIR_ZIP)/kemono/amdaemon.exe.local/segapi.dll
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
 		$(BUILD_DIR_ZIP)/kemono/DEVICE
