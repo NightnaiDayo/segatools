@@ -722,3 +722,43 @@ Enabling full virtualization will virtualize ALL writes to the C:\ drive. Using 
 unless you know what you're doing!
 
 The Windows directory is always excluded from virtualization.
+
+## `[api]`
+
+Configure SegAPI to allow commands to be sent to this game, such as coins or card insertions.
+
+### `enable`
+
+Default: `0`
+
+Enables the SegAPI.
+
+### `groupId`
+
+Default: `1`
+
+The cabinet group ID for the API. Should be the same on all devices inside this group (= all devices that belong to the same "cabinet"). If there is only a single cabinet in this group, this setting can be ignored.
+
+### `deviceId`
+
+Default: `1`
+
+The device ID for the API. Should be unique on all devices inside this group. If there is only a single device used, this setting can be ignored.
+
+### `port`
+
+Default: `5364`
+
+The UDP port the API will listen on. Should not be changed, and `groupId`/`deviceId` should be used instead.
+
+### `log`
+
+Default: `1`
+
+Whether or not traffic is logged to the console.
+
+### `bindAddr`
+
+Default: `255.255.255.255` (all interfaces)
+
+The network interface the API should listen on. Can be used to restrict what sources may send packets.
