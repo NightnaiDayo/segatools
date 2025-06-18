@@ -34,7 +34,9 @@ static const wchar_t *target_modules[] = {
     L"C300FWDLusb.dll",
     L"apmled.dll",
     L"HKBSys_api.dll",
-    L"amptw.dll"
+    L"amptw.dll",
+    L"apmmount.dll",
+    L"abaasgs.dll"
 };
 
 static const size_t target_modules_len = _countof(target_modules);

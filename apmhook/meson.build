@@ -1,0 +1,32 @@
+shared_library(
+    'apmhook',
+    name_prefix : '',
+    include_directories : inc,
+    implicit_include_directories : false,
+    vs_module_defs : 'apmhook.def',
+    dependencies : [
+        capnhook.get_variable('hook_dep'),
+        capnhook.get_variable('hooklib_dep'),
+    ],
+    link_with : [
+        aimeio_lib,
+        apmio_lib,
+        board_lib,
+        gfxhook_lib,
+        hooklib_lib,
+        platform_lib,
+        unityhook_lib,
+        util_lib,
+    ],
+    sources : [
+        'apm-dll.c',
+        'apm-dll.h',
+        'config.c',
+        'config.h',
+        'dllmain.c',
+        'io4.c',
+        'io4.h',
+        'mount.c',
+        'mount.h',
+    ],
+)
