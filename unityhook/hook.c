@@ -36,7 +36,9 @@ static const wchar_t *target_modules[] = {
     L"HKBSys_api.dll",
     L"amptw.dll",
     L"apmmount.dll",
-    L"abaasgs.dll"
+    L"abaasgs.dll",
+    L"AVProVideo.dll",
+    L"Audio360.dll",
 };
 
 static const size_t target_modules_len = _countof(target_modules);
