@@ -4,11 +4,6 @@ cd /d %~dp0
 
 set PATH=%~dp0lib;%~dp0;X:\;%PATH%
 
-FOR /F "tokens=* USEBACKQ" %%F IN (`powershell -ExecutionPolicy Bypass -Command "& {(Get-Content -Path segatools.ini | Where-Object { $_ -match 'option=' }).Split('=')[1]}"`) DO (
-	SET optionDir=%%F
-)
-ECHO Game Data directory: %optionDir%
-
 :BEGIN
 cd /d %~dp0
 
@@ -17,18 +12,18 @@ IF %ERRORLEVEL% NEQ 0 start /min cmd /C "inject -d -k apmhook.dll amdaemon.exe -
 
 inject -d -k apmhook.dll APMV3System -screen-fullscreen 0 -screen-width 1920 -screen-height 1080
 
-if exist %optionDir%\segaboot (
-  del %optionDir%\segaboot
+if exist %tmp%\segaboot (
+  del %tmp%\segaboot
   goto END
 )
 
-if exist %optionDir%\app (
-  del %optionDir%\app
+if exist %tmp%\app (
+  del %tmp%\app
   goto APP
 )
 
-if exist %optionDir%\apptest (
-  del %optionDir%\apptest
+if exist %tmp%\apptest (
+  del %tmp%\apptest
   goto APPTEST
 )
 
