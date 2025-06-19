@@ -1,4 +1,4 @@
-LIBRARY apmhook
+LIBRARY apm3hook
 
 EXPORTS
     aime_io_get_api_version

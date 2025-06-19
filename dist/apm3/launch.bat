@@ -8,9 +8,9 @@ set PATH=%~dp0lib;%~dp0;X:\;%PATH%
 cd /d %~dp0
 
 qprocess amdaemon.exe > NUL
-IF %ERRORLEVEL% NEQ 0 start /min cmd /C "inject -d -k apmhook.dll amdaemon.exe -f -c daemon_config\common.json daemon_config\server.json config_hook.json"
+IF %ERRORLEVEL% NEQ 0 start /min cmd /C "inject -d -k apm3hook.dll amdaemon.exe -f -c daemon_config\common.json daemon_config\server.json config_hook.json"
 
-inject -d -k apmhook.dll APMV3System -screen-fullscreen 0 -screen-width 1920 -screen-height 1080 -popupWindow -logFile output_log.txt
+inject -d -k apm3hook.dll APMV3System -screen-fullscreen 0 -screen-width 1920 -screen-height 1080 -popupWindow -logFile output_log.txt
 
 if exist %tmp%\segaboot (
   del %tmp%\segaboot
