@@ -48,7 +48,7 @@ static const struct hook_symbol mount_hooks[] = {
 static struct vfs_config* vcfg;
 static struct mount_config* mcfg;
 
-static wchar_t game_directory[PATH_MAX];
+static wchar_t game_directory[MAX_PATH];
 
 void mount_hook_init(struct vfs_config* vfs_cfg, struct mount_config* mount_cfg) {
 

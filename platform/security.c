@@ -1,9 +1,10 @@
 #include <windows.h>
 #include <Bcrypt.h>
-#include <ntstatus.h>
 
-#include <stdbool.h>
+#define STATUS_SUCCESS ((NTSTATUS)0x00000000)
+
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "hook/table.h"
 
