@@ -42,6 +42,7 @@ void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
 
     serial_hook_apply_hooks(hmodule);
     security_hook_insert_hooks(hmodule);
+    touch_hook_insert_hooks(hmodule);
     //mount_hook_apply_hooks(&apm_hook_cfg.mount, hmodule);
 }
 
@@ -124,6 +125,8 @@ static DWORD CALLBACK apm_pre_startup(void)
     if (FAILED(hr)) {
         goto fail;
     }
+
+    touch_screen_hook_init(&apm_hook_cfg.touch, apm_hook_mod);
 
     mount_hook_init(&apm_hook_cfg.platform.vfs, &apm_hook_cfg.mount);
 
