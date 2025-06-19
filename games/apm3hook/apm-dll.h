@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#include "apmio/apmio.h"
+#include "apm3io/apm3io.h"
 
 struct apm_dll {
     uint16_t api_version;

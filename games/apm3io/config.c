@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "apmio/config.h"
+#include "apm3io/config.h"
 
 const int BUTTON_DEFAULTS[] = {'Q','W','E','R','A','S','D','F'};
 

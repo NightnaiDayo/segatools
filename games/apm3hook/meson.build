@@ -1,5 +1,5 @@
 shared_library(
-    'apmhook',
+    'apm3hook',
     name_prefix : '',
     include_directories : inc,
     implicit_include_directories : false,
@@ -10,7 +10,7 @@ shared_library(
     ],
     link_with : [
         aimeio_lib,
-        apmio_lib,
+        apm3io_lib,
         board_lib,
         gfxhook_lib,
         hooklib_lib,

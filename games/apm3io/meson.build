@@ -1,5 +1,5 @@
-apmio_lib = static_library(
-    'apmio',
+apm3io_lib = static_library(
+    'apm3io',
     name_prefix : '',
     include_directories : inc,
     implicit_include_directories : false,
@@ -7,8 +7,8 @@ apmio_lib = static_library(
         xinput_lib,
     ],
     sources : [
-        'apmio.c',
-        'apmio.h',
+        'apm3io.c',
+        'apm3io.h',
         'config.c',
         'config.h',
     ],

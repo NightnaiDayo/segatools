@@ -11,7 +11,7 @@
 
 #include "gfxhook/config.h"
 
-#include "apmhook/apm-dll.h"
+#include "apm3hook/apm-dll.h"
 
 #include "platform/config.h"
 #include "unityhook/config.h"

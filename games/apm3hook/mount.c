@@ -10,8 +10,8 @@
 #include <stdlib.h>
 
 #include "hooklib/path.h"
-#include "subprojects/capnhook/hook/procaddr.h"
-#include "subprojects/capnhook/hook/table.h"
+#include "hook/procaddr.h"
+#include "hook/table.h"
 
 #include "util/dprintf.h"
 

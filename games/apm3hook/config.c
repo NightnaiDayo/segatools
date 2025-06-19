@@ -7,7 +7,7 @@
 #include "hooklib/config.h"
 #include "hooklib/dvd.h"
 
-#include "apmhook/config.h"
+#include "apm3hook/config.h"
 
 #include "platform/config.h"
 

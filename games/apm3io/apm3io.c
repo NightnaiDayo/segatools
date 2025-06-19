@@ -5,8 +5,8 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "apmio/apmio.h"
-#include "apmio/config.h"
+#include "apm3io/apm3io.h"
+#include "apm3io/config.h"
 #include "util/dprintf.h"
 #include "util/env.h"
 

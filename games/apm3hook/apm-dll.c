@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "apmhook/apm-dll.h"
+#include "apm3hook/apm-dll.h"
 
 #include "util/dll-bind.h"
 #include "util/dprintf.h"
