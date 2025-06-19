@@ -65,7 +65,7 @@ felicaGen=0
   and fill it with 20 digits, for example `01234567891234567890`. Make sure to
   save the file.
 
-1. Right click `start.bat` in `package` and run it as Administrator. After the
+1. Right click `launch.bat` in `package` and run it as Administrator. After the
    first run you may be able to run the game as a normal user.
 1. Once you're at the title screen, press 2 or 3 a few times to add some
    credits, then _hold_ the Enter key for a few seconds to scan a card and start

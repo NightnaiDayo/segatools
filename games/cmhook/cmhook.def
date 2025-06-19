@@ -1,0 +1,73 @@
+LIBRARY cmhook
+
+EXPORTS
+    aime_io_get_api_version
+    aime_io_init
+    aime_io_led_set_color
+    aime_io_nfc_get_aime_id
+    aime_io_nfc_get_felica_id
+    aime_io_nfc_poll
+    amDllVideoClose @2
+    amDllVideoGetVBiosVersion @4
+    amDllVideoOpen @1
+    amDllVideoSetResolution @3
+    cm_io_get_api_version
+    cm_io_get_opbtns
+    cm_io_init
+    cm_io_poll
+    CFW_init
+    CFW_term
+    CFW_open
+    CFW_close
+    CFW_listupPrinter
+    CFW_listupPrinterSN
+    CFW_selectPrinter
+    CFW_selectPrinterSN
+    CFW_getPrinterInfo
+    CFW_status
+    CFW_statusAll
+    CFW_resetPrinter
+    CFW_updateFirmware
+    CFW_getFirmwareInfo
+    CHCUSB_init
+    CHCUSB_term
+    CHCUSB_MakeThread
+    CHCUSB_open
+    CHCUSB_close
+    CHCUSB_ReleaseThread
+    CHCUSB_listupPrinter
+    CHCUSB_listupPrinterSN
+    CHCUSB_selectPrinter
+    CHCUSB_selectPrinterSN
+    CHCUSB_getPrinterInfo
+    CHCUSB_imageformat
+    CHCUSB_setmtf
+    CHCUSB_makeGamma
+    CHCUSB_setIcctableProfile
+    CHCUSB_setIcctable
+    CHCUSB_copies
+    CHCUSB_status
+    CHCUSB_statusAll
+    CHCUSB_startpage
+    CHCUSB_endpage
+    CHCUSB_write
+    CHCUSB_writeLaminate
+    CHCUSB_writeHolo
+    CHCUSB_setPrinterInfo
+    CHCUSB_setPrinterToneCurve
+    CHCUSB_getGamma
+    CHCUSB_getMtf
+    CHCUSB_cancelCopies
+    CHCUSB_getPrinterToneCurve
+    CHCUSB_blinkLED
+    CHCUSB_resetPrinter
+    CHCUSB_AttachThreadCount
+    CHCUSB_getPrintIDStatus
+    CHCUSB_setPrintStandby
+    CHCUSB_testCardFeed
+    CHCUSB_exitCard
+    CHCUSB_getCardRfidTID
+    CHCUSB_commCardRfidReader
+    CHCUSB_updateCardRfidReader
+    CHCUSB_getErrorLog
+    CHCUSB_getErrorStatus

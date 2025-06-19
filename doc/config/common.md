@@ -6,6 +6,17 @@ all games.
 Keyboard binding settings use
 [Virtual-Key Codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes).
 
+## Config Path
+The default file path for config file is `./segatools.ini`.
+
+You can modify environment variable `SEGATOOLS_CONFIG_PATH` to another path.
+
+For example, You can have another `launch.bat` with following code in it,
+Then you can copy `segatools.ini` to `another_config.ini` but with different dns host in it
+```bat
+set SEGATOOLS_CONFIG_PATH=.\another_config.ini
+```
+
 ## `[aimeio]`
 
 Controls the card reader driver.
@@ -31,12 +42,42 @@ Default: `1`
 Enable Aime card reader assembly emulation. Disable to use a real SEGA Aime
 reader (COM port number varies by game).
 
+### `portNo`
+
+Default: (game specific)
+
+Sets the COM port to use for the aime card reader assembly.
+
+### `highBaud`
+
+Default: `1`
+
+Enables the high baudrate of the Aime card reader to be 115200 (instead of 38400).
+This is required for some games (e.g. Chunithm) but not others (e.g. WACCA).
+
+### `gen`
+
+Default: `1`
+
+Changes the Aime card reader generation, this will also change the LED info 
+provided for the game.
+
+- `1`: TN32MSEC003S H/W Ver3.0 / TN32MSEC003S F/W Ver1.2
+- `2`: 837-15286 / 94
+- `3`: 837-15396 / 94
+
 ### `aimePath`
 
 Default: `DEVICE\aime.txt`
 
-Path to a text file containing a classic Aime IC card ID. **This does not
-currently work**.
+Path to a text file containing a classic Aime IC card ID.
+
+### `aimeGen`
+
+Default: `1`
+
+Whether to generate a random AiMe ID if the file at `aimePath` does not
+exist.
 
 ### `felicaPath`
 
@@ -46,7 +87,7 @@ Path to a text file containing a FeliCa e-cash card IDm serial number.
 
 ### `felicaGen`
 
-Default: `1`
+Default: `0`
 
 Whether to generate a random FeliCa ID if the file at `felicaPath` does not
 exist.
@@ -59,6 +100,41 @@ Virtual-key code. If this button is **held** then the emulated IC card reader
 emulates an IC card in its proximity. A variety of different IC cards can be
 emulated; the exact choice of card that is emulated depends on the presence or
 absence of the configured card ID files.
+
+### `proxyFlag`
+
+Default: `2`
+
+The "proxy flag" of the emulated Thinca authentication card. This should be 2 if no proxy is used, and 3 if it is. Invalid values will break Thinca authentication card reading. This information can be obtained by checking for the presence of "use_proxy: true" `tfps-res-pro\env.json`.
+
+### `authdataPath`
+
+Default: `DEVICE\authdata.bin`
+
+Path to the binary file containing data for a Thinca authentication card (see `emoney.txt`)
+
+## `[vfd]`
+
+Controls emulation of the VFD GP1232A02A FUTABA assembly.
+
+### `enable`
+
+Default: `1`
+
+Enable VFD emulation. Disable to use a real VFD
+GP1232A02A FUTABA assembly (COM port number varies by game).
+
+### `portNo`
+
+Default: (game specific)
+
+Sets the COM port to use for the VFD.
+
+### `utfConversion`
+
+Default: `0`
+
+Converts the strings from the VFD from their respective encoding to UTF, so console output will display as it should on non-Japanese locales.
 
 ## `[amvideo]`
 
@@ -118,6 +194,13 @@ setting. Also, loopback addresses are specifically checked for and rejected by
 the games themselves; this needs to be a LAN or WAN IP (or a hostname that
 resolves to one).
 
+### `title`
+
+Default: `title`
+
+Leave it as `title` to use the title server returned by ALL.Net. Rewrites 
+the title server hostname for certain games, such as crossbeats REV.
+
 ### `router`
 
 Default: Empty string (i.e. use value from `default` setting)
@@ -142,6 +225,30 @@ Overrides the target of the `ib.naominet.jp` host lookup.
 Default: Empty string (i.e. use value from `default` setting)
 
 Overrides the target of the `aime.naominet.jp` host lookup.
+
+### `replaceHost`
+
+Default: `0`
+
+Replace the HOST field in HTTP request headers with the settings above. This may help bypass network restrictions in some regions.
+
+### `startupPort`
+
+Default: `0` (i.e. no operation will perform)
+
+Overrides the port of connections to the `startup` server. The current implementation affects every TCP connection to the port 80.
+
+### `billingPort`
+
+Default: `0` (i.e. no operation will perform)
+
+Overrides the port of connections to the `billing` server. The current implementation affects every TCP connection to the port 8443.
+
+### `aimedbPort`
+
+Default: `0` (i.e. no operation will perform)
+
+Overrides the port of connections to the `aimedb` server. The current implementation affects every TCP connection to the port 22345.
 
 ## `[ds]`
 
@@ -247,6 +354,38 @@ Nu chassis DIP switch settings:
     - `111`: 1920x1080
 - Switch 8: Game-specific. Not used in any shipping game.
 
+## `[gfx]`
+
+### `enable`
+
+Default: `1`
+
+Enables graphic hooks.
+
+### `windowed`
+
+Default: `0`
+
+Force the game to run windowed.
+
+### `framed`
+
+Default: `0`
+
+Add a frame to the game window if running windowed.
+
+### `monitor`
+
+Default: `0`
+
+Select the monitor to run the game on. (Fullscreen only, 0 = primary screen)
+
+### `dpiAware`
+
+Default: `1`
+
+Sets the game to be DPI-aware. This prevents Windows automatically scaling the game window by your desktop's scaling factor, which may cause blurry graphics.
+
 ## `[hwmon]`
 
 Configure stub implementation of the platform hardware monitor driver. The
@@ -270,6 +409,33 @@ Default `1`
 
 Enable JVS port emulation. Disable to use the JVS port on a real AMEX.
 
+## `[io4]`
+
+Configure emulation of the IO4 board. Same settings also apply to `[io3]`.
+
+### `enable`
+
+Default `1`
+
+Enable IO4 port emulation. Disable to use the IO4 port on a real ALLS.
+
+### `test`
+Default `0x31`
+
+Test button virtual-key code. Default is the 1 key.
+
+### `service`
+
+Default `0x32`
+
+Service button virtual-key code. Default is the 2 key.
+
+### `coin`
+
+Default `0x33`
+
+Keyboard button to increment coin counter. Default is the 3 key.
+
 ## `[keychip]`
 
 Configure keychip emulation.
@@ -283,7 +449,7 @@ Enable keychip emulation. Disable to use a real keychip.
 Default: `A69E-01A88888888`
 
 Keychip serial number. Keychip serials observed in the wild follow this
-pattern: `A6xE-01Ayyyyyyyy`.
+pattern: `A\d{2}(E|X)-(01|20)[ABCDU]\d{8}`.
 
 ### `gameId`
 
@@ -298,18 +464,22 @@ Default: (Varies depending on game)
 
 Override the game's four-character platform code (e.g. `AAV2` for Nu 2). This
 is actually supposed to be a separate three-character `platformId` and
-integer `modelType` setting, but they are combined here for convenience. Valid
-values include:
+integer `modelType` setting, but they are combined here for convenience.
 
-- `AAV0`: Nu 1 (Project DIVA)
-- `AAV1`: Nu 1.1 (Chunithm)
-- `AAV2`: Nu 2 (Initial D Zero)
-- `AAW0`: NuSX 1
-- `AAW1`: NuSX 1.1
-- `ACA0`: ALLS UX
-- `ACA1`: ALLS HX
-- `ACA2`: ALLS UX (without dedicated GPU)
-- `ACA4`: ALLS MX
+`platformId` is one of the following:
+- `AAV`: Nu 1/1.1/2
+- `AAW`: NuSX 1/1.1
+- `ACA`: ALLS UX/HX/MX
+
+`modelType` is one of the following:
+- `1`: Server (SV) 
+- `2`: Satalite (ST) 
+- `3`: Live (LV) 
+- `4`: Terminal (TN)
+
+It's safe to assume that every game you'll be playing with these tools will be a Satalite.
+Some games care, others don't. Some even change how they run based on this value (Wonderland Wars
+will boot into terminal mode if `modelType` is 4).
 
 ### `region`
 
@@ -326,27 +496,37 @@ Bit values are:
 - 3: EXP: Export (for Asian markets)
 - 4: CHS: China (Simplified Chinese?)
 
+### `billingCa`
+
+Default: `DEVICE\\ca.crt`
+
+Set the billing certificate path. This has to match the one used for the 
+SSL billing server. The DER certificate must fit in 1024 bytes so it must be
+small.
+
+### `billingPub`
+
+Default: `DEVICE\\billing.pub`
+
+Set the actual keychip RSA public key path. This public key has to match the
+private key `billing.key` of the billing server in order to decrypt/encrypt
+the billing transactions.
+
 ### `billingType`
 
 Default: `1`
 
-Set the billing "type" for the keychip. The type determins what kind of revenue share,
-if any, the game maker has with SEGA. Some games may be picky and require types other 
-then 1 (ex. Crossbeats requires billing type 2), so this option is provided if this
-is an issue. Billing types are:
-
-- 0: No billing?
-- 1: Billing type A
-- 2: Billing type B1
-- 3: Billing type B2
+Sets the billing type, a single bit value that flags the cabinet as a rental if set to `1`, or `0` otherwise.
+Certian games that were only sold officially as full purchases (that is, non-rentals) must have this value set to 0.
+NOTE: Crossbeats erroniously displays Billing modes A/B1/B2, but this value comes from the `modelType` and NOT this value!
 
 ### `systemFlag`
 
 Default: `0x64`
 
 An 8-bit bitfield of unclear meaning. The least significant bit indicates a
-developer dongle, I think? Changing this doesn't seem to have any effect on
-anything other than Project DIVA.
+developer dongle. Changing this doesn't seem to have any effect on
+anything other than SEGA AM2 games.
 
 Other values observed in the wild:
 
@@ -468,3 +648,19 @@ Default: Empty string
 Configure the location of the "Option" data mount point. This mount point is
 optional (hence the name, probably) and contains directories which contain
 minor over-the-air content updates.
+
+## `[epay]`
+
+Configure Thinca Payment (E-Money) emulation and hooks.
+
+### `enable`
+
+Default: `1`
+
+Enables the Thinca emulation. This will allow you to enable E-Money on compatible servers.
+
+### `hook`
+
+Default: `0`
+
+Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.

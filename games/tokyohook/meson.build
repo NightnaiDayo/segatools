@@ -1,0 +1,31 @@
+shared_library(
+    'tokyohook',
+    name_prefix : '',
+    include_directories : inc,
+    implicit_include_directories : false,
+    vs_module_defs : 'tokyohook.def',
+    dependencies : [
+        capnhook.get_variable('hook_dep'),
+        capnhook.get_variable('hooklib_dep'),
+        xinput_lib,
+    ],
+    link_with : [
+        aimeio_lib,
+        board_lib,
+        hooklib_lib,
+        tokyoio_lib,
+        platform_lib,
+        util_lib,
+    ],
+    sources : [
+        'config.c',
+        'config.h',
+        'dllmain.c',
+        'io4.c',
+        'io4.h',
+        'zinput.c',
+        'zinput.h',
+        'tokyo-dll.c',
+        'tokyo-dll.h',
+    ],
+)

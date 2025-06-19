@@ -1,0 +1,9 @@
+{
+	"network" :
+	{
+		"property" :
+		{
+			"dhcp" : true
+        }
+	}
+}

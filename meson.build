@@ -13,14 +13,17 @@ add_project_arguments(
     '-DWIN32_LEAN_AND_MEAN',
     '-D_WIN32_WINNT=_WIN32_WINNT_WIN7',
     '-DMINGW_HAS_SECURE_API=1',
+    # '-ggdb',  # Add debug information
     language: 'c',
 )
 
-# Use get_argument_syntax() instead once Meson 0.49.0 releases
-if meson.get_compiler('c').get_id() != 'msvc'
+cc = meson.get_compiler('c')
+
+if cc.get_id() != 'msvc'
     add_project_arguments(
         '-ffunction-sections',
         '-fdata-sections',
+        '-Wno-unused',
         language: 'c',
     )
 
@@ -29,43 +32,110 @@ if meson.get_compiler('c').get_id() != 'msvc'
         '-Wl,--exclude-all-symbols',
         '-Wl,--gc-sections',
         '-static-libgcc',
+        # '-ggdb',  # Add debug information
+        '-lcrypt32', # Bcrypt needed for prashook
+        '-lws2_32', # WSAHtons / WSANtohs needed for porthook
+        # '-Wl,-s',  # Strip debug symbols
         language: 'c',
     )
 endif
 
-cc = meson.get_compiler('c')
+if get_option('log_all') or get_option('log_jvs')
+    add_project_arguments('-DLOG_JVS', language: 'c')
+endif
+if get_option('log_all') or get_option('log_io3')
+    add_project_arguments('-DLOG_IO3', language: 'c')
+endif
+if get_option('log_all') or get_option('log_led15070')
+    add_project_arguments('-DLOG_LED15070', language: 'c')
+endif
+if get_option('log_all') or get_option('log_led15093')
+    add_project_arguments('-DLOG_LED15093', language: 'c')
+endif
+if get_option('log_all') or get_option('log_nfc')
+    add_project_arguments('-DLOG_NFC', language: 'c')
+endif
+if get_option('log_all') or get_option('log_carol_control_bd')
+    add_project_arguments('-DLOG_CAROL_CONTROL_BD', language: 'c')
+endif
+if get_option('log_all') or get_option('log_carol_led_bd')
+    add_project_arguments('-DLOG_CAROL_LED_BD', language: 'c')
+endif
+if get_option('log_all') or get_option('log_carol_touch')
+    add_project_arguments('-DLOG_CAROL_TOUCH', language: 'c')
+endif
+if get_option('log_all') or get_option('log_mai2_touch')
+    add_project_arguments('-DLOG_MAI2_TOUCH', language: 'c')
+endif
+if get_option('log_all') or get_option('log_chuni_slider')
+    add_project_arguments('-DLOG_CHUNI_SLIDER', language: 'c')
+endif
+if get_option('log_all') or get_option('log_chusan_slider')
+    add_project_arguments('-DLOG_CHUSAN_SLIDER', language: 'c')
+endif
+if get_option('log_all') or get_option('log_diva_slider')
+    add_project_arguments('-DLOG_DIVA_SLIDER', language: 'c')
+endif
+if get_option('log_all') or get_option('log_mercury_slider')
+    add_project_arguments('-DLOG_MERCURY_SLIDER', language: 'c')
+endif
+if get_option('log_all') or get_option('log_clock')
+    add_project_arguments('-DLOG_CLOCK', language: 'c')
+endif
+if get_option('log_all') or get_option('log_vfs')
+    add_project_arguments('-DLOG_VFS', language: 'c')
+endif
+
 shlwapi_lib = cc.find_library('shlwapi')
 dinput8_lib = cc.find_library('dinput8')
 dxguid_lib = cc.find_library('dxguid')
 xinput_lib = cc.find_library('xinput')
+pathcch_lib = cc.find_library('pathcch')
+imagehlp_lib = cc.find_library('imagehlp')
+ws2_32_lib = cc.find_library('ws2_32')
 
-inc = include_directories('.')
+inc = include_directories('common', 'games')
 capnhook = subproject('capnhook')
 
-subdir('amex')
-subdir('iccard')
-subdir('board')
-subdir('hooklib')
-subdir('jvs')
-subdir('platform')
-subdir('util')
+subdir('common/amex')
+subdir('common/iccard')
+subdir('common/board')
+subdir('common/hooklib')
+subdir('common/jvs')
+subdir('common/platform')
+subdir('common/util')
+subdir('common/aimeio')
 
-subdir('gfxhook')
+subdir('common/gfxhook')
+subdir('common/unityhook')
 
-subdir('aimeio')
-subdir('chuniio')
-subdir('divaio')
-subdir('carolio')
-subdir('idzio')
-subdir('mu3io')
-subdir('mercuryio')
-subdir('cxbio')
+subdir('games/chuniio')
+subdir('games/divaio')
+subdir('games/carolio')
+subdir('games/idzio')
+subdir('games/idacio')
+subdir('games/swdcio')
+subdir('games/mu3io')
+subdir('games/mai2io')
+subdir('games/cmio')
+subdir('games/mercuryio')
+subdir('games/cxbio')
+subdir('games/tokyoio')
+subdir('games/fgoio')
+subdir('games/kemonoio')
 
-subdir('chunihook')
-subdir('divahook')
-subdir('carolhook')
-subdir('idzhook')
-subdir('minihook')
-subdir('mu3hook')
-subdir('mercuryhook')
-subdir('cxbhook')
+subdir('games/chunihook')
+subdir('games/divahook')
+subdir('games/carolhook')
+subdir('games/idzhook')
+subdir('games/idachook')
+subdir('games/swdchook')
+subdir('games/chusanhook')
+subdir('games/mu3hook')
+subdir('games/mai2hook')
+subdir('games/cmhook')
+subdir('games/mercuryhook')
+subdir('games/cxbhook')
+subdir('games/tokyohook')
+subdir('games/fgohook')
+subdir('games/kemonohook')

@@ -92,6 +92,16 @@ don't know the name of your input device, you can find it in the windows
 controller panel. The quickest way to access it is to press Win+R, then type in
 `joy.cpl` and look at the list it will display.
 
+### `pedalsName`
+
+Default ` `
+
+Name of the pedals to use (or any subset thereof). Leave blank if you do not
+have separate pedals; aka the pedals are part of the wheel. The pedals will 
+be mapped to the `accelAxis` and `brakeAxis` which would normally be used by 
+the wheel defined under `deviceName`. The quickest way to access it is to press 
+Win+R, then type in `joy.cpl` and look at the list it will display.
+
 ### `shifterName`
 
 Default ` `

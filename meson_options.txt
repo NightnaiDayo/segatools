@@ -1,0 +1,80 @@
+option('log_all',
+    type : 'boolean',
+    value : false,
+    description : 'Enables all of the subsequent debug logging options'
+)
+option('log_jvs',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for JVS'
+)
+option('log_io3',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for JVS'
+)
+option('log_led15070',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the 15070 LED board emulation'
+)
+option('log_led15093',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the 15093 LED board emulation'
+)
+option('log_nfc',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for NFC'
+)
+option('log_carol_control_bd',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the Carlo Control Board'
+)
+option('log_carol_led_bd',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the Carlo LED Board'
+)
+option('log_carol_touch',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the Carlo Touchscreen'
+)
+option('log_mai2_touch',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the mai2 TouchPanel'
+)
+option('log_chuni_slider',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the Chunithm Slider'
+)
+option('log_chusan_slider',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the Chusan Slider'
+)
+option('log_diva_slider',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the Diva Slider'
+)
+option('log_mercury_slider',
+    type : 'boolean',
+    value : false,
+    description : 'Enable debug logging for the WACCA Slider'
+)
+option('log_clock',
+       type : 'boolean',
+       value : false,
+       description : 'Enable debug logging for clock APIs'
+)
+option('log_vfs',
+       type : 'boolean',
+       value : false,
+       description : 'Enable debug logging for file system redirections'
+)

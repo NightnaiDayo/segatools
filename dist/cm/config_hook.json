@@ -1,0 +1,9 @@
+{
+    "credit" :
+    {
+        "coin_selector_AS6DB" :
+        {
+            "enable" : false
+        }
+    }
+}
