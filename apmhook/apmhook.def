@@ -18,3 +18,4 @@ EXPORTS
     apm_io_poll
     apm_io_led_init
     apm_io_led_set_colors
+    UnmountApmDrives

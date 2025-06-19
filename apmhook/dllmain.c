@@ -153,6 +153,12 @@ BOOL WINAPI DllMain(HMODULE mod, DWORD cause, void *ctx)
         return TRUE;
     }
 
+    wchar_t szFileName[MAX_PATH];
+    GetModuleFileNameW(NULL, szFileName, MAX_PATH);
+    if (wcsstr(szFileName, L"rundll32") != NULL) {
+        return TRUE;
+    }
+
     apm_hook_mod = mod;
     hr = process_hijack_startup(apm_pre_startup, &apm_startup);
 

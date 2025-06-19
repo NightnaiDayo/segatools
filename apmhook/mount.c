@@ -156,6 +156,11 @@ bool hook_ApmSys_unmountVhd(char mountDriveLetter) {
     return 0;
 }
 
+void CALLBACK UnmountApmDrives(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow) {
+    hook_ApmSys_unmountVhd('W');
+    hook_ApmSys_unmountVhd('X');
+}
+
 bool hook_ApmSys_unmountFscrypt(const wchar_t* mountFolderPath) {
     dprintf("Mount: Unmount FsCrypt (%ls)\n", mountFolderPath);
     memset(game_directory, 0, MAX_PATH * sizeof(wchar_t));
