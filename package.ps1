@@ -2,6 +2,8 @@ if ($null -eq $env:BUILD_DIR) {
     $BUILD_DIR="build"
     $BUILD_DIR_32="$BUILD_DIR\build32"
     $BUILD_DIR_64="$BUILD_DIR\build64"
+    $BUILD_DIR_GAMES_32="$BUILD_DIR_32\games"
+    $BUILD_DIR_GAMES_64="$BUILD_DIR_64\games"
     $BUILD_DIR_ZIP="$BUILD_DIR\zip"
     $DIST_DIR="dist"
     $DOC_DIR="doc"
@@ -9,6 +11,8 @@ if ($null -eq $env:BUILD_DIR) {
     $BUILD_DIR = $env:BUILD_DIR;
     $BUILD_DIR_32 = $env:BUILD_DIR_32;
     $BUILD_DIR_64 = $env:BUILD_DIR_64;
+    $BUILD_DIR_GAMES_32 = $env:BUILD_DIR_GAMES_32;
+    $BUILD_DIR_GAMES_64 = $env:BUILD_DIR_GAMES_64;
     $BUILD_DIR_ZIP = $env:BUILD_DIR_ZIP;
     $DIST_DIR = $env:DIST_DIR;
     $DOC_DIR = $env:DOC_DIR;
@@ -26,6 +30,8 @@ cat .\Package.mk | % {
                   Replace('$(BUILD_DIR)', $BUILD_DIR).
                   Replace('$(BUILD_DIR_32)', $BUILD_DIR_32).
                   Replace('$(BUILD_DIR_64)', $BUILD_DIR_64).
+                  Replace('$(BUILD_DIR_GAMES_32)', $BUILD_DIR_GAMES_32).
+                  Replace('$(BUILD_DIR_GAMES_64)', $BUILD_DIR_GAMES_64).
                   Replace('$(BUILD_DIR_ZIP)', $BUILD_DIR_ZIP).
                   Replace('$(DIST_DIR)', $DIST_DIR).
                   Replace('$(DOC_DIR)', $DOC_DIR).

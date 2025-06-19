@@ -101,6 +101,18 @@ emulates an IC card in its proximity. A variety of different IC cards can be
 emulated; the exact choice of card that is emulated depends on the presence or
 absence of the configured card ID files.
 
+### `proxyFlag`
+
+Default: `2`
+
+The "proxy flag" of the emulated Thinca authentication card. This should be 2 if no proxy is used, and 3 if it is. Invalid values will break Thinca authentication card reading. This information can be obtained by checking for the presence of "use_proxy: true" `tfps-res-pro\env.json`.
+
+### `authdataPath`
+
+Default: `DEVICE\authdata.bin`
+
+Path to the binary file containing data for a Thinca authentication card (see `emoney.txt`)
+
 ## `[vfd]`
 
 Controls emulation of the VFD GP1232A02A FUTABA assembly.
@@ -341,6 +353,38 @@ Nu chassis DIP switch settings:
     - `110`: 1360x768
     - `111`: 1920x1080
 - Switch 8: Game-specific. Not used in any shipping game.
+
+## `[gfx]`
+
+### `enable`
+
+Default: `1`
+
+Enables graphic hooks.
+
+### `windowed`
+
+Default: `0`
+
+Force the game to run windowed.
+
+### `framed`
+
+Default: `0`
+
+Add a frame to the game window if running windowed.
+
+### `monitor`
+
+Default: `0`
+
+Select the monitor to run the game on. (Fullscreen only, 0 = primary screen)
+
+### `dpiAware`
+
+Default: `1`
+
+Sets the game to be DPI-aware. This prevents Windows automatically scaling the game window by your desktop's scaling factor, which may cause blurry graphics.
 
 ## `[hwmon]`
 
@@ -604,3 +648,19 @@ Default: Empty string
 Configure the location of the "Option" data mount point. This mount point is
 optional (hence the name, probably) and contains directories which contain
 minor over-the-air content updates.
+
+## `[epay]`
+
+Configure Thinca Payment (E-Money) emulation and hooks.
+
+### `enable`
+
+Default: `1`
+
+Enables the Thinca emulation. This will allow you to enable E-Money on compatible servers.
+
+### `hook`
+
+Default: `0`
+
+Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.
