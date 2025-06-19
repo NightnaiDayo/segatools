@@ -5,6 +5,8 @@ V               ?= @
 BUILD_DIR := build
 BUILD_DIR_32 := $(BUILD_DIR)/build32
 BUILD_DIR_64 := $(BUILD_DIR)/build64
+BUILD_DIR_GAMES_32 := $(BUILD_DIR_32)/games
+BUILD_DIR_GAMES_64 := $(BUILD_DIR_64)/games
 BUILD_DIR_ZIP := $(BUILD_DIR)/zip
 
 DOC_DIR := doc
