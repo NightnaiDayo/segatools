@@ -240,7 +240,7 @@ $(BUILD_DIR_ZIP)/kemono.zip:
 	for x in exe dll; do strip $(BUILD_DIR_ZIP)/kemono/*.$$x; done
 	$(V)cd $(BUILD_DIR_ZIP)/kemono ; zip -r ../kemono.zip *
 
-$(BUILD_DIR_ZIP)/apm.zip:
+$(BUILD_DIR_ZIP)/apm3.zip:
 	$(V)echo ... $@
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/apm3
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/apm3/DEVICE
@@ -281,7 +281,7 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/tokyo.zip \
 		$(BUILD_DIR_ZIP)/fgo.zip \
 		$(BUILD_DIR_ZIP)/kemono.zip \
-		$(BUILD_DIR_ZIP)/apm.zip \
+		$(BUILD_DIR_ZIP)/apm3.zip \
 		CHANGELOG.md \
 		README.md \
 
