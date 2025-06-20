@@ -69,7 +69,7 @@ static const wchar_t vfs_option[] = L"C:\\Mount\\Option";
 static const size_t vfs_option_len = _countof(vfs_option) - 1;
 
 static const wchar_t vfs_apm[] = L"C:\\Mount\\Apm";
-static const size_t vfs_apm_len = _countof(vfs_apm) - 1;
+static const size_t vfs_apm3_len = _countof(vfs_apm) - 1;
 
 static const struct reg_hook_val vfs_reg_vals[] = {
     {
@@ -540,24 +540,24 @@ static HRESULT vfs_path_hook_apm(
 
     /* Case-insensitive check to see if src starts with vfs_apm */
 
-    if (path_compare_w(src, vfs_apm, vfs_apm_len) != 0) {
+    if (path_compare_w(src, vfs_apm, vfs_apm3_len) != 0) {
         return S_FALSE;
     }
 
     /* Check if the character after vfs_nthome is a separator or the end of
        the string */
 
-    if (!path_is_separator_w(src[vfs_apm_len]) &&
-            src[vfs_apm_len] != L'\0')
+    if (!path_is_separator_w(src[vfs_apm3_len]) &&
+            src[vfs_apm3_len] != L'\0')
     {
         return S_FALSE;
     }
 
     /* Cut off the matched <prefix>\, add the replaced prefix, count NUL */
 
-    shift = path_is_separator_w(src[vfs_apm_len]) ? 1 : 0;
+    shift = path_is_separator_w(src[vfs_apm3_len]) ? 1 : 0;
     redir_len = wcslen(vfs_config.option);
-    required = wcslen(src) - vfs_apm_len - shift + redir_len + 1;
+    required = wcslen(src) - vfs_apm3_len - shift + redir_len + 1;
 
     if (dest != NULL) {
         if (required > *count) {
@@ -565,7 +565,7 @@ static HRESULT vfs_path_hook_apm(
         }
 
         wcscpy_s(dest, *count, vfs_config.option);
-        wcscpy_s(dest + redir_len, *count - redir_len, src + vfs_apm_len + shift);
+        wcscpy_s(dest + redir_len, *count - redir_len, src + vfs_apm3_len + shift);
     }
 
     *count = required;

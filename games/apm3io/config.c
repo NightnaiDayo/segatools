@@ -8,8 +8,8 @@
 
 const int BUTTON_DEFAULTS[] = {'Q','W','E','R','A','S','D','F'};
 
-void apm_io_config_load(
-        struct apm_io_config *cfg,
+void apm3_io_config_load(
+        struct apm3_io_config *cfg,
         const wchar_t *filename)
 {
     assert(cfg != NULL);
@@ -28,7 +28,7 @@ void apm_io_config_load(
     cfg->vk_left = GetPrivateProfileIntW(L"io4", L"left", VK_LEFT, filename);
 
     wchar_t tmp[16];
-    for (int i = 0; i < APM_BUTTON_COUNT; i++) {
+    for (int i = 0; i < APM3_BUTTON_COUNT; i++) {
         swprintf_s(tmp, 32, L"button%d", i + 1);
         cfg->vk_buttons[i] = GetPrivateProfileIntW(L"io4", tmp, BUTTON_DEFAULTS[i], filename);
     }

@@ -11,11 +11,11 @@ EXPORTS
     amDllVideoGetVBiosVersion @4
     amDllVideoOpen @1
     amDllVideoSetResolution @3
-    apm_io_get_api_version
-    apm_io_get_gamebtns
-    apm_io_get_opbtns
-    apm_io_init
-    apm_io_poll
-    apm_io_led_init
-    apm_io_led_set_colors
+    apm3_io_get_api_version
+    apm3_io_get_gamebtns
+    apm3_io_get_opbtns
+    apm3_io_init
+    apm3_io_poll
+    apm3_io_led_init
+    apm3_io_led_set_colors
     UnmountApmDrives

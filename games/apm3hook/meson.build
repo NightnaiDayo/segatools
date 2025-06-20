@@ -19,8 +19,8 @@ shared_library(
         util_lib,
     ],
     sources : [
-        'apm-dll.c',
-        'apm-dll.h',
+        'apm3-dll.c',
+        'apm3-dll.h',
         'config.c',
         'config.h',
         'dllmain.c',

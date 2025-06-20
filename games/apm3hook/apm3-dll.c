@@ -3,34 +3,34 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "apm3hook/apm-dll.h"
+#include "apm3hook/apm3-dll.h"
 
 #include "util/dll-bind.h"
 #include "util/dprintf.h"
 
-const struct dll_bind_sym apm_dll_syms[] = {
+const struct dll_bind_sym apm3_dll_syms[] = {
     {
-        .sym = "apm_io_init",
-        .off = offsetof(struct apm_dll, init),
+        .sym = "apm3_io_init",
+        .off = offsetof(struct apm3_dll, init),
     }, {
-        .sym = "apm_io_poll",
-        .off = offsetof(struct apm_dll, poll),
+        .sym = "apm3_io_poll",
+        .off = offsetof(struct apm3_dll, poll),
     }, {
-        .sym = "apm_io_get_opbtns",
-        .off = offsetof(struct apm_dll, get_opbtns),
+        .sym = "apm3_io_get_opbtns",
+        .off = offsetof(struct apm3_dll, get_opbtns),
     }, {
-        .sym = "apm_io_get_gamebtns",
-        .off = offsetof(struct apm_dll, get_gamebtns),
+        .sym = "apm3_io_get_gamebtns",
+        .off = offsetof(struct apm3_dll, get_gamebtns),
     }, {
-        .sym = "apm_io_led_init",
-        .off = offsetof(struct apm_dll, led_init),
+        .sym = "apm3_io_led_init",
+        .off = offsetof(struct apm3_dll, led_init),
     }, {
-        .sym = "apm_io_led_set_colors",
-        .off = offsetof(struct apm_dll, led_set_leds),
+        .sym = "apm3_io_led_set_colors",
+        .off = offsetof(struct apm3_dll, led_set_leds),
     }
 };
 
-struct apm_dll apm_dll;
+struct apm3_dll apm3_dll;
 
 // Copypasta DLL binding and diagnostic message boilerplate.
 // Not much of this lends itself to being easily factored out. Also there
@@ -38,7 +38,7 @@ struct apm_dll apm_dll;
 // versions get defined, so even though these functions all look the same
 // now this won't remain the case forever.
 
-HRESULT apm_dll_init(const struct apm_dll_config *cfg, HINSTANCE self)
+HRESULT apm3_dll_init(const struct apm3_dll_config *cfg, HINSTANCE self)
 {
     uint16_t (*get_api_version)(void);
     const struct dll_bind_sym *sym;
@@ -68,28 +68,28 @@ HRESULT apm_dll_init(const struct apm_dll_config *cfg, HINSTANCE self)
         src = self;
     }
 
-    get_api_version = (void *) GetProcAddress(src, "apm_io_get_api_version");
+    get_api_version = (void *) GetProcAddress(src, "apm3_io_get_api_version");
 
     if (get_api_version != NULL) {
-        apm_dll.api_version = get_api_version();
+        apm3_dll.api_version = get_api_version();
     } else {
-        apm_dll.api_version = 0x0100;
-        dprintf("Custom IO DLL does not expose apm_io_get_api_version, "
+        apm3_dll.api_version = 0x0100;
+        dprintf("Custom IO DLL does not expose apm3_io_get_api_version, "
                 "assuming API version 1.0.\n"
                 "Please ask the developer to update their DLL.\n");
     }
 
-    if (apm_dll.api_version >= 0x0200) {
+    if (apm3_dll.api_version >= 0x0200) {
         hr = E_NOTIMPL;
         dprintf("APM IO: Custom IO DLL implements an unsupported "
                 "API version (%#04x). Please update Segatools.\n",
-                apm_dll.api_version);
+                apm3_dll.api_version);
 
         goto end;
     }
 
-    sym = apm_dll_syms;
-    hr = dll_bind(&apm_dll, src, &sym, _countof(apm_dll_syms));
+    sym = apm3_dll_syms;
+    hr = dll_bind(&apm3_dll, src, &sym, _countof(apm3_dll_syms));
 
     if (FAILED(hr)) {
         if (src != self) {

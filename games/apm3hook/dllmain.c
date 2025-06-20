@@ -33,9 +33,9 @@
 #include "util/dprintf.h"
 #include "util/env.h"
 
-static HMODULE apm_hook_mod;
-static process_entry_t apm_startup;
-static struct apm_hook_config apm_hook_cfg;
+static HMODULE apm3_hook_mod;
+static process_entry_t apm3_startup;
+static struct apm3_hook_config apm3_hook_cfg;
 
 void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
     dprintf("Unity: Hook callback: %ls\n", p);
@@ -43,10 +43,10 @@ void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
     serial_hook_apply_hooks(hmodule);
     security_hook_insert_hooks(hmodule);
     touch_hook_insert_hooks(hmodule);
-    //mount_hook_apply_hooks(&apm_hook_cfg.mount, hmodule);
+    //mount_hook_apply_hooks(&apm3_hook_cfg.mount, hmodule);
 }
 
-void apm_extra_hooks_init(void) {
+void apm3_extra_hooks_init(void) {
     HMODULE module = LoadLibraryA("Apmv3System_Data/Plugins/x86_64/apmmount.dll"); // HACK??
     if (module != NULL){
         dprintf("APM: Successfully pre-loaded apmmount\n");
@@ -57,7 +57,7 @@ void apm_extra_hooks_init(void) {
     }
 }
 
-static DWORD CALLBACK apm_pre_startup(void)
+static DWORD CALLBACK apm3_pre_startup(void)
 {
     HRESULT hr;
 
@@ -65,56 +65,56 @@ static DWORD CALLBACK apm_pre_startup(void)
 
     /* Load config */
 
-    apm_hook_config_load(&apm_hook_cfg, get_config_path());
+    apm3_hook_config_load(&apm3_hook_cfg, get_config_path());
 
     /* Pin stuff */
-    apm_extra_hooks_init();
+    apm3_extra_hooks_init();
 
     /* Hook Win32 APIs */
 
-    dvd_hook_init(&apm_hook_cfg.dvd, apm_hook_mod);
-    touch_screen_hook_init(&apm_hook_cfg.touch, apm_hook_mod);
+    dvd_hook_init(&apm3_hook_cfg.dvd, apm3_hook_mod);
+    touch_screen_hook_init(&apm3_hook_cfg.touch, apm3_hook_mod);
     serial_hook_init();
 
     /* Initialize emulation hooks */
 
     hr = platform_hook_init(
-            &apm_hook_cfg.platform,
+            &apm3_hook_cfg.platform,
             "SDEM",
             "ACA1",
-            apm_hook_mod);
+            apm3_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&apm_hook_cfg.aime, 3, 3, apm_hook_mod);
+    hr = sg_reader_hook_init(&apm3_hook_cfg.aime, 3, 3, apm3_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = vfd_hook_init(&apm_hook_cfg.vfd, 1);
+    hr = vfd_hook_init(&apm3_hook_cfg.vfd, 1);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = apm_dll_init(&apm_hook_cfg.dll, apm_hook_mod);
+    hr = apm3_dll_init(&apm3_hook_cfg.dll, apm3_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = apm_io4_hook_init(&apm_hook_cfg.io4);
+    hr = apm3_io4_hook_init(&apm3_hook_cfg.io4);
 
     if (FAILED(hr)) {
         goto fail;
     }
     
     unsigned int led_port_no[2] = {2, 0};
-    hr = led15093_hook_init(&apm_hook_cfg.led15093, 
-        apm_dll.led_init, apm_dll.led_set_leds, led_port_no);
+    hr = led15093_hook_init(&apm3_hook_cfg.led15093,
+        apm3_dll.led_init, apm3_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;
@@ -126,15 +126,15 @@ static DWORD CALLBACK apm_pre_startup(void)
         goto fail;
     }
 
-    touch_screen_hook_init(&apm_hook_cfg.touch, apm_hook_mod);
+    touch_screen_hook_init(&apm3_hook_cfg.touch, apm3_hook_mod);
 
-    mount_hook_init(&apm_hook_cfg.platform.vfs, &apm_hook_cfg.mount);
+    mount_hook_init(&apm3_hook_cfg.platform.vfs, &apm3_hook_cfg.mount);
 
     security_hook_insert_hooks(NULL);
 
     mount_hook_apply_hooks(NULL);
 
-    unity_hook_init(&apm_hook_cfg.unity, apm_hook_mod, unity_hook_callback);
+    unity_hook_init(&apm3_hook_cfg.unity, apm3_hook_mod, unity_hook_callback);
     
     /* Initialize debug helpers */
 
@@ -142,7 +142,7 @@ static DWORD CALLBACK apm_pre_startup(void)
 
     dprintf("---  End  %s ---\n", __func__);
 
-    return apm_startup();
+    return apm3_startup();
 
 fail:
     ExitProcess(EXIT_FAILURE);
@@ -162,8 +162,8 @@ BOOL WINAPI DllMain(HMODULE mod, DWORD cause, void *ctx)
         return TRUE;
     }
 
-    apm_hook_mod = mod;
-    hr = process_hijack_startup(apm_pre_startup, &apm_startup);
+    apm3_hook_mod = mod;
+    hr = process_hijack_startup(apm3_pre_startup, &apm3_startup);
 
     if (!SUCCEEDED(hr)) {
         dprintf("Failed to hijack process startup: %x\n", (int) hr);

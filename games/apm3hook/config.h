@@ -11,7 +11,7 @@
 
 #include "gfxhook/config.h"
 
-#include "apm3hook/apm-dll.h"
+#include "apm3hook/apm3-dll.h"
 
 #include "platform/config.h"
 #include "unityhook/config.h"
@@ -21,7 +21,7 @@ struct mount_config {
     bool delay;
 };
 
-struct apm_hook_config {
+struct apm3_hook_config {
     struct platform_config platform;
     struct aime_config aime;
     struct dvd_config dvd;
@@ -29,15 +29,15 @@ struct apm_hook_config {
     struct vfd_config vfd;
     struct touch_screen_config touch;
     struct led15093_config led15093;
-    struct apm_dll_config dll;
+    struct apm3_dll_config dll;
     struct unity_config unity;
     struct mount_config mount;
 };
 
-void apm_dll_config_load(
-        struct apm_dll_config *cfg,
+void apm3_dll_config_load(
+        struct apm3_dll_config *cfg,
         const wchar_t *filename);
 
-void apm_hook_config_load(
-        struct apm_hook_config *cfg,
+void apm3_hook_config_load(
+        struct apm3_hook_config *cfg,
         const wchar_t *filename);

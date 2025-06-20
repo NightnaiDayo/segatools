@@ -5,9 +5,9 @@
 
 #include <stdbool.h>
 
-#define APM_BUTTON_COUNT 8
+#define APM3_BUTTON_COUNT 8
 
-struct apm_io_config {
+struct apm3_io_config {
     uint8_t vk_test;
     uint8_t vk_service;
     uint8_t vk_coin;
@@ -20,9 +20,9 @@ struct apm_io_config {
     uint8_t vk_down;
     uint8_t vk_left;
 
-    uint8_t vk_buttons[APM_BUTTON_COUNT];
+    uint8_t vk_buttons[APM3_BUTTON_COUNT];
 };
 
-void apm_io_config_load(
-        struct apm_io_config *cfg,
+void apm3_io_config_load(
+        struct apm3_io_config *cfg,
         const wchar_t *filename);

@@ -4,7 +4,7 @@
 
 #include "apm3io/apm3io.h"
 
-struct apm_dll {
+struct apm3_dll {
     uint16_t api_version;
     HRESULT (*init)(void);
     HRESULT (*poll)(void);
@@ -14,10 +14,10 @@ struct apm_dll {
     void (*led_set_leds)(uint8_t board, uint8_t *rgb);
 };
 
-struct apm_dll_config {
+struct apm3_dll_config {
     wchar_t path[MAX_PATH];
 };
 
-extern struct apm_dll apm_dll;
+extern struct apm3_dll apm3_dll;
 
-HRESULT apm_dll_init(const struct apm_dll_config *cfg, HINSTANCE self);
+HRESULT apm3_dll_init(const struct apm3_dll_config *cfg, HINSTANCE self);

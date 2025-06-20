@@ -11,8 +11,8 @@
 
 #include "platform/config.h"
 
-void apm_dll_config_load(
-        struct apm_dll_config *cfg,
+void apm3_dll_config_load(
+        struct apm3_dll_config *cfg,
         const wchar_t *filename)
 {
     assert(cfg != NULL);
@@ -93,8 +93,8 @@ void mount_config_load(struct mount_config *cfg, const wchar_t *filename) {
     cfg->delay = GetPrivateProfileIntW(L"mount", L"delay", 1, filename);
 }
 
-void apm_hook_config_load(
-        struct apm_hook_config *cfg,
+void apm3_hook_config_load(
+        struct apm3_hook_config *cfg,
         const wchar_t *filename)
 {
     assert(cfg != NULL);
@@ -107,7 +107,7 @@ void apm_hook_config_load(
     vfd_config_load(&cfg->vfd, filename);
     touch_screen_config_load(&cfg->touch, filename);
     led15093_config_load(&cfg->led15093, filename);
-    apm_dll_config_load(&cfg->dll, filename);
+    apm3_dll_config_load(&cfg->dll, filename);
     unity_config_load(&cfg->unity, filename);
     mount_config_load(&cfg->mount, filename);
 }
