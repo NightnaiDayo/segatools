@@ -131,6 +131,10 @@ bool hook_ApmSys_mountVhd(const wchar_t* vhdOriginalPath, const wchar_t* vhdPatc
         dprintf("DefineDosDevice failed: %lx\n", GetLastError());
         return 1;
     }
+
+    if (mcfg->delay) {
+        Sleep(1500);
+    }
     return 0;
 }
 bool hook_ApmSys_unmountVhd(char mountDriveLetter) {

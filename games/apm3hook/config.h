@@ -18,6 +18,7 @@
 
 struct mount_config {
     bool enable;
+    bool delay;
 };
 
 struct apm_hook_config {

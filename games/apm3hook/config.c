@@ -90,6 +90,7 @@ void led15093_config_load(struct led15093_config *cfg, const wchar_t *filename)
 
 void mount_config_load(struct mount_config *cfg, const wchar_t *filename) {
     cfg->enable = GetPrivateProfileIntW(L"mount", L"enable", 1, filename);
+    cfg->delay = GetPrivateProfileIntW(L"mount", L"delay", 1, filename);
 }
 
 void apm_hook_config_load(
