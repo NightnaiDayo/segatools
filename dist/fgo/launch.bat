@@ -1,6 +1,6 @@
 @echo off
 
-cd /d %~dp0
+pushd %~dp0
 
 inject -d -k fgohook.dll ago.exe
 

@@ -4,6 +4,8 @@ setlocal enabledelayedexpansion
 set BUILD_DIR=build
 set BUILD_DIR_32=%BUILD_DIR%\build32
 set BUILD_DIR_64=%BUILD_DIR%\build64
+set BUILD_DIR_GAMES_32=%BUILD_DIR_32%\games
+set BUILD_DIR_GAMES_64=%BUILD_DIR_64%\games
 set BUILD_DIR_ZIP=%BUILD_DIR%\zip
 set DIST_DIR=dist
 set DOC_DIR=doc
