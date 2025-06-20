@@ -91,7 +91,9 @@ bool hook_ApmSys_mountFscrypt(const wchar_t* fscryptImagePath, const wchar_t* mo
         return 1;
     }
 
-    wcscpy_s(game_directory, MAX_PATH, trans);
+    if (trans != NULL) {
+        wcscpy_s(game_directory, MAX_PATH, trans);
+    }
 
     free(trans);
 
