@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <Bcrypt.h>
+#include <bcrypt.h>
 
 #define STATUS_SUCCESS ((NTSTATUS)0x00000000)
 
