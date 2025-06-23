@@ -27,7 +27,7 @@ enum {
     APM3_IO_GAMEBTN_B8 = 0x2000,
 };
 
-/* Get the version of the Fate Grand Order IO API that this DLL supports. This
+/* Get the version of the APMv3 IO API that this DLL supports. This
    function should return a positive 16-bit integer, where the high byte is
    the major version and the low byte is the minor version (as defined by the
    Semantic Versioning standard).
