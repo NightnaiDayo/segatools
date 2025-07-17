@@ -68,8 +68,8 @@ static const size_t vfs_w10home_len = _countof(vfs_w10home) - 1;
 static const wchar_t vfs_option[] = L"C:\\Mount\\Option";
 static const size_t vfs_option_len = _countof(vfs_option) - 1;
 
-static const wchar_t vfs_apm[] = L"C:\\Mount\\Apm";
-static const size_t vfs_apm3_len = _countof(vfs_apm) - 1;
+static const wchar_t vfs_apm3[] = L"C:\\Mount\\Apm";
+static const size_t vfs_apm3_len = _countof(vfs_apm3) - 1;
 
 static const struct reg_hook_val vfs_reg_vals[] = {
     {
@@ -540,7 +540,7 @@ static HRESULT vfs_path_hook_apm(
 
     /* Case-insensitive check to see if src starts with vfs_apm */
 
-    if (path_compare_w(src, vfs_apm, vfs_apm3_len) != 0) {
+    if (path_compare_w(src, vfs_apm3, vfs_apm3_len) != 0) {
         return S_FALSE;
     }
 

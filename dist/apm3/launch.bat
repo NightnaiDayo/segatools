@@ -44,7 +44,7 @@ goto BEGIN
 taskkill /f /im emoneyUI.exe > nul 2>&1
 taskkill /f /im amdaemon.exe > nul 2>&1
 
-rundll32 apmhook.dll,UnmountApmDrives
+rundll32 apm3hook.dll,UnmountApmDrives
 
 echo.
 echo Game processes have terminated
