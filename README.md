@@ -1,6 +1,6 @@
 # Segatools
 
-Version: `2024-09-30`
+Version: `2025-07-20`
 
 Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platforms.
 
@@ -32,6 +32,8 @@ Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platfo
   * starting from WACCA
 * Kemono Friends
   * Kemono Friends 3: Planet Tours
+* ALL.Net P-ras MULTI Version 3
+  * starting from ALL.Net P-ras MULTI Version 3 1.01
 
 ## End-users
 

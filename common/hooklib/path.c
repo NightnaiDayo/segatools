@@ -17,7 +17,6 @@
 
 static void path_hook_init(void);
 static BOOL path_transform_a(char **out, const char *src);
-static BOOL path_transform_w(wchar_t **out, const wchar_t *src);
 
 /* API hooks */
 
@@ -490,7 +489,7 @@ end:
     return ok;
 }
 
-static BOOL path_transform_w(wchar_t **out, const wchar_t *src)
+BOOL path_transform_w(wchar_t **out, const wchar_t *src)
 {
     BOOL ok;
     HRESULT hr;

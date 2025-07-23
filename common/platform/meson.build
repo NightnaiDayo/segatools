@@ -5,6 +5,7 @@ platform_lib = static_library(
     dependencies : [
         capnhook.get_variable('hook_dep'),
         shlwapi_lib,
+        bcrypt_lib,
     ],
     sources : [
         'amvideo.c',
@@ -31,6 +32,8 @@ platform_lib = static_library(
         'pcbid.h',
         'platform.c',
         'platform.h',
+        'security.c',
+        'security.h',
         'vfs.c',
         'vfs.h',
         'system.c',
