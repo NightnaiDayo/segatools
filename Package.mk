@@ -240,6 +240,22 @@ $(BUILD_DIR_ZIP)/kemono.zip:
 	for x in exe dll; do strip $(BUILD_DIR_ZIP)/kemono/*.$$x; done
 	$(V)cd $(BUILD_DIR_ZIP)/kemono ; zip -r ../kemono.zip *
 
+$(BUILD_DIR_ZIP)/apm3.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/apm3
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/apm3/DEVICE
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_GAMES_64)/apm3hook/apm3hook.dll \
+		$(DIST_DIR)/apm3/segatools.ini \
+		$(DIST_DIR)/apm3/launch.bat \
+		$(DIST_DIR)/apm3/config_hook.json \
+    	$(BUILD_DIR_ZIP)/apm3
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/apm3/DEVICE
+	$(V)strip $(BUILD_DIR_ZIP)/apm3/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/apm3 ; zip -r ../apm3.zip *
+
 $(BUILD_DIR_ZIP)/doc.zip: \
 		$(DOC_DIR)/config \
 		$(DOC_DIR)/chunihook.md \
@@ -265,6 +281,7 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/tokyo.zip \
 		$(BUILD_DIR_ZIP)/fgo.zip \
 		$(BUILD_DIR_ZIP)/kemono.zip \
+		$(BUILD_DIR_ZIP)/apm3.zip \
 		CHANGELOG.md \
 		README.md \
 
