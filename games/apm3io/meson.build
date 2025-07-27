@@ -1,0 +1,31 @@
+apm3io_lib = static_library(
+    'apm3io',
+    name_prefix : '',
+    include_directories : inc,
+    implicit_include_directories : false,
+    dependencies : [
+        dinput8_lib,
+        dxguid_lib,
+        xinput_lib,
+    ],
+    link_with : [
+        util_lib,
+    ],
+    sources : [
+        'apm3io.h',
+        'backend.h',
+        'config.c',
+        'config.h',
+        'di.c',
+        'di.h',
+        'di-dev.c',
+        'di-dev.h',
+        'dllmain.c',
+        'kb.c',
+        'kb.h',
+        'wnd.c',
+        'wnd.h',
+        'xi.c',
+        'xi.h',
+    ],
+)

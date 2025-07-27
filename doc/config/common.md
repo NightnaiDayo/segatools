@@ -661,6 +661,6 @@ Enables the Thinca emulation. This will allow you to enable E-Money on compatibl
 
 ### `hook`
 
-Default: `0`
+Default: `1`
 
 Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.

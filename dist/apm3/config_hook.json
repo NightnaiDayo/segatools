@@ -1,0 +1,10 @@
+{
+  "common": {
+    "language": "english"
+  },
+  "aime": {
+    "firmware_path": [
+      "aime_firm\\update_15396_6728_94.bin"
+    ]
+  }
+}

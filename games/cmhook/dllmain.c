@@ -87,7 +87,7 @@ static DWORD CALLBACK cm_pre_startup(void)
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&cm_hook_cfg.aime, 1, 1, cm_hook_mod);
+    hr = sg_reader_hook_init(&cm_hook_cfg.aime, 1, 3, cm_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
