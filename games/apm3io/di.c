@@ -1,9 +1,4 @@
 #include <windows.h>
-#include <dinput.h>
-
-#include <stddef.h>
-#include <stdint.h>
-#include <wchar.h>
 #include <assert.h>
 
 #include "apm3io/backend.h"
@@ -25,9 +20,6 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg);
 static BOOL CALLBACK apm3_di_enum_callback(
         const DIDEVICEINSTANCEW *dev,
         void *ctx);
-static BOOL CALLBACK apm3_di_enum_callback_shifter(
-        const DIDEVICEINSTANCEW *dev,
-        void *ctx);
 static void apm3_di_get_gamebtns(uint16_t *gamebtn_out);
 static uint8_t apm3_di_decode_pov(DWORD pov);
 
@@ -42,7 +34,7 @@ static IDirectInputDevice8W *apm3_di_dev;
 static IDirectInputEffect *apm3_di_fx;
 static uint8_t apm3_di_home;
 static uint8_t apm3_di_start;
-static uint8_t apm3_di_button[8];
+static uint8_t apm3_di_button[APM3_BUTTON_COUNT];
 
 HRESULT apm3_di_init(
         const struct apm3_di_config *cfg,
@@ -50,10 +42,6 @@ HRESULT apm3_di_init(
         const struct apm3_io_backend **backend)
 {
     HRESULT hr;
-    HMODULE dinput8;
-    HRESULT (WINAPI *api_entry)(HINSTANCE,DWORD,REFIID,LPVOID *,LPUNKNOWN);
-    wchar_t dll_path[MAX_PATH];
-    UINT path_pos;
 
     assert(cfg != NULL);
     assert(backend != NULL);
@@ -69,6 +57,18 @@ HRESULT apm3_di_init(
     hr = apm3_io_wnd_create(inst, &apm3_di_wnd);
 
     if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = DirectInput8Create(
+            inst,
+            DIRECTINPUT_VERSION,
+            &IID_IDirectInput8W,
+            (void**)&apm3_di_api,
+            NULL);
+    
+    if (FAILED(hr)) {
+        dprintf("DirectInput: DirectInput8Create failed: %08x\n", (int)hr);
         return hr;
     }
 
@@ -138,7 +138,7 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg)
     dprintf("Stick: Start button . . . : %i\n", cfg->start);
 
     /* Print the configuration for all 8 buttons */
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < APM3_BUTTON_COUNT; i++) {
         dprintf("Stick: Button %i . . . . . : %i\n", i, cfg->button[i]);
     }
 
@@ -147,7 +147,7 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg)
     apm3_di_start = cfg->start;
     apm3_di_home = cfg->home;
     
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < APM3_BUTTON_COUNT; i++) {
         apm3_di_button[i] = cfg->button[i];
     }
 
