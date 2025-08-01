@@ -25,8 +25,6 @@ shared_library(
         'idac-dll.h',
         'io4.c',
         'io4.h',
-        'zinput.c',
-        'zinput.h',
         'indrun.c',
         'indrun.h',
         'ffb.c',
