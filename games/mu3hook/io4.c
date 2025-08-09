@@ -7,7 +7,7 @@
 #include "board/io4.h"
 
 #include "mu3hook/mu3-dll.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 

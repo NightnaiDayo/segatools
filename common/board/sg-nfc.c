@@ -14,7 +14,7 @@
 
 #include "iccard/aime.h"
 #include "iccard/felica.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 #include "util/dump.h"

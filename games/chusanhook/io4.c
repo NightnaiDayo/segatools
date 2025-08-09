@@ -7,7 +7,7 @@
 #include "board/io4.h"
 
 #include "chusanhook/chuni-dll.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 #include "util/dprintf.h"
 
 struct chunithm_jvs_ir_mask {

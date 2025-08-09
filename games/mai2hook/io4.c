@@ -7,7 +7,7 @@
 #include "board/io4.h"
 
 #include "mai2hook/mai2-dll.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 

@@ -42,7 +42,7 @@
 #include "fgohook/deck.h"
 
 #include "platform/platform.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 #include "util/env.h"

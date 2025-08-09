@@ -5,6 +5,7 @@ shared_library(
     implicit_include_directories : false,
     vs_module_defs : 'swdchook.def',
     dependencies : [
+        segapi.get_variable('api_dep'),
         capnhook.get_variable('hook_dep'),
         capnhook.get_variable('hooklib_dep'),
         xinput_lib,

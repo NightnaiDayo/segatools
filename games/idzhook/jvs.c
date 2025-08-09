@@ -12,7 +12,7 @@
 #include "idzhook/jvs.h"
 
 #include "jvs/jvs-bus.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 

@@ -17,7 +17,7 @@
 #include "hook/iohook.h"
 
 #include "hooklib/setupapi.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/async.h"
 #include "util/dprintf.h"

@@ -15,7 +15,7 @@
 #include "kemonohook/jvs.h"
 #include "kemonohook/kemono-dll.h"
 #include "platform/platform.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 #include "unityhook/hook.h"
 #include "util/dprintf.h"
 #include "util/env.h"

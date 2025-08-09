@@ -10,7 +10,7 @@
 
 #include "aimeio/aimeio.h"
 
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 #include "util/crc.h"
 #include "util/dprintf.h"
 #include "util/env.h"

@@ -6,7 +6,7 @@
 
 #include "amex/gpio.h"
 
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "hook/iohook.h"
 

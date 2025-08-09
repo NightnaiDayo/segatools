@@ -23,7 +23,7 @@
 #include "jvs/jvs-bus.h"
 #include "jvs/jvs-cmd.h"
 #include "jvs/jvs-util.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 #include "util/dump.h"

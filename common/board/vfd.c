@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "board/config.h"
 #include "board/vfd.h"

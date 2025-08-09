@@ -33,7 +33,7 @@
 #include "mu3hook/mu3-dll.h"
 
 #include "platform/platform.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "unityhook/config.h"
 #include "unityhook/hook.h"

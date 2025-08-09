@@ -12,7 +12,7 @@
 #include "hook/procaddr.h"
 
 #include "hook/table.h"
-#include "subprojects/segapi/api/api.h"
+#include "api/api.h"
 
 #include "util/dprintf.h"
 #include "util/fg-detect.h"
