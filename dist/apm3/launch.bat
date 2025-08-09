@@ -20,7 +20,8 @@ pushd %~dp0
 qprocess amdaemon.exe > NUL
 IF %ERRORLEVEL% NEQ 0 start /min "AM Daemon" inject -d -k apm3hook.dll amdaemon.exe -c daemon_config\common.json daemon_config\server.json config_hook.json
 
-inject -d -k apm3hook.dll APMV3System -screen-fullscreen 0 -screen-width 1920 -screen-height 1080 -popupWindow -logFile output_log.txt
+REM Add "-screen-fullscreen 0 -popupWindow" if you want to run in windowed mode
+inject -d -k apm3hook.dll APMV3System -logFile output_log.txt
 
 if exist %tmp%\segaboot (
   del %tmp%\segaboot

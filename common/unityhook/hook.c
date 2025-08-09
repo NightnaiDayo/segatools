@@ -95,7 +95,6 @@ static void dll_hook_insert_hooks(HMODULE target) {
 
 static HMODULE WINAPI hook_LoadLibraryExW(const wchar_t *name, HANDLE  hFile, DWORD   dwFlags)
 {
-    // dprintf("Unity: LoadLibraryExW %ls\n", name);
     return hook_LoadLibraryW(name);
 }
 
@@ -157,11 +156,6 @@ static HMODULE WINAPI hook_LoadLibraryW(const wchar_t *name)
             if (hook_load_callback != NULL){
                 hook_load_callback(result, target_module);
             }
-
-            // Not needed?
-            // serial_hook_apply_hooks(result);
-            // Unity will crash during option loading when we hook this twice
-            // iohook_apply_hooks(result);
         }
     }
 

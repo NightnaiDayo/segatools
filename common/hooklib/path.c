@@ -136,6 +136,31 @@ static BOOL WINAPI hook_DeleteFileA(const char *lpFileName);
 
 static BOOL WINAPI hook_DeleteFileW(const wchar_t *lpFileName);
 
+static DWORD WINAPI hook_GetPrivateProfileStringA(
+        LPCSTR lpAppName,
+        LPCSTR lpKeyName,
+        LPCSTR lpDefault,
+        LPSTR  lpReturnedString,
+        DWORD  nSize,
+        LPCSTR lpFileName
+);
+
+static DWORD WINAPI hook_GetPrivateProfileStringW(
+        LPCWSTR lpAppName,
+        LPCWSTR lpKeyName,
+        LPCWSTR lpDefault,
+        LPWSTR  lpReturnedString,
+        DWORD   nSize,
+        LPCWSTR lpFileName
+);
+
+static DWORD WINAPI hook_GetPrivateProfileSectionW(
+        LPCWSTR lpAppName,
+        LPWSTR  lpReturnedString,
+        DWORD   nSize,
+        LPCWSTR lpFileName
+);
+
 /* Link pointers */
 
 static BOOL (WINAPI *next_CreateDirectoryA)(
@@ -253,6 +278,31 @@ static BOOL (WINAPI *next_DeleteFileA)(const char *lpFileName);
 
 static BOOL (WINAPI *next_DeleteFileW)(const wchar_t *lpFileName);
 
+static DWORD (WINAPI *next_GetPrivateProfileStringA)(
+        LPCSTR lpAppName,
+        LPCSTR lpKeyName,
+        LPCSTR lpDefault,
+        LPSTR  lpReturnedString,
+        DWORD  nSize,
+        LPCSTR lpFileName
+);
+
+static DWORD (WINAPI *next_GetPrivateProfileStringW)(
+        LPCWSTR lpAppName,
+        LPCWSTR lpKeyName,
+        LPCWSTR lpDefault,
+        LPWSTR  lpReturnedString,
+        DWORD   nSize,
+        LPCWSTR lpFileName
+);
+
+static DWORD (WINAPI *next_GetPrivateProfileSectionW)(
+        LPCWSTR lpAppName,
+        LPWSTR  lpReturnedString,
+        DWORD   nSize,
+        LPCWSTR lpFileName
+);
+
 /* Hook table */
 
 static const struct hook_symbol path_hook_syms[] = {
@@ -356,6 +406,18 @@ static const struct hook_symbol path_hook_syms[] = {
         .name   = "DeleteFileW",
         .patch  = hook_DeleteFileW,
         .link   = (void **) &next_DeleteFileW,
+    }, {
+        .name   = "GetPrivateProfileStringA",
+        .patch  = hook_GetPrivateProfileStringA,
+        .link   = (void **) &next_GetPrivateProfileStringA,
+    }, {
+        .name   = "GetPrivateProfileStringW",
+        .patch  = hook_GetPrivateProfileStringW,
+        .link   = (void **) &next_GetPrivateProfileStringW,
+    }, {
+        .name   = "GetPrivateProfileSectionW",
+        .patch  = hook_GetPrivateProfileSectionW,
+        .link   = (void **) &next_GetPrivateProfileSectionW,
     }
 };
 
@@ -1034,7 +1096,7 @@ static BOOL WINAPI hook_MoveFileA(
     ok = next_MoveFileA(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName);
-    
+
     free(oldTrans);
     free(newTrans);
 
@@ -1066,7 +1128,7 @@ static BOOL WINAPI hook_MoveFileW(
     ok = next_MoveFileW(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName);
-    
+
     free(oldTrans);
     free(newTrans);
 
@@ -1100,7 +1162,7 @@ static BOOL WINAPI hook_MoveFileExA(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName,
         dwFlags);
-    
+
     free(oldTrans);
     free(newTrans);
 
@@ -1187,7 +1249,7 @@ static BOOL WINAPI hook_ReplaceFileW(
     return ok;
 }
 
-static BOOL WINAPI hook_DeleteFileA(const char *lpFileName) 
+static BOOL WINAPI hook_DeleteFileA(const char *lpFileName)
 {
     char *trans;
     BOOL ok;
@@ -1217,4 +1279,62 @@ static BOOL WINAPI hook_DeleteFileW(const wchar_t *lpFileName)
     ok = next_DeleteFileW(trans ? trans: lpFileName);
 
     return ok;
+}
+
+static DWORD WINAPI hook_GetPrivateProfileStringA(
+        LPCSTR lpAppName,
+        LPCSTR lpKeyName,
+        LPCSTR lpDefault,
+        LPSTR  lpReturnedString,
+        DWORD  nSize,
+        LPCSTR lpFileName
+) {
+    char *trans;
+    BOOL ok;
+
+    ok = path_transform_a(&trans, lpFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    return next_GetPrivateProfileStringA(lpAppName, lpKeyName, lpDefault, lpReturnedString, nSize, trans ? trans: lpFileName);
+}
+
+static DWORD WINAPI hook_GetPrivateProfileStringW(
+        LPCWSTR lpAppName,
+        LPCWSTR lpKeyName,
+        LPCWSTR lpDefault,
+        LPWSTR  lpReturnedString,
+        DWORD   nSize,
+        LPCWSTR lpFileName
+) {
+    wchar_t *trans;
+    BOOL ok;
+
+    ok = path_transform_w(&trans, lpFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    return next_GetPrivateProfileStringW(lpAppName, lpKeyName, lpDefault, lpReturnedString, nSize, trans ? trans: lpFileName);
+}
+
+static DWORD WINAPI hook_GetPrivateProfileSectionW(
+        LPCWSTR lpAppName,
+        LPWSTR  lpReturnedString,
+        DWORD   nSize,
+        LPCWSTR lpFileName
+) {
+    wchar_t *trans;
+    BOOL ok;
+
+    ok = path_transform_w(&trans, lpFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    return next_GetPrivateProfileSectionW(lpAppName, lpReturnedString, nSize, trans ? trans: lpFileName);
 }

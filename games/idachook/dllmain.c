@@ -31,7 +31,6 @@
 #include "idachook/idac-dll.h"
 #include "idachook/io4.h"
 #include "idachook/ffb.h"
-#include "idachook/zinput.h"
 
 #include "platform/platform.h"
 
@@ -55,7 +54,6 @@ static DWORD CALLBACK idac_pre_startup(void)
     /* Hook Win32 APIs */
 
     serial_hook_init();
-    zinput_hook_init(&idac_hook_cfg.zinput);
     dvd_hook_init(&idac_hook_cfg.dvd, idac_hook_mod);
 
     /* Initialize emulation hooks */

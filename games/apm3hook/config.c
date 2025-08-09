@@ -93,6 +93,10 @@ void mount_config_load(struct mount_config *cfg, const wchar_t *filename) {
     cfg->delay = GetPrivateProfileIntW(L"mount", L"delay", 1, filename);
 }
 
+void video_config_load(struct video_config *cfg, const wchar_t *filename) {
+    cfg->enable = GetPrivateProfileIntW(L"video", L"enable", 1, filename);
+}
+
 void apm3_hook_config_load(
         struct apm3_hook_config *cfg,
         const wchar_t *filename)
@@ -110,4 +114,5 @@ void apm3_hook_config_load(
     apm3_dll_config_load(&cfg->dll, filename);
     unity_config_load(&cfg->unity, filename);
     mount_config_load(&cfg->mount, filename);
+    video_config_load(&cfg->video, filename);
 }

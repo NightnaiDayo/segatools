@@ -1,6 +1,6 @@
 # Segatools
 
-Version: `2025-07-20`
+Version: `2025-07-27`
 
 Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platforms.
 

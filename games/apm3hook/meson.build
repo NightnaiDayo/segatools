@@ -28,5 +28,7 @@ shared_library(
         'io4.h',
         'mount.c',
         'mount.h',
+        'video.c',
+        'video.h',
     ],
 )
