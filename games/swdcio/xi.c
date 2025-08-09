@@ -179,7 +179,7 @@ static int16_t calculate_norm_steering(int16_t axis, uint16_t deadzone, bool lin
 
         // optionally normalize the magnitude with respect to its expected range
         // giving a magnitude value of 0.0 to 1.0
-        norm_magnitude = (int16_t)(magnitude / (max_stick_value - deadzone));
+        norm_magnitude = (magnitude / (max_stick_value - deadzone));
     } else // if the controller is in the deadzone zero out the magnitude
     {
         magnitude = 0.0;

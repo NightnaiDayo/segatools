@@ -16,6 +16,7 @@
 #include "config.h"
 #include "io4.h"
 #include "mount.h"
+#include "video.h"
 
 #include "hook/iohook.h"
 #include "hook/process.h"
@@ -52,9 +53,7 @@ void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
             iohook_apply_hooks(hmodule);
         }
     }
-    security_hook_insert_hooks(hmodule);
     touch_hook_insert_hooks(hmodule);
-    // mount_hook_apply_hooks(&apm3_hook_cfg.mount, hmodule);
 }
 
 static DWORD CALLBACK apm3_pre_startup(void)
@@ -73,7 +72,20 @@ static DWORD CALLBACK apm3_pre_startup(void)
     touch_screen_hook_init(&apm3_hook_cfg.touch, apm3_hook_mod);
     serial_hook_init();
 
+    /* Hook external DLL APIs */
+
+    mount_hook_init(&apm3_hook_cfg.platform.vfs, &apm3_hook_cfg.mount);
+    av_pro_video_hook_init(&apm3_hook_cfg.video);
+
     /* Initialize emulation hooks */
+
+    struct dipsw_config new_dipsw_config[8] = {
+        {L"LAN Install", L"Server", L"Client"},
+    };
+
+    // Set the system dip switch configuration
+    memcpy(apm3_hook_cfg.platform.system.dipsw_config, new_dipsw_config,
+           sizeof(new_dipsw_config));
 
     hr = platform_hook_init(
             &apm3_hook_cfg.platform,
@@ -116,20 +128,6 @@ static DWORD CALLBACK apm3_pre_startup(void)
     if (FAILED(hr)) {
         goto fail;
     }
-
-    hr = security_hook_init();
-
-    if (FAILED(hr)) {
-        goto fail;
-    }
-
-    touch_screen_hook_init(&apm3_hook_cfg.touch, apm3_hook_mod);
-
-    mount_hook_init(&apm3_hook_cfg.platform.vfs, &apm3_hook_cfg.mount);
-
-    security_hook_insert_hooks(NULL);
-
-    mount_hook_apply_hooks(NULL);
 
     unity_hook_init(&apm3_hook_cfg.unity, apm3_hook_mod, unity_hook_callback);
     

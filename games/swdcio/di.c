@@ -1,11 +1,5 @@
 #include <windows.h>
-#include <dinput.h>
-
 #include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <wchar.h>
 
 #include "swdcio/backend.h"
 #include "swdcio/config.h"
@@ -81,10 +75,6 @@ HRESULT swdc_di_init(
         const struct swdc_io_backend **backend)
 {
     HRESULT hr;
-    HMODULE dinput8;
-    HRESULT (WINAPI *api_entry)(HINSTANCE,DWORD,REFIID,LPVOID *,LPUNKNOWN);
-    wchar_t dll_path[MAX_PATH];
-    UINT path_pos;
 
     assert(cfg != NULL);
     assert(backend != NULL);
@@ -103,46 +93,15 @@ HRESULT swdc_di_init(
         return hr;
     }
 
-    /* SWDC has some built-in DirectInput support that is not
-       particularly useful. swdchook shorts this out by redirecting dinput8.dll
-       to a no-op implementation of DirectInput. However, swdcio does need to
-       talk to the real operating system implementation of DirectInput without
-       the stub DLL interfering, so build a path to
-       C:\Windows\System32\dinput.dll here. */
-
-    dll_path[0] = L'\0';
-    path_pos = GetSystemDirectoryW(dll_path, _countof(dll_path));
-    wcscat_s(
-            dll_path + path_pos,
-            _countof(dll_path) - path_pos,
-            L"\\dinput8.dll");
-
-    dinput8 = LoadLibraryW(dll_path);
-
-    if (dinput8 == NULL) {
-        hr = HRESULT_FROM_WIN32(GetLastError());
-        dprintf("DirectInput: LoadLibrary failed: %08x\n", (int) hr);
-
-        return hr;
-    }
-
-    api_entry = (void *) GetProcAddress(dinput8, "DirectInput8Create");
-
-    if (api_entry == NULL) {
-        dprintf("DirectInput: GetProcAddress failed\n");
-
-        return E_FAIL;
-    }
-
-    hr = api_entry(
+    hr = DirectInput8Create(
             inst,
             DIRECTINPUT_VERSION,
             &IID_IDirectInput8W,
-            (void **) &swdc_di_api,
+            (void**)&swdc_di_api,
             NULL);
-
+    
     if (FAILED(hr)) {
-        dprintf("DirectInput: API create failed: %08x\n", (int) hr);
+        dprintf("DirectInput: DirectInput8Create failed: %08x\n", (int) hr);
 
         return hr;
     }

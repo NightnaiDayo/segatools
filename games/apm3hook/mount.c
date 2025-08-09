@@ -62,15 +62,17 @@ void mount_hook_init(struct vfs_config* vfs_cfg, struct mount_config* mount_cfg)
         return;
     }
 
-    dprintf("Mount: Hook enabled\n");
+    mount_hook_apply_hooks(NULL);
+
+    dprintf("Mount: hook enabled\n");
 }
 
-void mount_hook_apply_hooks(HMODULE module) {
-    if (!mcfg->enable) {
-        return;
-    }
-
-    proc_addr_table_push(module, "apmmount.dll", mount_hooks, _countof(mount_hooks));
+void mount_hook_apply_hooks(HMODULE target) {
+    proc_addr_table_push(
+        target,
+        "apmmount.dll",
+        mount_hooks,
+        _countof(mount_hooks));
 }
 
 

@@ -11,15 +11,12 @@
 
 #include "gfxhook/config.h"
 
-#include "apm3hook/apm3-dll.h"
+#include "apm3-dll.h"
+#include "mount.h"
+#include "video.h"
 
 #include "platform/config.h"
 #include "unityhook/config.h"
-
-struct mount_config {
-    bool enable;
-    bool delay;
-};
 
 struct apm3_hook_config {
     struct platform_config platform;
@@ -32,6 +29,7 @@ struct apm3_hook_config {
     struct apm3_dll_config dll;
     struct unity_config unity;
     struct mount_config mount;
+    struct video_config video;
 };
 
 void apm3_dll_config_load(
