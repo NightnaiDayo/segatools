@@ -18,6 +18,8 @@ struct idac_di_config {
     uint8_t view_chg;
     uint8_t left;
     uint8_t right;
+    uint8_t up;
+    uint8_t down; 
     uint8_t shift_dn;
     uint8_t shift_up;
     uint8_t gear[6];
