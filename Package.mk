@@ -256,6 +256,24 @@ $(BUILD_DIR_ZIP)/apm3.zip:
 	$(V)strip $(BUILD_DIR_ZIP)/apm3/*.{exe,dll}
 	$(V)cd $(BUILD_DIR_ZIP)/apm3 ; zip -r ../apm3.zip *
 
+$(BUILD_DIR_ZIP)/ekt.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/ekt
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/ekt/DEVICE
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_GAMES_64)/ekthook/ekthook.dll \
+		$(DIST_DIR)/ekt/segatools_terminal.ini \
+		$(DIST_DIR)/ekt/segatools_satellite.ini \
+		$(DIST_DIR)/ekt/launch_terminal.bat \
+		$(DIST_DIR)/ekt/launch_satellite.bat \
+		$(DIST_DIR)/ekt/config_hook.json \
+    	$(BUILD_DIR_ZIP)/ekt
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/ekt/DEVICE
+	$(V)strip $(BUILD_DIR_ZIP)/ekt/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/ekt ; zip -r ../ekt.zip *
+
 $(BUILD_DIR_ZIP)/doc.zip: \
 		$(DOC_DIR)/config \
 		$(DOC_DIR)/chunihook.md \
@@ -282,6 +300,7 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/fgo.zip \
 		$(BUILD_DIR_ZIP)/kemono.zip \
 		$(BUILD_DIR_ZIP)/apm3.zip \
+		$(BUILD_DIR_ZIP)/ekt.zip \
 		CHANGELOG.md \
 		README.md \
 
