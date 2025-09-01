@@ -11,6 +11,7 @@ struct ekt_kb_config {
     uint8_t vk_stratagem;
     uint8_t vk_stratagem_lock;
     uint8_t vk_hougu;
+    uint8_t vk_ryuuha;
 
     uint8_t vk_tenkey_0;
     uint8_t vk_tenkey_1;

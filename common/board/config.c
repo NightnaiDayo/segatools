@@ -74,7 +74,7 @@ void aime_config_load(struct aime_config *cfg, const wchar_t *filename)
     cfg->enable = GetPrivateProfileIntW(L"aime", L"enable", 1, filename);
     cfg->port_no = GetPrivateProfileIntW(L"aime", L"portNo", 0, filename);
     cfg->high_baudrate = GetPrivateProfileIntW(L"aime", L"highBaud", 1, filename);
-    cfg->gen = GetPrivateProfileIntW(L"aime", L"gen", 0, filename);
+    cfg->gen = GetPrivateProfileIntW(L"aime", L"gen", 3, filename);
     cfg->proxy_flag = GetPrivateProfileIntW(L"aime", L"proxyFlag", 2, filename);
 
     GetPrivateProfileStringW(

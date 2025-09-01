@@ -18,6 +18,7 @@ void ekt_kb_config_load(
     cfg->vk_stratagem = GetPrivateProfileIntW(L"io4", L"stratagem", 'D', filename);
     cfg->vk_stratagem_lock = GetPrivateProfileIntW(L"io4", L"stratagem_lock", 'F', filename);
     cfg->vk_hougu = GetPrivateProfileIntW(L"io4", L"hougu", 'G', filename);
+    cfg->vk_ryuuha = GetPrivateProfileIntW(L"io4", L"ryuuha", 'H', filename);
 
     cfg->vk_tenkey_0 = GetPrivateProfileIntW(L"io4", L"tenkey_0", VK_NUMPAD0, filename);
     cfg->vk_tenkey_1 = GetPrivateProfileIntW(L"io4", L"tenkey_1", VK_NUMPAD1, filename);
@@ -32,8 +33,8 @@ void ekt_kb_config_load(
     cfg->vk_tenkey_clear = GetPrivateProfileIntW(L"io4", L"tenkey_clear", VK_DECIMAL, filename);
     cfg->vk_tenkey_enter = GetPrivateProfileIntW(L"io4", L"tenkey_enter", VK_RETURN, filename);
 
-    cfg->vk_vol_down = GetPrivateProfileIntW(L"io4", L"vol_down", VK_SUBTRACT, filename);
-    cfg->vk_vol_up = GetPrivateProfileIntW(L"io4", L"vol_up", VK_ADD, filename);
+    cfg->vk_vol_down = GetPrivateProfileIntW(L"io4", L"vol_down", VK_NEXT, filename);
+    cfg->vk_vol_up = GetPrivateProfileIntW(L"io4", L"vol_up", VK_PRIOR, filename);
 
     cfg->vk_terminal_decide = GetPrivateProfileIntW(L"io4", L"decide", 'A', filename);
     cfg->vk_terminal_cancel = GetPrivateProfileIntW(L"io4", L"cancel", 'S', filename);

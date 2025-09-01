@@ -39,7 +39,7 @@ HRESULT ekt_kb_init(const struct ekt_kb_config* cfg, const struct ekt_io_backend
 static void ekt_kb_get_gamebtns(uint32_t* gamebtn_out) {
     assert(gamebtn_out != NULL);
 
-    uint8_t gamebtn = 0;
+    uint32_t gamebtn = 0;
 
     if (GetAsyncKeyState(config.vk_hougu) & 0x8000) {
         gamebtn |= EKT_IO_GAMEBTN_HOUGU;
@@ -59,6 +59,10 @@ static void ekt_kb_get_gamebtns(uint32_t* gamebtn_out) {
 
     if (GetAsyncKeyState(config.vk_stratagem_lock) & 0x8000) {
         gamebtn |= EKT_IO_GAMEBTN_STRATAGEM_LOCK;
+    }
+
+    if (GetAsyncKeyState(config.vk_ryuuha) & 0x8000) {
+        gamebtn |= EKT_IO_GAMEBTN_RYUUHA;
     }
 
     if (GetAsyncKeyState(config.vk_tenkey_0) & 0x8000) {
@@ -162,9 +166,9 @@ static void ekt_kb_get_trackball(uint8_t* x, uint8_t* y) {
         current_x += config.speed;
     }
     if (GetAsyncKeyState(config.y_down) & 0x8000) {
-        current_y -= config.speed;
-    } else if (GetAsyncKeyState(config.y_up) & 0x8000) {
         current_y += config.speed;
+    } else if (GetAsyncKeyState(config.y_up) & 0x8000) {
+        current_y -= config.speed;
     }
 
     *x = current_x;

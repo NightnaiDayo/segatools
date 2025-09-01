@@ -24,13 +24,10 @@
 /*
  * Eiketsu Taisen
  *
- * IP: 192.168.189.0
- *
  * SATELLITE: Model Type 1
  *
  * COM2: LED
  * COM3: AIME
- * COM3: "TM LED"
  * COM4: FPR / Y3
  *
  * TERMINAL: Model Type 2
@@ -45,7 +42,7 @@ static process_entry_t ekt_startup;
 static struct ekt_hook_config ekt_hook_cfg;
 
 static const wchar_t *target_modules[] = {
-    L"Y3CodeReaderNE.dll",
+    L"Y3CodeReaderNE.dll"
 };
 
 static const size_t target_modules_len = _countof(target_modules);
@@ -111,12 +108,14 @@ static DWORD CALLBACK ekt_pre_startup(void)
     }
 
     /* Initialize Terminal/Satellite hooks */
-    if (strncmp(ekt_hook_cfg.platform.nusec.platform_id, "AAV1", 4) == 0) {
+    if (strncmp(ekt_hook_cfg.platform.nusec.platform_id, "ACA1", 4) == 0) {
         // Terminal
-        is_terminal = true;
-    } else if (strncmp(ekt_hook_cfg.platform.nusec.platform_id, "AAV2", 4) == 0) {
-        // Satellite
         is_terminal = false;
+        dprintf("Mode: Satellite\n");
+    } else if (strncmp(ekt_hook_cfg.platform.nusec.platform_id, "ACA2", 4) == 0) {
+        // Satellite
+        is_terminal = true;
+        dprintf("Mode: Terminal\n");
     } else {
         // Unknown
         dprintf("Unknown platform ID: %s\n", ekt_hook_cfg.platform.nusec.platform_id);
@@ -153,6 +152,8 @@ static DWORD CALLBACK ekt_pre_startup(void)
     if (FAILED(hr)) {
         goto fail;
     }
+
+    dvd_hook_init(&ekt_hook_cfg.dvd, ekt_hook_mod);
 
     unity_hook_init(&ekt_hook_cfg.unity, ekt_hook_mod, unity_hook_callback);
 

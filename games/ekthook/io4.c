@@ -1,3 +1,5 @@
+#include "io4.h"
+
 #include <windows.h>
 
 #include <assert.h>
@@ -73,11 +75,11 @@ static HRESULT ekt_io4_poll(void *ctx, struct io4_state *state)
     }
 
     if (opbtn & EKT_IO_OPBTN_SW1) {
-        state->buttons[0] |= 1 << 0; // TODO
+        state->buttons[0] |= 1 << 2;
     }
 
     if (opbtn & EKT_IO_OPBTN_SW2) {
-        state->buttons[0] |= 1 << 0; // TODO
+        state->buttons[0] |= 1 << 3;
     }
 
     if (opbtn & EKT_IO_OPBTN_COIN) {
@@ -85,105 +87,119 @@ static HRESULT ekt_io4_poll(void *ctx, struct io4_state *state)
     }
     state->chutes[0] = coins << 8;
 
-    // TODO: indexes
-
     if (!io_is_terminal) {
         if (gamebtn & EKT_IO_GAMEBTN_HOUGU) {
+            state->buttons[1] |= 1 << 14;
+        }
+
+        if (gamebtn & EKT_IO_GAMEBTN_RYUUHA) {
             state->buttons[1] |= 1 << 12;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_MENU) {
-            state->buttons[0] |= 1 << 7;
+            state->buttons[0] |= 1 << 13;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_START) {
-            state->buttons[0] |= 1 << 5;
+            state->buttons[0] |= 1 << 7;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_STRATAGEM) {
-            state->buttons[0] |= 1 << 2;
+            state->buttons[1] |= 1 << 15;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_STRATAGEM_LOCK) {
-            state->buttons[0] |= 1 << 2;
+            state->buttons[1] |= 1 << 13;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_VOL_DOWN) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[1] |= 1 << 10;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_VOL_UP) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[1] |= 1 << 11;
         }
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_0) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C2 : EKT_NUMPAD_TERM_C2;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R4 : EKT_NUMPAD_TERM_R4;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_1) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C1 : EKT_NUMPAD_TERM_C1;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R1 : EKT_NUMPAD_TERM_R1;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_2) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C2 : EKT_NUMPAD_TERM_C2;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R1 : EKT_NUMPAD_TERM_R1;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_3) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C3 : EKT_NUMPAD_TERM_C3;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R1 : EKT_NUMPAD_TERM_R1;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_4) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C1 : EKT_NUMPAD_TERM_C1;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R2 : EKT_NUMPAD_TERM_R2;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_5) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C2 : EKT_NUMPAD_TERM_C2;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R2 : EKT_NUMPAD_TERM_R2;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_6) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C3 : EKT_NUMPAD_TERM_C3;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R2 : EKT_NUMPAD_TERM_R2;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_7) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C1 : EKT_NUMPAD_TERM_C1;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R3 : EKT_NUMPAD_TERM_R3;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_8) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C2 : EKT_NUMPAD_TERM_C2;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R3 : EKT_NUMPAD_TERM_R3;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_9) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C3 : EKT_NUMPAD_TERM_C3;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R3 : EKT_NUMPAD_TERM_R3;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_CLEAR) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C1 : EKT_NUMPAD_TERM_C1;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R4 : EKT_NUMPAD_TERM_R4;
     }
 
     if (gamebtn & EKT_IO_GAMEBTN_NUMPAD_ENTER) {
-        state->buttons[0] |= 1 << (io_is_terminal ? 4 : 4);
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_C3 : EKT_NUMPAD_TERM_C3;
+        state->buttons[0] |= !io_is_terminal ? EKT_NUMPAD_SATE_R4 : EKT_NUMPAD_TERM_R4;
     }
 
     if (io_is_terminal) {
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_CANCEL) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[1] |= 1 << 0;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_DECIDE) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[1] |= 1 << 1;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_LEFT) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[0] |= 1 << 3;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_UP) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[0] |= 1 << 5;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_RIGHT) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[0] |= 1 << 2;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_DOWN) {
@@ -191,18 +207,16 @@ static HRESULT ekt_io4_poll(void *ctx, struct io4_state *state)
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_LEFT_2) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[1] |= 1 << 3;
         }
 
         if (gamebtn & EKT_IO_GAMEBTN_TERMINAL_RIGHT_2) {
-            state->buttons[0] |= 1 << 4;
+            state->buttons[1] |= 1 << 2;
         }
     }
 
-    state->adcs[0] = 1;
-    state->adcs[1] = 1;
-    state->adcs[2] = x;
-    state->adcs[3] = y;
+    state->spinners[2] = x;
+    state->spinners[3] = y;
 
     return S_OK;
 }
