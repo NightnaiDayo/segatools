@@ -59,14 +59,14 @@ void ekt_io_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    cfg->vk_test = GetPrivateProfileIntW(L"keyboard", L"test", '1', filename);
-    cfg->vk_service = GetPrivateProfileIntW(L"keyboard", L"service", '2', filename);
-    cfg->vk_coin = GetPrivateProfileIntW(L"keyboard", L"coin", '3', filename);
-    cfg->vk_sw1 = GetPrivateProfileIntW(L"keyboard", L"sw1", '4', filename);
-    cfg->vk_sw2 = GetPrivateProfileIntW(L"keyboard", L"sw2", '5', filename);
+    cfg->vk_test = GetPrivateProfileIntW(L"io4", L"test", '1', filename);
+    cfg->vk_service = GetPrivateProfileIntW(L"io4", L"service", '2', filename);
+    cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", '3', filename);
+    cfg->vk_sw1 = GetPrivateProfileIntW(L"io4", L"sw1", '4', filename);
+    cfg->vk_sw2 = GetPrivateProfileIntW(L"io4", L"sw2", '5', filename);
 
     GetPrivateProfileStringW(
-            L"keyboard",
+            L"io4",
             L"mode",
             L"keyboard",
             cfg->mode,
