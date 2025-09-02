@@ -1,3 +1,4 @@
+// ReSharper disable CppParameterNeverUsed
 #include <windows.h>
 
 #include <stdint.h>
@@ -5,7 +6,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "ekthook/y3.h"
+#include "y3.h"
+#include "y3-dll.h"
 
 #include "hook/table.h"
 #include "hook/procaddr.h"
@@ -264,11 +266,12 @@ static struct CardInfo card_data[MAX_CARD_SIZE];
 static int* Y3_COM_FIELD = (int*)10;
 static int* Y3_COM_PRINT = (int*)11;
 
-void y3_hook_init(const struct y3_config* cfg, HINSTANCE self) {
+HRESULT y3_hook_init(const struct y3_config* cfg, HINSTANCE self, const wchar_t* config_filename) {
+    HRESULT hr;
     assert(cfg != NULL);
 
     if (!cfg->enable) {
-        return;
+        return S_FALSE;
     }
 
     memcpy(&y3_config, cfg, sizeof(*cfg));
@@ -279,7 +282,17 @@ void y3_hook_init(const struct y3_config* cfg, HINSTANCE self) {
 
     memset(card_data, 0, sizeof(card_data));
 
+    struct y3_dll_config config;
+    y3_dll_config_load(&config, config_filename);
+
+    hr = y3_dll_init(&config, self);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     dprintf("Y3: hook enabled (field port = %d, printer port = %d)\n", cfg->port_field, cfg->port_printer);
+
+    return hr;
 }
 
 void y3_insert_hooks(HMODULE target) {
@@ -322,15 +335,23 @@ CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage,
 }
 
 CALL int* API_Connect(char* szPortName) {
+    HRESULT hr;
+
     dprintf("Y3: %s(%s)\n", __func__, szPortName);
 
     if (!y3_config.enable) {
         return NULL;
-    } else {
-        char number[2];
-        strncpy(number, szPortName + 3, 2);
-        return (int*)(uintptr_t)atoi(number);
     }
+
+    hr = y3_dll.init();
+    if (FAILED(hr)) {
+        dprintf("Y3: Hook DLL initialization failed: %lx\n", hr);
+        return NULL;
+    }
+
+    char number[2];
+    strncpy(number, szPortName + 3, 2);
+    return (int*)(uintptr_t)atoi(number);
 }
 
 CALL int API_Close(int* hDevice) {
@@ -413,49 +434,15 @@ CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo)
     //  numCards = max cards
 
     if (hDevice == Y3_COM_FIELD) {
-        memset(pCardInfo, 0, sizeof(struct CardInfo) * numCards);
 
-        const float paddingX = 86.0f;
-        const float paddingY = 54.0f;
-
-        // Dimensions of the flat panel
-        const float panelHeight = 1232.0f;
-        const float panelWidth = 1160.0f;
-
-        // Number of cards in each row and column
-        const int numRows = 4;
-        const int numCols = 4;
-        int activeCards = numRows * numCols;
-
-        if (numCards < activeCards) {
-            activeCards = numCards;
+        int cards = numCards;
+        HRESULT hr = y3_dll.get_cards(pCardInfo, &cards);
+        if (FAILED(hr)) {
+            dprintf("Y3: DLL returned error when retrieving cards: %lx\n", hr);
+            return 0;
         }
 
-        // Calculate spacing between cards
-        const float cardWidth = (panelWidth - paddingY * 2) / (numCols - 1);
-        const float cardHeight = (panelHeight - paddingX * 2) / (numRows - 1);
-
-        // Create example card info
-        for (int i = 0; i < activeCards; i++) {
-            int row = i / numCols;
-            int col = i % numCols;
-
-            pCardInfo[i].fX = paddingX + (col * cardHeight);
-            pCardInfo[i].fY = paddingY + (row * cardWidth);
-            pCardInfo[i].fAngle = 0.0f;
-            pCardInfo[i].eCardType = TYPE0;
-            pCardInfo[i].eCardStatus = VALID;
-            pCardInfo[i].uID = 1000 + i;
-            pCardInfo[i].nNumChars = 0;
-            pCardInfo[0].ubChar0.Data = 0;
-            pCardInfo[0].ubChar1.Data = 0;
-            pCardInfo[0].ubChar2.Data = 0;
-            pCardInfo[0].ubChar3.Data = 0;
-            pCardInfo[0].ubChar4.Data = 0;
-            pCardInfo[0].ubChar5.Data = 0;
-        }
-
-        return activeCards;
+        return cards;
     } else if (hDevice == Y3_COM_PRINT) {
         pCardInfo[0].fX = 0;
         pCardInfo[0].fY = 0;
@@ -606,7 +593,7 @@ uint32_t convert_string_to_uint(const char* firmName) {
 
     // Iterate over each character in the string and construct the uint32_t
     for (int i = 0; i < 4; i++) {
-        result |= ((uint32_t)firmName[i] << (i * 8));
+        result |= (uint32_t)firmName[i] << (i * 8);
     }
 
     return result;

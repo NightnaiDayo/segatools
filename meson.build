@@ -106,6 +106,7 @@ subdir('common/jvs')
 subdir('common/platform')
 subdir('common/util')
 subdir('common/aimeio')
+subdir('common/y3io')
 
 subdir('common/gfxhook')
 subdir('common/unityhook')

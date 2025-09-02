@@ -13,7 +13,7 @@
 #include "unityhook/config.h"
 
 #include "ekthook/ekt-dll.h"
-#include "ekthook/y3.h"
+#include "y3io/config.h"
 
 struct ekt_hook_config {
     struct platform_config platform;

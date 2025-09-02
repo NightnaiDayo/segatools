@@ -17,6 +17,7 @@ shared_library(
         platform_lib,
         unityhook_lib,
         util_lib,
+        y3io_lib,
     ],
     sources : [
         'config.c',
@@ -26,7 +27,5 @@ shared_library(
         'ekt-dll.h',
         'io4.c',
         'io4.h',
-        'y3.c',
-        'y3.h'
     ],
 )

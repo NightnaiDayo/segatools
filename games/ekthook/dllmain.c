@@ -41,6 +41,8 @@
 
 #include "util/dprintf.h"
 #include "util/env.h"
+#include "y3io/y3-dll.h"
+#include "y3io/y3.h"
 
 static HMODULE ekt_hook_mod;
 static process_entry_t ekt_startup;
@@ -63,8 +65,12 @@ static DWORD CALLBACK ekt_pre_startup(void)
     serial_hook_init();
 
     /* Hook external DLL APIs */
-    
-    y3_hook_init(&ekt_hook_cfg.y3, ekt_hook_mod);
+
+    hr = y3_hook_init(&ekt_hook_cfg.y3, ekt_hook_mod, get_config_path());
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
 
     /* Initialize emulation hooks */
 

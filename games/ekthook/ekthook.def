@@ -15,6 +15,9 @@ EXPORTS
     ekt_io_poll
     ekt_io_led_init
     ekt_io_led_set_colors
+    y3_io_get_api_version
+    y3_io_init
+    y3_io_get_cards
     API_DLLVersion @1
     API_GetLastError @2
     API_GetErrorMessage @3
