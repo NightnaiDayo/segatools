@@ -18,6 +18,6 @@ y3io_lib = static_library(
         'y3.c',
         'y3.h',
         'impl/dummy/y3io.c',
-        'impl/dummy/y3io.h',
+        'impl/y3io.h',
     ],
 )
