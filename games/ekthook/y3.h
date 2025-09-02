@@ -52,9 +52,6 @@ struct CardInfo {
 
 struct y3_config {
     bool enable;
-    uint8_t ws_enable;
-    uint16_t ws_port;
-    uint32_t ws_timeout;
 
     float dll_version;
     float firm_version;
@@ -62,6 +59,8 @@ struct y3_config {
     char firm_name_printer[5];
     char target_code_field[5];
     char target_code_printer[5];
+    uint8_t port_field;
+    uint8_t port_printer;
 };
 
 void y3_hook_init(const struct y3_config *cfg, HINSTANCE self);

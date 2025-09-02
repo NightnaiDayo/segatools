@@ -261,8 +261,8 @@ static struct y3_config y3_config;
 #define MAX_CARD_SIZE 32
 static struct CardInfo card_data[MAX_CARD_SIZE];
 
-static const int* Y3_COM_FIELD = (int*)10;
-static const int* Y3_COM_PRINT = (int*)11;
+static int* Y3_COM_FIELD = (int*)10;
+static int* Y3_COM_PRINT = (int*)11;
 
 void y3_hook_init(const struct y3_config* cfg, HINSTANCE self) {
     assert(cfg != NULL);
@@ -272,12 +272,14 @@ void y3_hook_init(const struct y3_config* cfg, HINSTANCE self) {
     }
 
     memcpy(&y3_config, cfg, sizeof(*cfg));
+    Y3_COM_FIELD = (int*)(uintptr_t)cfg->port_field;
+    Y3_COM_PRINT = (int*)(uintptr_t)cfg->port_printer;
 
     y3_insert_hooks(NULL);
 
     memset(card_data, 0, sizeof(card_data));
 
-    dprintf("Y3: hook enabled\n");
+    dprintf("Y3: hook enabled (field port = %d, printer port = %d)\n", cfg->port_field, cfg->port_printer);
 }
 
 void y3_insert_hooks(HMODULE target) {
@@ -322,12 +324,6 @@ CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage,
 CALL int* API_Connect(char* szPortName) {
     dprintf("Y3: %s(%s)\n", __func__, szPortName);
 
-    if ((GetAsyncKeyState(0x11) & 0x8000) &&
-        (GetAsyncKeyState(0x42) & 0x8000)) {
-        dprintf("Y3: Ctrl+B is active!\n");
-        return NULL;
-    }
-
     if (!y3_config.enable) {
         return NULL;
     } else {
@@ -367,7 +363,6 @@ CALL uint32_t API_GetFirmName(int* hDevice) {
     } else if (hDevice == Y3_COM_PRINT) {
         result = convert_string_to_uint(y3_config.firm_name_printer);
         dprintf("This Y3 device is PRINTER: %s\n", y3_config.firm_name_printer);
-        // DebugBreak();
     } else {
         dprintf("This Y3 device is UNKNOWN\n");
     }
@@ -385,7 +380,6 @@ CALL uint32_t API_GetTargetCode(int* hDevice) {
     } else if (hDevice == Y3_COM_PRINT) {
         result = convert_string_to_uint(y3_config.target_code_printer);
         dprintf("This Y3 device is PRINTER: %s\n", y3_config.target_code_printer);
-        // DebugBreak();
     } else {
         dprintf("This Y3 device is UNKNOWN\n");
     }
@@ -450,13 +444,13 @@ CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo)
             pCardInfo[i].fY = paddingY + (row * cardWidth);
             pCardInfo[i].fAngle = 0.0f;
             pCardInfo[i].eCardType = TYPE0;
-            pCardInfo[i].eCardStatus = MARKER;
+            pCardInfo[i].eCardStatus = VALID;
             pCardInfo[i].uID = 1000 + i;
             pCardInfo[i].nNumChars = 0;
             pCardInfo[0].ubChar0.Data = 0;
-            pCardInfo[0].ubChar1.Data = 0x4000;
+            pCardInfo[0].ubChar1.Data = 0;
             pCardInfo[0].ubChar2.Data = 0;
-            pCardInfo[0].ubChar3.Data = 0x0;  // 40
+            pCardInfo[0].ubChar3.Data = 0;
             pCardInfo[0].ubChar4.Data = 0;
             pCardInfo[0].ubChar5.Data = 0;
         }

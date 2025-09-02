@@ -108,13 +108,9 @@ void y3_config_load(
     memset(cfg->target_code_printer, ' ', sizeof(cfg->target_code_printer) - 1);
     cfg->target_code_printer[sizeof(cfg->target_code_printer) - 1] = '\0';
 
-
-    cfg->enable = GetPrivateProfileIntW(L"y3", L"enable", 1, filename);
-    cfg->ws_enable = GetPrivateProfileIntW(L"y3", L"ws_enable", 1, filename);
-    cfg->ws_port = GetPrivateProfileIntW(L"y3", L"ws_port", 3597, filename);
-    cfg->ws_timeout = GetPrivateProfileIntW(L"y3", L"ws_timeout", 30000, filename);
-
     cfg->enable = GetPrivateProfileIntW(L"flatPanelReader", L"enable", 1, filename);
+    cfg->port_field = GetPrivateProfileIntW(L"flatPanelReader", L"port_field", 10, filename);
+    cfg->port_printer = GetPrivateProfileIntW(L"flatPanelReader", L"port_printer", 11, filename);
 
     cfg->dll_version = (float)GetPrivateProfileIntW(
             L"flatPanelReader",
