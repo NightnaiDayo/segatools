@@ -83,7 +83,7 @@ void ekt_io_get_gamebtns(uint32_t* btn) {
     ekt_io_backend->get_gamebtns(btn);
 }
 
-void ekt_io_get_trackball_position(uint8_t* stick_x, uint8_t* stick_y) {
+void ekt_io_get_trackball_position(uint16_t* stick_x, uint16_t* stick_y) {
     assert(ekt_io_backend != NULL);
     assert(stick_x != NULL);
     assert(stick_y != NULL);

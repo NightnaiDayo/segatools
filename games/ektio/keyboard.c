@@ -13,15 +13,15 @@
 #include "util/dprintf.h"
 
 static void ekt_kb_get_gamebtns(uint32_t* gamebtn_out);
-static void ekt_kb_get_trackball(uint8_t* x, uint8_t* y);
+static void ekt_kb_get_trackball(uint16_t* x, uint16_t* y);
 
 static const struct ekt_io_backend ekt_kb_backend = {
     .get_gamebtns = ekt_kb_get_gamebtns,
     .get_trackball = ekt_kb_get_trackball
 };
 
-static uint8_t current_x;
-static uint8_t current_y;
+static uint16_t current_x;
+static uint16_t current_y;
 
 static struct ekt_kb_config config;
 
@@ -156,7 +156,7 @@ static void ekt_kb_get_gamebtns(uint32_t* gamebtn_out) {
     *gamebtn_out = gamebtn;
 }
 
-static void ekt_kb_get_trackball(uint8_t* x, uint8_t* y) {
+static void ekt_kb_get_trackball(uint16_t* x, uint16_t* y) {
     assert(x != NULL);
     assert(y != NULL);
 

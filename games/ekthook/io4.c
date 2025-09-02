@@ -40,7 +40,8 @@ HRESULT ekt_io4_hook_init(const struct io4_config *cfg, bool is_terminal)
 
 static HRESULT ekt_io4_poll(void *ctx, struct io4_state *state)
 {
-    uint8_t opbtn, x, y;
+    uint8_t opbtn;
+    uint16_t x, y;
     uint32_t gamebtn;
     HRESULT hr;
 

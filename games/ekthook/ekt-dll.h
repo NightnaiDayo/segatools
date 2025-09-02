@@ -10,7 +10,7 @@ struct ekt_dll {
     HRESULT (*poll)(void);
     void (*get_opbtns)(uint8_t *opbtn);
     void (*get_gamebtns)(uint32_t *gamebtn);
-    void (*get_trackball_position)(uint8_t *x, uint8_t *y);
+    void (*get_trackball_position)(uint16_t *x, uint16_t *y);
     HRESULT (*led_init)(void);
     void (*led_set_leds)(uint8_t board, uint8_t *rgb);
 };

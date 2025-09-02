@@ -88,7 +88,7 @@ void ekt_io_get_gamebtns(uint32_t *gamebtn);
 
    Minimum API version: 0x0100 */
 
-void ekt_io_get_trackball_position(uint8_t *stick_x, uint8_t *stick_y);
+void ekt_io_get_trackball_position(uint16_t *stick_x, uint16_t *stick_y);
 
 /* Initialize LED emulation. This function will be called before any
    other ekt_io_led_*() function calls.
