@@ -2,9 +2,6 @@
 
 #include <stddef.h>
 
-#include "ekt-dll.h"
-#include "amex/amex.h"
-
 #include "board/sg-reader.h"
 #include "board/config.h"
 #include "board/led15093.h"
@@ -12,14 +9,11 @@
 #include "hooklib/dvd.h"
 
 #include "platform/config.h"
+
 #include "unityhook/config.h"
 
-struct y3_config {
-    uint8_t enable;
-    uint8_t ws_enable;
-    uint16_t ws_port;
-    uint32_t ws_timeout;
-};
+#include "ekthook/ekt-dll.h"
+#include "ekthook/y3.h"
 
 struct ekt_hook_config {
     struct platform_config platform;
@@ -32,10 +26,10 @@ struct ekt_hook_config {
     struct unity_config unity;
 };
 
-void ekt_hook_config_load(
-        struct ekt_hook_config *cfg,
+void ekt_dll_config_load(
+        struct ekt_dll_config *cfg,
         const wchar_t *filename);
 
-void y3_config_load(
-        struct y3_config *cfg,
+void ekt_hook_config_load(
+        struct ekt_hook_config *cfg,
         const wchar_t *filename);

@@ -1,19 +1,16 @@
 #include <windows.h>
-#include <shellapi.h>
 
 #include <stdint.h>
 #include <stdio.h>
-#include <math.h>
-#include <sys/time.h>
+#include <stdlib.h>
+#include <assert.h>
 
-#include "hook/table.h"
-#include "hooklib/dll.h"
-#include "util/dprintf.h"
-
-#include "ekthook/config.h"
 #include "ekthook/y3.h"
 
-#include <assert.h>
+#include "hook/table.h"
+#include "hook/procaddr.h"
+
+#include "util/dprintf.h"
 
 #define CALL __cdecl
 
@@ -43,21 +40,23 @@ CALL int API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam);
 CALL int API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam);
 
 signed int CALL API_SetDevice(int a1, int a2);
-signed int CALL API_SetCommand(int a1, int a2, int a3, int *a4);
-signed int CALL API_SetSysControl(int a1, int a2, int *a3);
-signed int CALL API_GetSysControl(int a1, int a2, int *a3);
+signed int CALL API_SetCommand(int a1, int a2, int a3, int* a4);
+signed int CALL API_SetSysControl(int a1, int a2, int* a3);
+signed int CALL API_GetSysControl(int a1, int a2, int* a3);
 int CALL API_TestReset(int a1);
 signed int API_DebugReset(int a1, ...);
 int CALL API_GetBoardType(int a1);
 int CALL API_GetCardDataSize(int a1);
 int CALL API_GetFirmDate(int a1);
 int API_SystemCommand(int a1, char a2, ...);
-int CALL API_CalcCheckSum(DWORD *a1, int a2, int a3);
+int CALL API_CalcCheckSum(DWORD* a1, int a2, int a3);
 int CALL API_GetCheckSumResult(int a1);
 int CALL API_BlockRead(int a1, int a2, int a3, SIZE_T dwBytes);
-int CALL API_GetBlockReadResult(int a1, void *a2);
-int CALL API_BlockWrite(int a1, int a2, int a3, SIZE_T dwBytes, void *a5);
-signed int CALL API_GetDebugParam(int a1, int a2, DWORD *a3);
+int CALL API_GetBlockReadResult(int a1, void* a2);
+int CALL API_BlockWrite(int a1, int a2, int a3, SIZE_T dwBytes, void* a5);
+signed int CALL API_GetDebugParam(int a1, int a2, DWORD* a3);
+
+uint32_t convert_string_to_uint(const char* firmName);
 
 static const struct hook_symbol Y3_hooks[] = {
     {
@@ -265,8 +264,7 @@ static struct CardInfo card_data[MAX_CARD_SIZE];
 static const int* Y3_COM_FIELD = (int*)10;
 static const int* Y3_COM_PRINT = (int*)11;
 
-
-void y3_hook_init(const struct y3_config *cfg, HINSTANCE self){
+void y3_hook_init(const struct y3_config* cfg, HINSTANCE self) {
     assert(cfg != NULL);
 
     if (!cfg->enable) {
@@ -275,117 +273,196 @@ void y3_hook_init(const struct y3_config *cfg, HINSTANCE self){
 
     memcpy(&y3_config, cfg, sizeof(*cfg));
 
-    hook_table_apply(NULL, "Y3CodeReaderNE.dll", Y3_hooks, _countof(Y3_hooks));
-
-    if (self != NULL) {
-        dll_hook_push(self, L"Y3CodeReaderNE.dll");
-    }
+    y3_insert_hooks(NULL);
 
     memset(card_data, 0, sizeof(card_data));
 
-    dprintf("Y3: enabled\n");
+    dprintf("Y3: hook enabled\n");
 }
 
-CALL float API_DLLVersion(){
+void y3_insert_hooks(HMODULE target) {
+    hook_table_apply(
+        target,
+        "Y3CodeReaderNE.dll",
+        Y3_hooks,
+        _countof(Y3_hooks));
+
+    proc_addr_table_push(
+        target,
+        "Y3CodeReaderNE.dll",
+        Y3_hooks,
+        _countof(Y3_hooks));
+}
+
+CALL float API_DLLVersion() {
     dprintf("Y3: %s\n", __func__);
     return 1;
 }
-CALL uint32_t API_GetLastError(int* hDevice){
+
+CALL uint32_t API_GetLastError(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     if (!y3_config.enable) {
         return 1;
     }
     return 0;
 }
-CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage, int numBytes){
+
+CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage,
+                                  int numBytes) {
     dprintf("Y3: %s\n", __func__);
     if (!y3_config.enable) {
-        strcpy_s(szMessage, numBytes, "Y3Emu is disabled but emulator DLL is called");
+        strcpy_s(szMessage, numBytes,
+                 "Y3Emu is disabled but emulator DLL is called");
     } else {
         strcpy_s(szMessage, numBytes, "No error - Y3Emu");
     }
     return 0;
 }
-CALL int* API_Connect(char* szPortName){
+
+CALL int* API_Connect(char* szPortName) {
     dprintf("Y3: %s(%s)\n", __func__, szPortName);
-if ((GetAsyncKeyState(0x11) & 0x8000) && (GetAsyncKeyState(0x42) & 0x8000)) {
+
+    if ((GetAsyncKeyState(0x11) & 0x8000) &&
+        (GetAsyncKeyState(0x42) & 0x8000)) {
         dprintf("Y3: Ctrl+B is active!\n");
         return NULL;
     }
+
     if (!y3_config.enable) {
         return NULL;
     } else {
         char number[2];
-        strncpy(number, szPortName+3, 2);
+        strncpy(number, szPortName + 3, 2);
         return (int*)(uintptr_t)atoi(number);
     }
 }
-CALL int API_Close(int* hDevice){
+
+CALL int API_Close(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 0;
 }
-CALL int API_Start(int* hDevice){
+
+CALL int API_Start(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 0;
 }
-CALL int API_Stop(int* hDevice){
+
+CALL int API_Stop(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 0;
 }
-CALL float API_GetFirmVersion(int* hDevice){
+
+CALL float API_GetFirmVersion(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 1;
 }
-CALL uint32_t API_GetFirmName(int* hDevice){
-    dprintf("Y3: %s(%p)\n", __func__, hDevice);
-    if (hDevice == Y3_COM_FIELD){
-        dprintf("This Y3 device is FIELD\n");
-        return 1380992595;
-    } else if (hDevice == Y3_COM_PRINT){
-        dprintf("This Y3 device is PRINTER\n");
-        //DebugBreak();
-        return 1414680659;
-    } else {
-        dprintf("This Y3 device is UNKNOWN\n");
-    }
-    return 0;
-}
-CALL uint32_t API_GetTargetCode(int* hDevice){
-    dprintf("Y3: %s(%p)\n", __func__, hDevice);
-    if (hDevice == Y3_COM_FIELD){
-        dprintf("This Y3 device is FIELD\n");
-        return 810698323;
-    } else if (hDevice == Y3_COM_PRINT){
-        dprintf("This Y3 device is PRINTER\n");
-        //DebugBreak();
-        return 810831955;
-    } else {
-        dprintf("This Y3 device is UNKNOWN\n");
-    }
-    return 1162760014;
-}
-CALL uint32_t API_GetStatus(int* hDevice){
-    //dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL uint32_t API_GetCounter(int* hDevice){
-    //dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL int API_ClearError(int* hDevice){
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL int API_Reset(int* hDevice, bool isHardReset){
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo){
-    //dprintf("Y3: %s(%p), %d\n", __func__, hDevice, numCards);
-    // ret = num cards
-    // numCards = max cards
 
-    if (hDevice == Y3_COM_PRINT){
+CALL uint32_t API_GetFirmName(int* hDevice) {
+    uint32_t result = 0;
+    dprintf("Y3: %s(%p)\n", __func__, hDevice);
+
+    if (hDevice == Y3_COM_FIELD) {
+        result = convert_string_to_uint(y3_config.firm_name_field);
+        dprintf("This Y3 device is a FIELD: %s\n", y3_config.firm_name_field);
+    } else if (hDevice == Y3_COM_PRINT) {
+        result = convert_string_to_uint(y3_config.firm_name_printer);
+        dprintf("This Y3 device is PRINTER: %s\n", y3_config.firm_name_printer);
+        // DebugBreak();
+    } else {
+        dprintf("This Y3 device is UNKNOWN\n");
+    }
+
+    return result;
+}
+
+CALL uint32_t API_GetTargetCode(int* hDevice) {
+    uint32_t result = 1162760014;
+    dprintf("Y3: %s(%p)\n", __func__, hDevice);
+
+    if (hDevice == Y3_COM_FIELD) {
+        result = convert_string_to_uint(y3_config.target_code_field);
+        dprintf("This Y3 device is FIELD: %s\n", y3_config.target_code_field);
+    } else if (hDevice == Y3_COM_PRINT) {
+        result = convert_string_to_uint(y3_config.target_code_printer);
+        dprintf("This Y3 device is PRINTER: %s\n", y3_config.target_code_printer);
+        // DebugBreak();
+    } else {
+        dprintf("This Y3 device is UNKNOWN\n");
+    }
+
+    return result;
+}
+
+CALL uint32_t API_GetStatus(int* hDevice) {
+    // dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+CALL uint32_t API_GetCounter(int* hDevice) {
+    // dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+CALL int API_ClearError(int* hDevice) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+CALL int API_Reset(int* hDevice, bool isHardReset) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo) {
+    // dprintf("Y3: %s(%p), %d\n", __func__, hDevice, numCards);
+    //  ret = num cards
+    //  numCards = max cards
+
+    if (hDevice == Y3_COM_FIELD) {
+        memset(pCardInfo, 0, sizeof(struct CardInfo) * numCards);
+
+        const float paddingX = 86.0f;
+        const float paddingY = 54.0f;
+
+        // Dimensions of the flat panel
+        const float panelHeight = 1232.0f;
+        const float panelWidth = 1160.0f;
+
+        // Number of cards in each row and column
+        const int numRows = 4;
+        const int numCols = 4;
+        int activeCards = numRows * numCols;
+
+        if (numCards < activeCards) {
+            activeCards = numCards;
+        }
+
+        // Calculate spacing between cards
+        const float cardWidth = (panelWidth - paddingY * 2) / (numCols - 1);
+        const float cardHeight = (panelHeight - paddingX * 2) / (numRows - 1);
+
+        // Create example card info
+        for (int i = 0; i < activeCards; i++) {
+            int row = i / numCols;
+            int col = i % numCols;
+
+            pCardInfo[i].fX = paddingX + (col * cardHeight);
+            pCardInfo[i].fY = paddingY + (row * cardWidth);
+            pCardInfo[i].fAngle = 0.0f;
+            pCardInfo[i].eCardType = TYPE0;
+            pCardInfo[i].eCardStatus = MARKER;
+            pCardInfo[i].uID = 1000 + i;
+            pCardInfo[i].nNumChars = 0;
+            pCardInfo[0].ubChar0.Data = 0;
+            pCardInfo[0].ubChar1.Data = 0x4000;
+            pCardInfo[0].ubChar2.Data = 0;
+            pCardInfo[0].ubChar3.Data = 0x0;  // 40
+            pCardInfo[0].ubChar4.Data = 0;
+            pCardInfo[0].ubChar5.Data = 0;
+        }
+
+        return activeCards;
+    } else if (hDevice == Y3_COM_PRINT) {
         pCardInfo[0].fX = 0;
         pCardInfo[0].fY = 0;
         pCardInfo[0].fAngle = 0;
@@ -396,115 +473,147 @@ CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo)
         pCardInfo[0].ubChar0.Data = 0;
         pCardInfo[0].ubChar1.Data = 0x4000;
         pCardInfo[0].ubChar2.Data = 0;
-        pCardInfo[0].ubChar3.Data = 0x0; // 40
+        pCardInfo[0].ubChar3.Data = 0x0;  // 40
         pCardInfo[0].ubChar4.Data = 0;
         pCardInfo[0].ubChar5.Data = 0;
         return 1;
-    } else if (numCards == MAX_CARD_SIZE){
-        memcpy(pCardInfo, card_data, sizeof(card_data));
-        return MAX_CARD_SIZE;
     }
 
     return 0;
 }
-CALL int API_GetCardInfoCharSize(){
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL int API_FirmwareUpdate(int* hDevice, uint32_t address, uint32_t size, uint8_t* buffer){
-    dprintf("Y3: %s\n", __func__);
-    return 1; // not supported
-}
-CALL int API_Calibration(int* hDevice, int calib){
-    dprintf("Y3: %s\n", __func__);
-    return 1;
-}
-CALL int API_GetCalibrationResult(int* hDevice, int calib, uint32_t* result){
-    dprintf("Y3: %s\n", __func__);
-    return 1;
-}
-CALL uint32_t API_GetProcTime(int* hDevice){
-    //dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL uint32_t API_GetMemStatus(int* hDevice){
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL uint32_t API_GetMemCounter(int* hDevice){
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL int API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam){
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-CALL int API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam){
+
+CALL int API_GetCardInfoCharSize() {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-signed int CALL API_SetDevice(int a1, int a2){
+CALL int API_FirmwareUpdate(int* hDevice, uint32_t address, uint32_t size,
+                            uint8_t* buffer) {
+    dprintf("Y3: %s\n", __func__);
+    return 1;  // not supported
+}
+
+CALL int API_Calibration(int* hDevice, int calib) {
+    dprintf("Y3: %s\n", __func__);
+    return 1;
+}
+
+CALL int API_GetCalibrationResult(int* hDevice, int calib, uint32_t* result) {
+    dprintf("Y3: %s\n", __func__);
+    return 1;
+}
+
+CALL uint32_t API_GetProcTime(int* hDevice) {
+    // dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+CALL uint32_t API_GetMemStatus(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-signed int CALL API_SetCommand(int a1, int a2, int a3, int *a4){
+CALL uint32_t API_GetMemCounter(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-signed int CALL API_SetSysControl(int a1, int a2, int *a3){
+
+CALL int API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-signed int CALL API_GetSysControl(int a1, int a2, int *a3){
+
+CALL int API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_TestReset(int a1){
+
+signed int CALL API_SetDevice(int a1, int a2) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-signed int API_DebugReset(int a1, ...){
+
+signed int CALL API_SetCommand(int a1, int a2, int a3, int* a4) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_GetBoardType(int a1){
+
+signed int CALL API_SetSysControl(int a1, int a2, int* a3) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_GetCardDataSize(int a1){
+
+signed int CALL API_GetSysControl(int a1, int a2, int* a3) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_GetFirmDate(int a1){
+
+int CALL API_TestReset(int a1) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int API_SystemCommand(int a1, char a2, ...){
+
+signed int API_DebugReset(int a1, ...) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_CalcCheckSum(DWORD *a1, int a2, int a3){
+
+int CALL API_GetBoardType(int a1) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_GetCheckSumResult(int a1){
+
+int CALL API_GetCardDataSize(int a1) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_BlockRead(int a1, int a2, int a3, SIZE_T dwBytes){
+
+int CALL API_GetFirmDate(int a1) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_GetBlockReadResult(int a1, void *a2){
+
+int API_SystemCommand(int a1, char a2, ...) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-int CALL API_BlockWrite(int a1, int a2, int a3, SIZE_T dwBytes, void *a5){
+
+int CALL API_CalcCheckSum(DWORD* a1, int a2, int a3) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-signed int CALL API_GetDebugParam(int a1, int a2, DWORD *a3){
+
+int CALL API_GetCheckSumResult(int a1) {
     dprintf("Y3: %s\n", __func__);
     return 0;
+}
+
+int CALL API_BlockRead(int a1, int a2, int a3, SIZE_T dwBytes) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+int CALL API_GetBlockReadResult(int a1, void* a2) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+int CALL API_BlockWrite(int a1, int a2, int a3, SIZE_T dwBytes, void* a5) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+signed int CALL API_GetDebugParam(int a1, int a2, DWORD* a3) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+uint32_t convert_string_to_uint(const char* firmName) {
+    uint32_t result = 0;
+
+    // Iterate over each character in the string and construct the uint32_t
+    for (int i = 0; i < 4; i++) {
+        result |= ((uint32_t)firmName[i] << (i * 8));
+    }
+
+    return result;
 }

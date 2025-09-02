@@ -1,106 +1,77 @@
+/*
+    "Eiketsu Taisen" (ekt) hook
+
+    Devices
+
+    USB:    837-15257-01 "Type 4" I/O Board
+
+    [Satellite]
+
+    USB:    630-00011 G-Printec CX-7000 Printer
+    COM2:   837-15093-06 LED Controller Board
+    COM3:   837-15396 "Gen 3" Aime Reader
+    COM4:   601-13160-01 "Flat Panel Reader" Y3CR BD SIE F720MM Board
+
+    [Terminal]
+
+    COM1:   837-15396 "Gen 3" Aime Reader
+    COM3:   837-15093-06 LED Controller Board
+*/
+
 #include <windows.h>
 
+#include <stdlib.h>
 
 #include "ekt-dll.h"
 #include "board/sg-reader.h"
 #include "board/led15093.h"
 
 #include "hook/process.h"
+#include "hook/iohook.h"
 
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 
 #include "ekthook/config.h"
 #include "ekthook/io4.h"
-#include "ekthook/y3.h"
-#include "hook/iohook.h"
 
 #include "platform/platform.h"
+
 #include "unityhook/hook.h"
 
 #include "util/dprintf.h"
 #include "util/env.h"
 
-/*
- * Eiketsu Taisen
- *
- * SATELLITE: Model Type 1
- *
- * COM2: LED
- * COM3: AIME
- * COM4: FPR / Y3
- *
- * TERMINAL: Model Type 2
- *
- * COM1: Aime
- * COM3: LED
- *
- */
-
 static HMODULE ekt_hook_mod;
 static process_entry_t ekt_startup;
 static struct ekt_hook_config ekt_hook_cfg;
 
-static const wchar_t *target_modules[] = {
-    L"Y3CodeReaderNE.dll"
-};
-
-static const size_t target_modules_len = _countof(target_modules);
-
-void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
-    dprintf("Unity: Hook callback: %ls\n", p);
-
-    for (size_t i = 0; i < target_modules_len; i++) {
-        if (_wcsicmp(p, target_modules[i]) == 0) {
-            serial_hook_apply_hooks(hmodule);
-            iohook_apply_hooks(hmodule);
-        }
-    }
-}
-
 static DWORD CALLBACK ekt_pre_startup(void)
 {
-    HMODULE d3dc;
-    HMODULE dbghelp;
     HRESULT hr;
     bool is_terminal;
 
     dprintf("--- Begin ekt_pre_startup ---\n");
-
-    /* Pin the D3D shader compiler. This makes startup much faster. */
-
-    d3dc = LoadLibraryA("d3dcompiler_43.dll");
-
-    if (d3dc != NULL) {
-        dprintf("Pinned shader compiler, hMod=%p\n", d3dc);
-    } else {
-        dprintf("Failed to load shader compiler!\n");
-    }
-
-    /* Pin dbghelp so the path hooks apply to it. */
-
-    dbghelp = LoadLibraryW(L"dbghelp.dll");
-
-    if (dbghelp != NULL) {
-        dprintf("Pinned debug helper library, hMod=%p\n", dbghelp);
-    } else {
-        dprintf("Failed to load debug helper library!\n");
-    }
 
     /* Load config */
 
     ekt_hook_config_load(&ekt_hook_cfg, get_config_path());
 
     /* Hook Win32 APIs */
+
+    dvd_hook_init(&ekt_hook_cfg.dvd, ekt_hook_mod);
     serial_hook_init();
+
+    /* Hook external DLL APIs */
+    
+    y3_hook_init(&ekt_hook_cfg.y3, ekt_hook_mod);
 
     /* Initialize emulation hooks */
 
-    // Terminal = AAV1, Satellite = AAV2
     hr = platform_hook_init(
             &ekt_hook_cfg.platform,
             "SDGY",
-            "AAV1",
+            "ACA1",
             ekt_hook_mod);
 
     if (FAILED(hr)) {
@@ -110,17 +81,21 @@ static DWORD CALLBACK ekt_pre_startup(void)
     /* Initialize Terminal/Satellite hooks */
     if (strncmp(ekt_hook_cfg.platform.nusec.platform_id, "ACA1", 4) == 0) {
         // Terminal
-        is_terminal = false;
-        dprintf("Mode: Satellite\n");
+        is_terminal = true;
     } else if (strncmp(ekt_hook_cfg.platform.nusec.platform_id, "ACA2", 4) == 0) {
         // Satellite
-        is_terminal = true;
-        dprintf("Mode: Terminal\n");
+        is_terminal = false;
     } else {
         // Unknown
         dprintf("Unknown platform ID: %s\n", ekt_hook_cfg.platform.nusec.platform_id);
         goto fail;
     }
+
+    // LED: terminal uses COM 3 and satellite use COM 2
+    unsigned int led_port_no[2] = {is_terminal ? 3 : 2, 0};
+
+    // AIME: terminal uses COM 1 and satellite use COM 3
+    unsigned int aime_port_no = is_terminal ? 1 : 3;
 
     if (FAILED(hr)) {
         goto fail;
@@ -138,7 +113,6 @@ static DWORD CALLBACK ekt_pre_startup(void)
         goto fail;
     }
     
-    unsigned int led_port_no[2] = {is_terminal ? 3 : 2, 0};
     hr = led15093_hook_init(&ekt_hook_cfg.led15093, 
         ekt_dll.led_init, ekt_dll.led_set_leds, led_port_no);
 
@@ -146,18 +120,19 @@ static DWORD CALLBACK ekt_pre_startup(void)
         goto fail;
     }
 
-
-    hr = sg_reader_hook_init(&ekt_hook_cfg.aime, is_terminal ? 1 : 3, ekt_hook_cfg.aime.gen, ekt_hook_mod);
+    hr = sg_reader_hook_init(&ekt_hook_cfg.aime, aime_port_no, 3,
+        ekt_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    dvd_hook_init(&ekt_hook_cfg.dvd, ekt_hook_mod);
+    /* Initialize Unity native plugin DLL hooks
 
-    unity_hook_init(&ekt_hook_cfg.unity, ekt_hook_mod, unity_hook_callback);
+       There seems to be an issue with other DLL hooks if `LoadLibraryW` is
+       hooked earlier in the `ekthook` initialization. */
 
-    y3_hook_init(&ekt_hook_cfg.y3, ekt_hook_mod);
+    unity_hook_init(&ekt_hook_cfg.unity, ekt_hook_mod, NULL);
 
     /* Initialize debug helpers */
 

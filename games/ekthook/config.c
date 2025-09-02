@@ -1,7 +1,5 @@
 #include <assert.h>
-
-#include "amex/amex.h"
-#include "amex/config.h"
+#include <stdlib.h>
 
 #include "board/config.h"
 
@@ -89,6 +87,88 @@ void ekt_dll_config_load(
             filename);
 }
 
+void y3_config_load(
+        struct y3_config *cfg,
+        const wchar_t *filename)
+{
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    wchar_t tmpstr[5];
+
+    memset(cfg->firm_name_field, ' ', sizeof(cfg->firm_name_field) - 1);
+    cfg->firm_name_field[sizeof(cfg->firm_name_field) - 1] = '\0';
+
+    memset(cfg->firm_name_printer, ' ', sizeof(cfg->firm_name_printer) - 1);
+    cfg->firm_name_printer[sizeof(cfg->firm_name_printer) - 1] = '\0';
+
+    memset(cfg->target_code_field, ' ', sizeof(cfg->target_code_field) - 1);
+    cfg->target_code_field[sizeof(cfg->target_code_field) - 1] = '\0';
+
+    memset(cfg->target_code_printer, ' ', sizeof(cfg->target_code_printer) - 1);
+    cfg->target_code_printer[sizeof(cfg->target_code_printer) - 1] = '\0';
+
+
+    cfg->enable = GetPrivateProfileIntW(L"y3", L"enable", 1, filename);
+    cfg->ws_enable = GetPrivateProfileIntW(L"y3", L"ws_enable", 1, filename);
+    cfg->ws_port = GetPrivateProfileIntW(L"y3", L"ws_port", 3597, filename);
+    cfg->ws_timeout = GetPrivateProfileIntW(L"y3", L"ws_timeout", 30000, filename);
+
+    cfg->enable = GetPrivateProfileIntW(L"flatPanelReader", L"enable", 1, filename);
+
+    cfg->dll_version = (float)GetPrivateProfileIntW(
+            L"flatPanelReader",
+            L"dllVersion",
+            1,
+            filename);
+
+    cfg->firm_version = (float)GetPrivateProfileIntW(
+            L"flatPanelReader",
+            L"firmVersion",
+            1,
+            filename);
+
+    GetPrivateProfileStringW(
+            L"flatPanelReader",
+            L"firmNameField",
+            L"SFPR",
+            tmpstr,
+            _countof(tmpstr),
+            filename);
+
+    wcstombs(cfg->firm_name_field, tmpstr, sizeof(cfg->firm_name_field) - 1);
+
+    GetPrivateProfileStringW(
+            L"flatPanelReader",
+            L"firmNamePrinter",
+            L"SPRT",
+            tmpstr,
+            _countof(tmpstr),
+            filename);
+
+    wcstombs(cfg->firm_name_printer, tmpstr, sizeof(cfg->firm_name_printer) - 1);
+
+    GetPrivateProfileStringW(
+            L"flatPanelReader",
+            L"targetCodeField",
+            L"SFR0",
+            tmpstr,
+            _countof(tmpstr),
+            filename);
+
+    wcstombs(cfg->target_code_field, tmpstr, sizeof(cfg->target_code_field) - 1);
+
+    GetPrivateProfileStringW(
+            L"flatPanelReader",
+            L"targetCodePrinter",
+            L"SPT0",
+            tmpstr,
+            _countof(tmpstr),
+            filename);
+
+    wcstombs(cfg->target_code_printer, tmpstr, sizeof(cfg->target_code_printer) - 1);
+}
+
 void ekt_hook_config_load(
         struct ekt_hook_config *cfg,
         const wchar_t *filename)
@@ -102,16 +182,6 @@ void ekt_hook_config_load(
     dvd_config_load(&cfg->dvd, filename);
     led15093_config_load(&cfg->led15093, filename);
     y3_config_load(&cfg->y3, filename);
+    unity_config_load(&cfg->unity, filename);
     ekt_dll_config_load(&cfg->dll, filename);
-}
-
-void y3_config_load(struct y3_config *cfg, const wchar_t *filename){
-
-    assert(cfg != NULL);
-    assert(filename != NULL);
-
-    cfg->enable = GetPrivateProfileIntW(L"y3", L"enable", 1, filename);
-    cfg->ws_enable = GetPrivateProfileIntW(L"y3", L"ws_enable", 1, filename);
-    cfg->ws_port = GetPrivateProfileIntW(L"y3", L"ws_port", 3597, filename);
-    cfg->ws_timeout = GetPrivateProfileIntW(L"y3", L"ws_timeout", 30000, filename);
 }
