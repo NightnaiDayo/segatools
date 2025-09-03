@@ -16,6 +16,9 @@ const struct dll_bind_sym y3_dll_syms[] = {
     }, {
         .sym = "y3_io_get_cards",
         .off = offsetof(struct y3_dll, get_cards),
+    }, {
+        .sym = "y3_io_close",
+        .off = offsetof(struct y3_dll, close),
     }
 };
 

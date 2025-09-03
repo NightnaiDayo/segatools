@@ -10,6 +10,7 @@
 struct y3_dll {
     uint16_t api_version;
     HRESULT (*init)(void);
+    HRESULT (*close)(void);
     HRESULT (*get_cards)(struct CardInfo* cards, int* len);
 };
 

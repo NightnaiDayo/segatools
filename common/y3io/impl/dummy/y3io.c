@@ -14,6 +14,10 @@ HRESULT y3_io_init() {
     return S_OK;
 }
 
+HRESULT y3_io_close() {
+    return S_OK;
+}
+
 HRESULT y3_io_get_cards(struct CardInfo* pCardInfo, int* numCards) {
     memset(pCardInfo, 0, sizeof(struct CardInfo) * *numCards);
 
