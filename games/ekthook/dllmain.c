@@ -34,6 +34,7 @@
 
 #include "ekthook/config.h"
 #include "ekthook/io4.h"
+#include "hooklib/printer_cx.h"
 
 #include "platform/platform.h"
 
@@ -71,6 +72,8 @@ static DWORD CALLBACK ekt_pre_startup(void)
     if (FAILED(hr)) {
         goto fail;
     }
+
+    printer_cx_hook_init(&ekt_hook_cfg.printer, ekt_hook_mod);
 
     /* Initialize emulation hooks */
 

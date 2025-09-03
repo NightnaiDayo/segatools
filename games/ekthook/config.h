@@ -7,6 +7,7 @@
 #include "board/led15093.h"
 
 #include "hooklib/dvd.h"
+#include "hooklib/printer_cx.h"
 
 #include "platform/config.h"
 
@@ -24,6 +25,7 @@ struct ekt_hook_config {
     struct y3_config y3;
     struct ekt_dll_config dll;
     struct unity_config unity;
+    struct printer_cx_config printer;
 };
 
 void ekt_dll_config_load(

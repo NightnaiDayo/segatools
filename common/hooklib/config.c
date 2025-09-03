@@ -26,7 +26,7 @@ void touch_screen_config_load(struct touch_screen_config *cfg, const wchar_t *fi
     cfg->cursor = GetPrivateProfileIntW(L"touch", L"cursor", 1, filename);
 }
 
-void printer_config_load(struct printer_config *cfg, const wchar_t *filename)
+void printer_chc_config_load(struct printer_chc_config *cfg, const wchar_t *filename)
 {
     assert(cfg != NULL);
     assert(filename != NULL);
@@ -83,4 +83,68 @@ void printer_config_load(struct printer_config *cfg, const wchar_t *filename)
             filename);
 
     cfg->wait_time = GetPrivateProfileIntW(L"printer", L"waitTime", 0, filename);
+}
+
+void printer_cx_config_load(struct printer_cx_config *cfg, const wchar_t *filename){
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    char filenameA[MAX_PATH];
+
+    size_t n = wcstombs(filenameA, filename, MAX_PATH);
+    for (int i = n; i < MAX_PATH; i++)
+    {
+        filenameA[i] = '\0';
+    }
+
+    cfg->enable = GetPrivateProfileIntW(L"printer", L"enable", 1, filename);
+
+    GetPrivateProfileStringA(
+            "printer",
+            "firmwareVersion",
+            "V04-03B",
+            cfg->printer_firm_version,
+            _countof(cfg->printer_firm_version),
+            filenameA);
+
+    GetPrivateProfileStringA(
+            "printer",
+            "configVersion",
+            "V01-75",
+            cfg->printer_config_version,
+            _countof(cfg->printer_config_version),
+            filenameA);
+
+    GetPrivateProfileStringA(
+            "printer",
+            "tableVersion",
+            "V01-E0",
+            cfg->printer_table_version,
+            _countof(cfg->printer_table_version),
+            filenameA);
+
+    GetPrivateProfileStringA(
+            "printer",
+            "cameraVersion",
+            "00.19",
+            cfg->printer_camera_version,
+            _countof(cfg->printer_camera_version),
+            filenameA);
+
+    GetPrivateProfileStringW(
+            L"printer",
+            L"printerOutPath",
+            L"DEVICE\\print",
+            cfg->printer_out_path,
+            _countof(cfg->printer_out_path),
+            filename);
+
+    GetPrivateProfileStringW(
+            L"printer",
+            L"printerDataPath",
+            L"DEVICE\\cx7000_data.bin",
+            cfg->printer_data_path,
+            _countof(cfg->printer_data_path),
+            filename);
+
 }

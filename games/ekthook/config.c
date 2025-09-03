@@ -103,6 +103,7 @@ void ekt_hook_config_load(
     dvd_config_load(&cfg->dvd, filename);
     led15093_config_load(&cfg->led15093, filename);
     y3_config_load(&cfg->y3, filename);
+    printer_cx_config_load(&cfg->printer, filename);
     unity_config_load(&cfg->unity, filename);
     ekt_dll_config_load(&cfg->dll, filename);
 }

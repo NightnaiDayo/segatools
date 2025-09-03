@@ -58,6 +58,14 @@ HRESULT ekt_io_poll(void) {
         ekt_opbtn |= EKT_IO_OPBTN_SERVICE;
     }
 
+    if (GetAsyncKeyState(ekt_io_cfg.vk_sw1) & 0x8000) {
+        ekt_opbtn |= EKT_IO_OPBTN_SW1;
+    }
+
+    if (GetAsyncKeyState(ekt_io_cfg.vk_sw2) & 0x8000) {
+        ekt_opbtn |= EKT_IO_OPBTN_SW2;
+    }
+
     if (GetAsyncKeyState(ekt_io_cfg.vk_coin) & 0x8000) {
         if (!ekt_io_coin) {
             ekt_io_coin = true;

@@ -22,7 +22,7 @@ struct kemono_hook_config {
     struct vfd_config vfd;
     struct kemono_dll_config dll;
     struct unity_config unity;
-    struct printer_config printer;
+    struct printer_chc_config printer;
     struct amex_config amex;
     struct led15093_config led15093;
 };
