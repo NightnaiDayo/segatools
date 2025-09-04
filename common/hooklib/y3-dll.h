@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "config.h"
-#include "y3.h"
+#include "hooklib/y3.h"
+
 
 struct y3_dll {
     uint16_t api_version;

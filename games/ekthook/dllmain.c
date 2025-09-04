@@ -42,8 +42,8 @@
 
 #include "util/dprintf.h"
 #include "util/env.h"
-#include "y3io/y3-dll.h"
-#include "y3io/y3.h"
+#include "hooklib/y3-dll.h"
+#include "hooklib/y3.h"
 
 static HMODULE ekt_hook_mod;
 static process_entry_t ekt_startup;

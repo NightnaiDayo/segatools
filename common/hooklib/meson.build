@@ -37,5 +37,9 @@ hooklib_lib = static_library(
         'printer_chc.h',
         'printer_cx.c',
         'printer_cx.h',
+        'y3.c',
+        'y3.h',
+        'y3-dll.c',
+        'y3-dll.h',
     ],
 )

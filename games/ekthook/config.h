@@ -6,15 +6,15 @@
 #include "board/config.h"
 #include "board/led15093.h"
 
+#include "ekthook/ekt-dll.h"
+
+#include "hooklib/config.h"
 #include "hooklib/dvd.h"
 #include "hooklib/printer_cx.h"
 
 #include "platform/config.h"
 
 #include "unityhook/config.h"
-
-#include "ekthook/ekt-dll.h"
-#include "y3io/config.h"
 
 struct ekt_hook_config {
     struct platform_config platform;

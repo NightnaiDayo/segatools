@@ -6,7 +6,7 @@
 #include "3rdparty/websockets/websocket.h"
 #include "3rdparty/cjson/cJSON.h"
 #include "util/dprintf.h"
-#include "y3io/y3.h"
+#include "../../../hooklib/y3.h"
 
 DWORD __stdcall y3_websocket_thread_proc(LPVOID ctx);
 

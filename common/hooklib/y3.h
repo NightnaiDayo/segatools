@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "config.h"
+#include "hooklib/config.h"
 
 #pragma pack(push, 1)
 

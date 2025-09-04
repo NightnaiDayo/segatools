@@ -3,11 +3,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "config.h"
-#include "y3.h"
-#include "y3-dll.h"
+#include "hooklib/config.h"
+
 #include "util/dll-bind.h"
 #include "util/dprintf.h"
+
+#include "y3.h"
+#include "y3-dll.h"
 
 const struct dll_bind_sym y3_dll_syms[] = {
     {

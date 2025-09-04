@@ -11,12 +11,6 @@ y3io_lib = static_library(
         util_lib
     ],
     sources : [
-        'config.c',
-        'config.h',
-        'y3-dll.c',
-        'y3-dll.h',
-        'y3.c',
-        'y3.h',
         'impl/dummy/y3io.c',
         'impl/websockets/y3io.c',
         'impl/websockets/3rdparty/websockets/aw-base64.h',

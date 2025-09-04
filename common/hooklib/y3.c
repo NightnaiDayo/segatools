@@ -7,10 +7,11 @@
 #include <assert.h>
 
 #include "y3.h"
-#include "y3-dll.h"
 
 #include "hook/table.h"
 #include "hook/procaddr.h"
+
+#include "hooklib/y3-dll.h"
 
 #include "util/dprintf.h"
 

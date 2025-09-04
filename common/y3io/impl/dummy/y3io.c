@@ -2,7 +2,8 @@
 #include <windows.h>
 
 #include "util/dprintf.h"
-#include "y3io/y3.h"
+
+#include "hooklib/y3.h"
 
 
 uint16_t y3_io_get_api_version() {

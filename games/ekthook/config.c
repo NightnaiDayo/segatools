@@ -3,14 +3,12 @@
 
 #include "board/config.h"
 
+#include "ekthook/config.h"
+#include "ekthook/ekt-dll.h"
+
 #include "hooklib/config.h"
 
 #include "platform/config.h"
-
-#include "ekthook/config.h"
-#include "y3io/config.h"
-
-#include "ekthook/ekt-dll.h"
 
 void led15093_config_load(struct led15093_config *cfg, const wchar_t *filename)
 {
