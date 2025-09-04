@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <windows.h>
 
-#include "y3io/y3.h"
+#include "hooklib/y3.h"
 
 /* Get the version of the Y3 IO API that this DLL supports. This
    function should return a positive 16-bit integer, where the high byte is
