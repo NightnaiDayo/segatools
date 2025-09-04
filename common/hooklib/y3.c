@@ -357,6 +357,9 @@ CALL int* API_Connect(char* szPortName) {
 
 CALL int API_Close(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
+
+    y3_dll.close();
+
     return 0;
 }
 
@@ -381,12 +384,12 @@ CALL uint32_t API_GetFirmName(int* hDevice) {
 
     if (hDevice == Y3_COM_FIELD) {
         result = convert_string_to_uint(y3_config.firm_name_field);
-        dprintf("This Y3 device is a FIELD: %s\n", y3_config.firm_name_field);
+        dprintf("Y3: This device is a FIELD: %s\n", y3_config.firm_name_field);
     } else if (hDevice == Y3_COM_PRINT) {
         result = convert_string_to_uint(y3_config.firm_name_printer);
-        dprintf("This Y3 device is PRINTER: %s\n", y3_config.firm_name_printer);
+        dprintf("Y3: This device is a PRINTER: %s\n", y3_config.firm_name_printer);
     } else {
-        dprintf("This Y3 device is UNKNOWN\n");
+        dprintf("Y3: This device is UNKNOWN\n");
     }
 
     return result;
@@ -398,12 +401,12 @@ CALL uint32_t API_GetTargetCode(int* hDevice) {
 
     if (hDevice == Y3_COM_FIELD) {
         result = convert_string_to_uint(y3_config.target_code_field);
-        dprintf("This Y3 device is FIELD: %s\n", y3_config.target_code_field);
+        dprintf("Y3: This device is a FIELD: %s\n", y3_config.target_code_field);
     } else if (hDevice == Y3_COM_PRINT) {
         result = convert_string_to_uint(y3_config.target_code_printer);
-        dprintf("This Y3 device is PRINTER: %s\n", y3_config.target_code_printer);
+        dprintf("Y3: This device is a PRINTER: %s\n", y3_config.target_code_printer);
     } else {
-        dprintf("This Y3 device is UNKNOWN\n");
+        dprintf("Y3: This Y3 device is UNKNOWN\n");
     }
 
     return result;
