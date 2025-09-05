@@ -26,7 +26,7 @@ Returns the current game ID that is being run (SDDD, SDGY).
 - get_cards
 
 Extra response fields:
- - array of objects
+ - cards: <array of objects>
    - card_id: <long>
    - path: <string>
 
