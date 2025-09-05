@@ -97,6 +97,7 @@ bcrypt_lib = cc.find_library('bcrypt')
 
 inc = include_directories('common', 'games')
 capnhook = subproject('capnhook')
+cwinwebsocket = subproject('cwinwebsocket')
 
 subdir('common/amex')
 subdir('common/iccard')

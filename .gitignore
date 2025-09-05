@@ -18,6 +18,7 @@ build/
 
 # External dependencies
 subprojects/capnhook
+subprojects/cwinwebsocket
 
 # For enabling debug logging on local builds
 MesonLocalOptions.mk
