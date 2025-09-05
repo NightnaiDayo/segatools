@@ -5,10 +5,9 @@ pushd %~dp0
 
 start "AM Daemon" /min inject -d -k ekthook.dll ..\PackageBase\amdaemon.exe -c ..\PackageBase\config_sate.json config_hook.json
 
-REM AmCapture
-REM pushd ..\PackageBase\am_capture
-REM start /min "" %AMCAPTURE_EXE_NAME% >nul 2>&1
-REM popd
+pushd ..\PackageBase\am_capture
+start "AM Capture" /min AmCapture.exe
+popd
 
 inject -d -k ekthook.dll ekt.exe -logfile satellite.log -screen-fullscreen 1 -screen-width 1920 -screen-height 1080 -screen-quality Ultra -silent-crashes
 
