@@ -1,4 +1,6 @@
-Y3WS websocket protocol for card I/O for the taisen series by Haruka:
+Y3WS websocket protocol for card I/O for the Taisen series by Haruka:
+
+Default listening port: 3594 (san-go-ku-shi)
 
 All packets are JSON and, unless otherwise specified contain these fields:
 

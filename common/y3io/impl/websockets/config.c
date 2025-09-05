@@ -15,7 +15,7 @@ void y3ws_config_load(struct y3ws_config *cfg, const wchar_t *filename)
     cfg->enable = GetPrivateProfileIntW(L"y3ws", L"enable", 1, filename);
     cfg->debug = GetPrivateProfileIntW(L"y3ws", L"debug", 0, filename);
 
-    cfg->port = GetPrivateProfileIntW(L"y3ws", L"port", 3497, filename);
+    cfg->port = GetPrivateProfileIntW(L"y3ws", L"port", 3594, filename);
 
     wchar_t tmpstr[16];
 
