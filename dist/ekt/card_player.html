@@ -1,0 +1,229 @@
+<!-- very basic thing, I can't do UX/CSS/design, don't blame me, I'm a network engineer lmao -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Taisen Card Field</title>
+</head>
+<style>
+    html, body {
+        width: 99%;
+        height: 99%;
+    }
+    .playfield {
+        width: 79%;
+        height: 100%;
+        float: left;
+        border: 1px solid black;
+    }
+    .card_menu {
+        width: 20%;
+        height: 100%;
+        border: 1px solid black;
+        overflow-x: hidden;
+        overflow-y: scroll;
+    }
+
+    .card {
+        width: 200px;
+        transform: rotate(-90deg);
+    }
+
+    #playfield .card {
+        position: absolute;
+    }
+
+    #status {
+        margin-bottom: 50px;
+    }
+</style>
+<script>
+    var VERSION = 1;
+
+    var socket;
+    var state = 0;
+    var game_id;
+    var cards = [];
+    var current_card_fetch = 0;
+
+    function send(obj){
+        if (!socket){ return; }
+        var data = JSON.stringify(obj);
+        console.log("Sending: " + data);
+        socket.send(data);
+    }
+
+    function connect(){
+        socket = new WebSocket("ws://127.0.0.1:3594/y3io");
+
+        socket.onopen = function(e) {
+            document.getElementById("status").innerText = "Connected. Loading information...";
+            state = 0;
+            send({
+                version: VERSION,
+                command: "get_game_id"
+            });
+        };
+
+        socket.onmessage = function(event) {
+        console.log("Received: " + event.data);
+            handle_response(JSON.parse(event.data));
+        };
+
+        socket.onclose = function(event) {
+            state = -1;
+            document.getElementById("status").innerHTML = "Disconnected. <a href='javascript:window.location.reload();'>Reconnect</a>";
+        };
+
+        socket.onerror = function(error) {
+            console.log(error);
+        };
+    }
+
+    function handle_response(obj){
+        if (!obj.success){
+            alert("Error receiving data while in state " + state + ": " + obj.error);
+            socket.close();
+            return;
+        }
+        if (state == 0){
+            game_id = obj.game_id;
+            document.getElementById("status").innerText = "Connected to "+game_id+". Loading cards...";
+            state = 1;
+            send({
+                version: VERSION,
+                command: "get_cards"
+            });
+        } else if (state == 1){
+            cards = obj.cards;
+            document.getElementById("status").innerText = "Connected to "+game_id+". Loading card images...";
+            document.getElementById("cards").innerHTML = "";
+            document.getElementById("playfield").innerHTML = "";
+            current_card_fetch = 0;
+            state = 2;
+            if (cards.length > 0){
+                fetch_next_card();
+            } else {
+                document.getElementById("status").innerText = "Connected to "+game_id+". No cards available.";
+            }
+        } else if (state == 2){
+            cards[current_card_fetch].image = obj.data;
+            document.getElementById("cards").innerHTML += "<img class='card' src='data:image/bmp;base64, "+obj.data+"' onclick='spawn_card("+current_card_fetch+");' />";
+
+            if (++current_card_fetch >= cards.length){
+                document.getElementById("status").innerText = "Connected to "+game_id+".";
+                state = 3;
+            } else {
+                fetch_next_card();
+            }
+        }
+    }
+
+    function fetch_next_card(){
+        var p = cards[current_card_fetch].path;
+        if (!p.includes("_front")){
+            current_card_fetch++;
+            fetch_next_card();
+            return;
+        }
+        send({
+            version: VERSION,
+            command: "get_card_image",
+            path: p
+        });
+    }
+
+    var mydragg = function() {
+      return {
+        move: function(divid, xpos, ypos) {
+          divid.style.left = xpos + 'px';
+          divid.style.top = ypos + 'px';
+        },
+        startMoving: function(divid, container, evt) {
+          evt = evt || window.event;
+          var posX = evt.clientX,
+            posY = evt.clientY,
+            divTop = divid.style.top,
+            divLeft = divid.style.left,
+            eWi = parseInt(divid.style.width),
+            eHe = parseInt(divid.style.height),
+            cWi = parseInt(document.getElementById(container).style.width),
+            cHe = parseInt(document.getElementById(container).style.height);
+          document.getElementById(container).style.cursor = 'move';
+          divTop = divTop.replace('px', '');
+          divLeft = divLeft.replace('px', '');
+          var diffX = posX - divLeft,
+            diffY = posY - divTop;
+          document.onmousemove = function(evt) {
+            evt = evt || window.event;
+            var posX = evt.clientX,
+              posY = evt.clientY,
+              aX = posX - diffX,
+              aY = posY - diffY;
+            if (aX < 0) aX = 0;
+            if (aY < 0) aY = 0;
+            if (aX + eWi > cWi) aX = cWi - eWi;
+            if (aY + eHe > cHe) aY = cHe - eHe;
+            mydragg.move(divid, aX, aY);
+          }
+        },
+        stopMoving: function(container) {
+          var a = document.createElement('script');
+          document.getElementById(container).style.cursor = 'default';
+          document.onmousemove = function() {}
+        },
+      }
+    }();
+
+    function spawn_card(i){
+        if (state != 3){
+            return;
+        }
+
+        document.getElementById("playfield").innerHTML += "<img class='card' src='data:image/bmp;base64, "+cards[i].image+"' onclick='spawn_card("+current_card_fetch+");' onmousedown='mydragg.startMoving(this,\"playfield\",event);' onmouseup='mydragg.stopMoving(\"playfield\");update_pos("+i+", event);' />";
+    }
+
+    function update_pos(i, event){
+        if (state != 3){
+            return;
+        }
+
+        var panelHeight = 1232;
+        var panelWidth = 1160;
+
+        cards[i].x = panelWidth - event.clientY;
+        cards[i].y = panelHeight - event.clientX;
+        cards[i].rotation = 0;
+
+
+        var list = [];
+        for (var j = 0; j < cards.length; j++){
+            var c = cards[j];
+            if (c.x && c.y){
+                list.push({
+                    card_id: c.card_id,
+                    x: c.x,
+                    y: c.y,
+                    rotation: c.rotation
+                });
+            }
+        }
+
+        send({
+            version: VERSION,
+            command: "set_field",
+            cards: list
+        });
+    }
+</script>
+<body onload="connect();">
+    <div id="playfield" class="playfield">
+
+    </div>
+    <div class="card_menu">
+        <div id="status">Please wait...</div>
+        <div id="cards">
+
+        </div>
+    </div>
+</body>
+</html>

@@ -266,6 +266,7 @@ $(BUILD_DIR_ZIP)/ekt.zip:
 		$(DIST_DIR)/ekt/segatools_satellite.ini \
 		$(DIST_DIR)/ekt/launch_terminal.bat \
 		$(DIST_DIR)/ekt/launch_satellite.bat \
+		$(DIST_DIR)/ekt/card_player.html \
 		$(DIST_DIR)/ekt/config_hook.json \
     	$(BUILD_DIR_ZIP)/ekt
 	$(V)cp pki/billing.pub \
