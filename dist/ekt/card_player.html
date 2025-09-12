@@ -145,11 +145,11 @@
             return;
         }
 
-        var panelHeight = 832;
-        var panelWidth = 1160;
+        var panelHeight = 1272;
+        var panelWidth = 1260;
 
-        cards[i].x = panelHeight - y;
-        cards[i].y = panelWidth - x;
+        cards[i].x = panelHeight - ((y / window.screen.height) * panelHeight);
+        cards[i].y = panelWidth - ((x / window.screen.width) * panelWidth);
         cards[i].rotation = 0;
 
 
