@@ -576,6 +576,12 @@ Default: `01:02:03:04:05:06`
 The MAC address of the virtualized Ethernet adapter. The exact value shouldn't
 ever matter.
 
+### `broadcast`
+
+Default: `255.255.255.255`
+
+The UDP broadcast address that should be used if packets are being sent to the virtual keychip's subnet. This is used for cab-to-cab communication (Local Play, Satellite to Terminal, etc.). Depending on your network adapters (VPNs etc), sometimes you must explicitely specify your real LANs subnet.
+
 ## `[pcbid]`
 
 Configure Windows host name virtualization. The ALLS-series platform no longer

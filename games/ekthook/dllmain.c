@@ -49,6 +49,10 @@ static HMODULE ekt_hook_mod;
 static process_entry_t ekt_startup;
 static struct ekt_hook_config ekt_hook_cfg;
 
+static void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
+    netenv_hook_apply_hooks(hmodule);
+}
+
 static DWORD CALLBACK ekt_pre_startup(void)
 {
     HRESULT hr;
@@ -141,7 +145,7 @@ static DWORD CALLBACK ekt_pre_startup(void)
        There seems to be an issue with other DLL hooks if `LoadLibraryW` is
        hooked earlier in the `ekthook` initialization. */
 
-    unity_hook_init(&ekt_hook_cfg.unity, ekt_hook_mod, NULL);
+    unity_hook_init(&ekt_hook_cfg.unity, ekt_hook_mod, unity_hook_callback);
 
     /* Initialize debug helpers */
 
