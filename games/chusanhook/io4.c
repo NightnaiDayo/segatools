@@ -55,7 +55,7 @@ HRESULT chusan_io4_hook_init(const struct io4_config* cfg)
         return hr;
     }
 
-    io4_hook_init(cfg, &chusan_io4_ops, NULL);
+    io4_hook_init(cfg, &chusan_io4_ops, NULL, L"teaGfx DirectX Release");
 
     return S_OK;
 }

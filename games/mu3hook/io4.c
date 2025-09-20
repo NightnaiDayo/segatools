@@ -26,7 +26,7 @@ HRESULT mu3_io4_hook_init(const struct io4_config *cfg)
 
     assert(mu3_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &mu3_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &mu3_io4_ops, NULL, L"Otoge");
 
     if (FAILED(hr)) {
         return hr;

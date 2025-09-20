@@ -23,7 +23,7 @@ HRESULT mai2_io4_hook_init(const struct io4_config *cfg)
 
     assert(mai2_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &mai2_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &mai2_io4_ops, NULL, NULL);
 
     if (FAILED(hr)) {
         return hr;

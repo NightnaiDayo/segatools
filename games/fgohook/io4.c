@@ -23,7 +23,7 @@ HRESULT fgo_io4_hook_init(const struct io4_config *cfg)
 
     assert(fgo_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &fgo_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &fgo_io4_ops, NULL, L"Fate/Grand Order Arcade r");
 
     if (FAILED(hr)) {
         return hr;

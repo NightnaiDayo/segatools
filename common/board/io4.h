@@ -16,6 +16,7 @@ enum {
 
 struct io4_config {
     bool enable;
+    bool foreground_only;
 };
 
 struct io4_state {
@@ -31,6 +32,7 @@ struct io4_ops {
 };
 
 HRESULT io4_hook_init(
-        const struct io4_config *cfg,
-        const struct io4_ops *ops,
-        void *ctx);
+    const struct io4_config *cfg,
+    const struct io4_ops *ops,
+    void *ctx,
+    const wchar_t* window_name);

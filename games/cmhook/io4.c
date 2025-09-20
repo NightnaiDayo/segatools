@@ -23,7 +23,7 @@ HRESULT cm_io4_hook_init(const struct io4_config *cfg)
 
     assert(cm_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &cm_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &cm_io4_ops, NULL, L"MU3CardViewer");
 
     if (FAILED(hr)) {
         return hr;
