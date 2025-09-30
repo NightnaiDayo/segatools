@@ -149,6 +149,7 @@ int WINAPI chcusb_getEEPROM(uint8_t index, uint8_t *rData, uint16_t *rResult);
 int WINAPI chcusb_setParameter(uint8_t a1, uint32_t a2, uint16_t *rResult);
 int WINAPI chcusb_getParameter(uint8_t a1, uint8_t *a2, uint16_t *rResult);
 int WINAPI chcusb_universal_command(int32_t a1, uint8_t a2, int32_t a3, uint8_t *a4, uint16_t *rResult);
+int WINAPI chcusb_writeIred(uint8_t* a1, uint8_t* a2, uint16_t* rResult);
 
 /* PrintDLL API hooks */
 
@@ -866,6 +867,336 @@ static const struct hook_symbol C3XXusb_hooks[] = {
     },
 };
 
+/* CHC320 x86 hook table */
+
+static const struct hook_symbol C320usb_hooks[] = {
+    {
+        .name   = "__imp_chcusb_MakeThread",
+        .ordinal= 1,
+        .patch  = chcusb_MakeThread,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_open",
+        .ordinal= 2,
+        .patch  = chcusb_open,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_close",
+        .ordinal= 3,
+        .patch  = chcusb_close,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_ReleaseThread",
+        .ordinal= 4,
+        .patch  = chcusb_ReleaseThread,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_listupPrinter",
+        .ordinal= 5,
+        .patch  = chcusb_listupPrinter,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_listupPrinterSN",
+        .ordinal= 6,
+        .patch  = chcusb_listupPrinterSN,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_selectPrinter",
+        .ordinal= 7,
+        .patch  = chcusb_selectPrinter,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_selectPrinterSN",
+        .ordinal= 8,
+        .patch  = chcusb_selectPrinterSN,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getPrinterInfo",
+        .ordinal= 9,
+        .patch  = chcusb_getPrinterInfo,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_imageformat",
+        .ordinal= 10,
+        .patch  = chcusb_imageformat_330,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setmtf",
+        .ordinal= 11,
+        .patch  = chcusb_setmtf,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_makeGamma",
+        .ordinal= 12,
+        .patch  = chcusb_makeGamma,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setIcctable",
+        .ordinal= 13,
+        .patch  = chcusb_setIcctable,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_copies",
+        .ordinal= 14,
+        .patch  = chcusb_copies,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_status",
+        .ordinal= 15,
+        .patch  = chcusb_status,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_statusAll",
+        .ordinal= 16,
+        .patch  = chcusb_statusAll,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_startpage",
+        .ordinal= 17,
+        .patch  = chcusb_startpage,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_endpage",
+        .ordinal= 18,
+        .patch  = chcusb_endpage,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_write",
+        .ordinal= 19,
+        .patch  = chcusb_write,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_writeLaminate",
+        .ordinal= 20,
+        .patch  = chcusb_writeLaminate,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_writeHolo",
+        .ordinal= 21,
+        .patch  = chcusb_writeHolo,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setPrinterInfo",
+        .ordinal= 22,
+        .patch  = chcusb_setPrinterInfo,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getGamma",
+        .ordinal= 23,
+        .patch  = chcusb_getGamma,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getMtf",
+        .ordinal= 24,
+        .patch  = chcusb_getMtf,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_cancelCopies",
+        .ordinal= 25,
+        .patch  = chcusb_cancelCopies,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setPrinterToneCurve",
+        .ordinal= 26,
+        .patch  = chcusb_setPrinterToneCurve,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getPrinterToneCurve",
+        .ordinal= 27,
+        .patch  = chcusb_getPrinterToneCurve,
+        .link   = NULL
+    }, {
+        .name   = "chcusb_blinkLED",
+        .ordinal= 28,
+        .patch  = chcusb_blinkLED,
+        .link   = NULL
+    }, {
+        .name   = "chcusb_resetPrinter",
+        .ordinal= 29,
+        .patch  = chcusb_resetPrinter,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_AttachThreadCount",
+        .ordinal= 30,
+        .patch  = chcusb_AttachThreadCount,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getPrintIDStatus",
+        .ordinal= 31,
+        .patch  = chcusb_getPrintIDStatus,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setPrintStandby",
+        .ordinal= 32,
+        .patch  = chcusb_setPrintStandby,
+        .link   = NULL
+    }, {
+        .name   = "chcusb_testCardFeed",
+        .ordinal= 33,
+        .patch  = chcusb_testCardFeed,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_exitCard",
+        .ordinal= 34,
+        .patch  = chcusb_exitCard,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getCardRfidTID",
+        .ordinal= 35,
+        .patch  = chcusb_getCardRfidTID,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_commCardRfidReader",
+        .ordinal= 36,
+        .patch  = chcusb_commCardRfidReader,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_updateCardRfidReader",
+        .ordinal= 37,
+        .patch  = chcusb_updateCardRfidReader,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getErrorLog",
+        .ordinal= 38,
+        .patch  = chcusb_getErrorLog,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getErrorStatus",
+        .ordinal= 39,
+        .patch  = chcusb_getErrorStatus,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setCutList",
+        .ordinal= 40,
+        .patch  = chcusb_setCutList,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setLaminatePattern",
+        .ordinal= 41,
+        .patch  = chcusb_setLaminatePattern,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_color_adjustment",
+        .ordinal= 42,
+        .patch  = chcusb_color_adjustment,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_color_adjustmentEx",
+        .ordinal= 43,
+        .patch  = chcusb_color_adjustmentEx,
+        .link   = NULL
+    },  {
+        .name   = "__imp_chcusb_writeIred",
+        .ordinal= 50,
+        .patch  = chcusb_writeIred,
+        .link   = NULL
+    },  {
+        .name   = "__imp_chcusb_getEEPROM",
+        .ordinal= 58,
+        .patch  = chcusb_getEEPROM,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_setParameter",
+        .ordinal= 64,
+        .patch  = chcusb_setParameter,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_getParameter",
+        .ordinal= 65,
+        .patch  = chcusb_getParameter,
+        .link   = NULL
+    }, {
+        .name   = "__imp_chcusb_universal_command",
+        .ordinal= 73,
+        .patch  = chcusb_universal_command,
+        .link   = NULL
+    },
+};
+
+static const struct hook_symbol C320FWDLusb_hooks[] = {
+    {
+        .name   = "__imp_fwdlusb_open",
+        .ordinal= 1,
+        .patch  = fwdlusb_open,
+        .link   = NULL
+    }, {
+        .name   = "__imp_fwdlusb_close",
+        .ordinal= 2,
+        .patch  = fwdlusb_close,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_listupPrinter",
+        .ordinal= 3,
+        .patch  = fwdlusb_listupPrinter,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_listupPrinterSN",
+        .ordinal= 4,
+        .patch  = fwdlusb_listupPrinterSN,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_selectPrinter",
+        .ordinal= 5,
+        .patch  = fwdlusb_selectPrinter,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_selectPrinterSN",
+        .ordinal= 6,
+        .patch  = fwdlusb_selectPrinterSN,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_getPrinterInfo",
+        .ordinal= 7,
+        .patch  = fwdlusb_getPrinterInfo,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_status",
+        .ordinal= 8,
+        .patch  = fwdlusb_status,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_statusAll",
+        .ordinal= 9,
+        .patch  = fwdlusb_statusAll,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_resetPrinter",
+        .ordinal= 10,
+        .patch  = fwdlusb_resetPrinter,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_updateFirmware",
+        .ordinal= 11,
+        .patch  = fwdlusb_updateFirmware,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_getFirmwareInfo",
+        .ordinal= 12,
+        .patch  = fwdlusb_getFirmwareInfo,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_MakeThread",
+        .ordinal= 13,
+        .patch  = fwdlusb_MakeThread,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_ReleaseThread",
+        .ordinal= 14,
+        .patch  = fwdlusb_ReleaseThread,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_AttachThreadCount",
+        .ordinal= 15,
+        .patch  = fwdlusb_AttachThreadCount,
+        .link   = NULL
+    },  {
+        .name   = "__imp_fwdlusb_getErrorLog",
+        .ordinal= 16,
+        .patch  = fwdlusb_getErrorLog,
+        .link   = NULL
+    },
+};
+
 /* PrintDLL hook tbl */
 
 static struct hook_symbol printdll_hooks[] = {
@@ -1236,8 +1567,8 @@ void printer_chc_hook_insert_hooks(HMODULE target) {
     hook_table_apply(target, "C310Busb.dll", C3XXusb_hooks, _countof(C3XXusb_hooks));
     hook_table_apply(target, "C310FWDLusb.dll", C3XXFWDLusb_hooks, _countof(C3XXFWDLusb_hooks));
     hook_table_apply(target, "C310BFWDLusb.dll", C3XXFWDLusb_hooks, _countof(C3XXFWDLusb_hooks));
-    hook_table_apply(target, "C320Ausb.dll", C3XXusb_hooks, _countof(C3XXusb_hooks));
-    hook_table_apply(target, "C320AFWDLusb.dll", C3XXFWDLusb_hooks, _countof(C3XXFWDLusb_hooks));
+    hook_table_apply(target, "C320Ausb.dll", C320usb_hooks, _countof(C3XXusb_hooks));
+    hook_table_apply(target, "C320AFWDLusb.dll", C320FWDLusb_hooks, _countof(C3XXFWDLusb_hooks));
     hook_table_apply(target, "C330Ausb.dll", C3XXusb_hooks, _countof(C3XXusb_hooks));
     hook_table_apply(target, "C330AFWDLusb.dll", C3XXFWDLusb_hooks, _countof(C3XXFWDLusb_hooks));
 
@@ -2159,6 +2490,11 @@ int WINAPI chcusb_getPrinterInfo(uint16_t tagNumber, uint8_t *rBuffer, uint32_t 
         // getPaperInfo
         case 0:
             if (*rLen != 0x67) *rLen = 0x67;
+            if (rBuffer) memset(rBuffer, 0, *rLen);
+            break;
+
+        case 2: // unknown
+            if (*rLen != 0x17) *rLen = 0x17;
             if (rBuffer) memset(rBuffer, 0, *rLen);
             break;
 
@@ -3152,4 +3488,13 @@ int CHCUSB_writeLaminate(const void *handle, uint8_t *data, uint32_t offset, uin
 void printer_set_dimensions(int width, int height){
     WIDTH = width;
     HEIGHT = height;
+}
+
+
+int WINAPI chcusb_writeIred(uint8_t* a1, uint8_t* a2, uint16_t* rResult) {
+    dprintf("Printer: C3XXusb: %s, %p, %p\n", __func__, a1, a2);
+    dump(a1, 16);
+    dump(a2, 16);
+    *rResult = 0;
+    return 1;
 }

@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#include "board/io4.h"
+#include "jvs/jvs-bus.h"
 
 enum {
     SEKITO_NUMPAD_R1 = 1 << 9,
@@ -14,4 +14,5 @@ enum {
     SEKITO_NUMPAD_C3 = 1 << 3
 };
 
-HRESULT sekito_io4_hook_init(const struct io4_config *cfg, bool is_terminal);
+HRESULT sekito_jvs_init(struct jvs_node **root);
+void sekito_jvs_set_terminal(bool is_terminal);

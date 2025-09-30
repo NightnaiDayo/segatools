@@ -1,7 +1,10 @@
+#include "amex/config.h"
+
 #include <assert.h>
 #include <stdlib.h>
 
 #include "board/config.h"
+#include "gfxhook/config.h"
 
 #include "sekitohook/config.h"
 #include "sekitohook/sekito-dll.h"
@@ -102,6 +105,8 @@ void sekito_hook_config_load(
     led15093_config_load(&cfg->led15093, filename);
     y3_config_load(&cfg->y3, filename);
     printer_chc_config_load(&cfg->printer, filename);
-    unity_config_load(&cfg->unity, filename);
     sekito_dll_config_load(&cfg->dll, filename);
+    gfx_config_load(&cfg->gfx, filename);
+    amex_config_load(&cfg->amex, filename);
+    amvideo_config_load(&cfg->amvideo, filename);
 }

@@ -19,6 +19,10 @@ EXPORTS
     y3_io_init
     y3_io_close
     y3_io_get_cards
+    amDllVideoClose
+    amDllVideoGetVBiosVersion
+    amDllVideoOpen
+    amDllVideoSetResolution
     API_DLLVersion @1
     API_GetLastError @2
     API_GetErrorMessage @3

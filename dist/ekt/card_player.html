@@ -53,7 +53,7 @@
     }
 
     function connect(){
-        socket = new WebSocket("ws://127.0.0.1:3497/y3io");
+        socket = new WebSocket("ws://127.0.0.1:3594/y3io");
 
         socket.onopen = function(e) {
             document.getElementById("status").innerText = "Connected. Loading information...";

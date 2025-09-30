@@ -3,19 +3,20 @@
 
     Devices
 
-    USB:    837-15257-01 "Type 4" I/O Board
-    COM12:  837-15396 "Gen 3" Aime Reader
+    USB:    837-14572 "Type 3" I/O Board
+    COM12:  Aime
 
     [Satellite]
 
     USB:    Printer
     COM1:   837-15093-06 LED Controller Board
+    COM10:  601-13160-01 "Flat Panel Reader" Y3CR BD SIE F720MM Board
     COM11:  Printer Camera
 
     [Terminal]
 
-    COM1:   837-15396 "Gen 3" Aime Reader
-    COM3:   837-15093-06 LED Controller Board
+    COM1:   Aime
+    COM11:  837-15093-06 LED Controller Board
 */
 
 #include <windows.h>
@@ -23,35 +24,30 @@
 #include <stdlib.h>
 
 #include "sekito-dll.h"
+#include "amex/amex.h"
 #include "board/sg-reader.h"
 #include "board/led15093.h"
+#include "gfxhook/gfx.h"
 
 #include "hook/process.h"
 #include "hook/iohook.h"
+#include "hooklib/dll.h"
 
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 
 #include "sekitohook/config.h"
-#include "sekitohook/io4.h"
-#include "hooklib/printer_cx.h"
+#include "sekitohook/jvs.h"
 
 #include "platform/platform.h"
 
-#include "unityhook/hook.h"
-
 #include "util/dprintf.h"
 #include "util/env.h"
-#include "hooklib/y3-dll.h"
 #include "hooklib/y3.h"
 
 static HMODULE sekito_hook_mod;
 static process_entry_t sekito_startup;
 static struct sekito_hook_config sekito_hook_cfg;
-
-static void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
-    netenv_hook_apply_hooks(hmodule);
-}
 
 static DWORD CALLBACK sekito_pre_startup(void)
 {
@@ -67,7 +63,9 @@ static DWORD CALLBACK sekito_pre_startup(void)
     /* Hook Win32 APIs */
 
     dvd_hook_init(&sekito_hook_cfg.dvd, sekito_hook_mod);
+    gfx_hook_init(&sekito_hook_cfg.gfx);
     serial_hook_init();
+    sekito_io_init();
 
     /* Hook external DLL APIs */
 
@@ -78,6 +76,10 @@ static DWORD CALLBACK sekito_pre_startup(void)
     }
 
     printer_chc_hook_init(&sekito_hook_cfg.printer, 0, sekito_hook_mod);
+    if (sekito_hook_cfg.printer.enable) {
+        dll_hook_push(sekito_hook_mod, L"C320Ausb.dll");
+        dll_hook_push(sekito_hook_mod, L"C320AFWDLusb.dll");
+    }
 
     /* Initialize emulation hooks */
 
@@ -104,16 +106,10 @@ static DWORD CALLBACK sekito_pre_startup(void)
         goto fail;
     }
 
-    // LED: terminal uses COM 3 and satellite use COM 2
-    unsigned int led_port_no[2] = {is_terminal ? 3 : 2, 0};
+    // LED: terminal uses COM 11 and satellite use COM 2
+    unsigned int led_port_no[2] = {is_terminal ? 11 : 1, 0};
 
     hr = sekito_dll_init(&sekito_hook_cfg.dll, sekito_hook_mod);
-
-    if (FAILED(hr)) {
-        goto fail;
-    }
-
-    hr = sekito_io4_hook_init(&sekito_hook_cfg.io4, is_terminal);
 
     if (FAILED(hr)) {
         goto fail;
@@ -142,6 +138,18 @@ static DWORD CALLBACK sekito_pre_startup(void)
             goto fail;
         }
 
+    }
+
+    sekito_jvs_set_terminal(is_terminal);
+    hr = amex_hook_init(&sekito_hook_cfg.amex, sekito_jvs_init);
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
+    hr = amvideo_hook_init(&sekito_hook_cfg.amvideo, sekito_hook_mod);
+
+    if (FAILED(hr)) {
+        goto fail;
     }
 
     /* Initialize debug helpers */
