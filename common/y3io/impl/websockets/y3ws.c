@@ -177,7 +177,7 @@ static void y3ws_read_cards(char* output_data, size_t* output_size) {
 
 static void y3ws_read_card_image(char* file_name, char* output_data, size_t* output_size) {
     wchar_t path[MAX_PATH];
-    swprintf(path, MAX_PATH, L"%ls\\%S", cfg.card_path, file_name);
+    swprintf(path, MAX_PATH, L"%ls\\%hs", cfg.card_path, file_name);
 
     HANDLE hImage = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hImage == INVALID_HANDLE_VALUE) {
