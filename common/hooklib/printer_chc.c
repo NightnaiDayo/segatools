@@ -100,7 +100,7 @@ int WINAPI chcusb_imageformat_330(
         uint16_t width,
         uint16_t height,
         uint16_t *rResult);
-int __fastcall chcusb_setmtf(int32_t *mtf);
+int WINAPI chcusb_setmtf(int32_t *mtf);
 int WINAPI chcusb_makeGamma(uint16_t k, uint8_t *intoneR, uint8_t *intoneG, uint8_t *intoneB);
 int WINAPI chcusb_setIcctable(
     LPCSTR icc1,
@@ -2672,7 +2672,7 @@ int WINAPI chcusb_imageformat_330(
     return 1;
 }
 
-int __fastcall chcusb_setmtf(int32_t *mtf) {
+int WINAPI chcusb_setmtf(int32_t *mtf) {
     dprintf("Printer: C3XXusb: %s\n", __func__);
 
     memcpy(MTF, mtf, sizeof(MTF));
@@ -3492,9 +3492,7 @@ void printer_set_dimensions(int width, int height){
 
 
 int WINAPI chcusb_writeIred(uint8_t* a1, uint8_t* a2, uint16_t* rResult) {
-    dprintf("Printer: C3XXusb: %s, %p, %p\n", __func__, a1, a2);
-    dump(a1, 16);
-    dump(a2, 16);
+    dprintf("Printer: C3XXusb: %s\n", __func__);
     *rResult = 0;
     return 1;
 }
