@@ -365,21 +365,27 @@ int* CALL API_Connect(char* szPortName) {
         return NULL;
     }
 
-    hr = y3_dll.init();
-    if (FAILED(hr)) {
-        dprintf("Y3: Hook DLL initialization failed: %lx\n", hr);
-        return NULL;
-    }
-
     char number[2];
     strncpy(number, szPortName + 3, 2);
-    return (int*)(uintptr_t)atoi(number);
+    int* hDevice = (int*)(uintptr_t)atoi(number);
+
+    if (hDevice == Y3_COM_FIELD) {
+        hr = y3_dll.init();
+        if (FAILED(hr)) {
+            dprintf("Y3: Hook DLL initialization failed: %lx\n", hr);
+            return NULL;
+        }
+    }
+
+    return hDevice;
 }
 
 int CALL API_Close(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
 
-    y3_dll.close();
+    if (hDevice == Y3_COM_FIELD) {
+        y3_dll.close();
+    }
 
     return 0;
 }
