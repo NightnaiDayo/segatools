@@ -275,6 +275,27 @@ $(BUILD_DIR_ZIP)/ekt.zip:
 	$(V)strip $(BUILD_DIR_ZIP)/ekt/*.{exe,dll}
 	$(V)cd $(BUILD_DIR_ZIP)/ekt ; zip -r ../ekt.zip *
 
+$(BUILD_DIR_ZIP)/sekito.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/sekito
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/sekito/DEVICE
+	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject_x86.exe \
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject_x64.exe \
+		$(BUILD_DIR_GAMES_64)/sekitohook/sekitohook_x64.dll \
+		$(BUILD_DIR_GAMES_32)/sekitohook/sekitohook_x86.dll \
+		$(DIST_DIR)/sekito/segatools_terminal.ini \
+		$(DIST_DIR)/sekito/segatools_satellite.ini \
+		$(DIST_DIR)/sekito/launch_terminal.bat \
+		$(DIST_DIR)/sekito/launch_satellite.bat \
+		$(DIST_DIR)/sekito/card_player.html \
+		$(DIST_DIR)/sekito/config_hook.json \
+    	$(BUILD_DIR_ZIP)/sekito
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/sekito/DEVICE
+	$(V)strip $(BUILD_DIR_ZIP)/sekito/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/sekito ; zip -r ../sekito.zip *
+
 $(BUILD_DIR_ZIP)/doc.zip: \
 		$(DOC_DIR)/config \
 		$(DOC_DIR)/chunihook.md \
