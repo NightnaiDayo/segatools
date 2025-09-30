@@ -1,4 +1,4 @@
-LIBRARY taisenhook
+LIBRARY sekitohook
 
 EXPORTS
     aime_io_get_api_version

@@ -15,32 +15,53 @@
 
 #include "util/dprintf.h"
 
-#define CALL __cdecl
+#if _WIN32 || _WIN64
+    #if _WIN64
+        #define ENV64BIT
+    #else
+        #define ENV32BIT
+    #endif
+#endif
 
-CALL float API_DLLVersion();
-CALL uint32_t API_GetLastError(int* hDevice);
-CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage, int numBytes);
-CALL int* API_Connect(char* szPortName);
-CALL int API_Close(int* hDevice);
-CALL int API_Start(int* hDevice);
-CALL int API_Stop(int* hDevice);
-CALL float API_GetFirmVersion(int* hDevice);
-CALL uint32_t API_GetFirmName(int* hDevice);
-CALL uint32_t API_GetTargetCode(int* hDevice);
-CALL uint32_t API_GetStatus(int* hDevice);
-CALL uint32_t API_GetCounter(int* hDevice);
-CALL int API_ClearError(int* hDevice);
-CALL int API_Reset(int* hDevice, bool isHardReset);
-CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo);
-CALL int API_GetCardInfoCharSize();
-CALL int API_FirmwareUpdate(int* hDevice, uint32_t address, uint32_t size, uint8_t* buffer);
-CALL int API_Calibration(int* hDevice, int calib);
-CALL int API_GetCalibrationResult(int* hDevice, int calib, uint32_t* result);
-CALL uint32_t API_GetProcTime(int* hDevice);
-CALL uint32_t API_GetMemStatus(int* hDevice);
-CALL uint32_t API_GetMemCounter(int* hDevice);
-CALL int API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam);
-CALL int API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam);
+// Check GCC
+#if __GNUC__
+    #if __x86_64__ || __ppc64__
+        #define ENV64BIT
+    #else
+        #define ENV32BIT
+    #endif
+#endif
+
+#ifdef ENV64BIT
+    #define CALL
+#else
+    #define CALL __cdecl
+#endif
+
+float CALL API_DLLVersion();
+uint32_t CALL API_GetLastError(int* hDevice);
+uint32_t CALL API_GetErrorMessage(uint32_t errNo, char* szMessage, int numBytes);
+int* CALL API_Connect(char* szPortName);
+int CALL API_Close(int* hDevice);
+int CALL API_Start(int* hDevice);
+int CALL API_Stop(int* hDevice);
+float CALL API_GetFirmVersion(int* hDevice);
+uint32_t CALL API_GetFirmName(int* hDevice);
+uint32_t CALL API_GetTargetCode(int* hDevice);
+uint32_t CALL API_GetStatus(int* hDevice);
+uint32_t CALL API_GetCounter(int* hDevice);
+int CALL API_ClearError(int* hDevice);
+int CALL API_Reset(int* hDevice, bool isHardReset);
+int CALL API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo);
+int CALL API_GetCardInfoCharSize();
+int CALL API_FirmwareUpdate(int* hDevice, uint32_t address, uint32_t size, uint8_t* buffer);
+int CALL API_Calibration(int* hDevice, int calib);
+int CALL API_GetCalibrationResult(int* hDevice, int calib, uint32_t* result);
+uint32_t CALL API_GetProcTime(int* hDevice);
+uint32_t CALL API_GetMemStatus(int* hDevice);
+uint32_t CALL API_GetMemCounter(int* hDevice);
+int CALL API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam);
+int CALL API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam);
 
 signed int CALL API_SetDevice(int a1, int a2);
 signed int CALL API_SetCommand(int a1, int a2, int a3, int* a4);
@@ -310,12 +331,12 @@ void y3_insert_hooks(HMODULE target) {
         _countof(Y3_hooks));
 }
 
-CALL float API_DLLVersion() {
+float CALL API_DLLVersion() {
     dprintf("Y3: %s\n", __func__);
     return 1;
 }
 
-CALL uint32_t API_GetLastError(int* hDevice) {
+uint32_t CALL API_GetLastError(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     if (!y3_config.enable) {
         return 1;
@@ -323,7 +344,7 @@ CALL uint32_t API_GetLastError(int* hDevice) {
     return 0;
 }
 
-CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage,
+uint32_t CALL API_GetErrorMessage(uint32_t errNo, char* szMessage,
                                   int numBytes) {
     dprintf("Y3: %s\n", __func__);
     if (!y3_config.enable) {
@@ -335,7 +356,7 @@ CALL uint32_t API_GetErrorMessage(uint32_t errNo, char* szMessage,
     return 0;
 }
 
-CALL int* API_Connect(char* szPortName) {
+int* CALL API_Connect(char* szPortName) {
     HRESULT hr;
 
     dprintf("Y3: %s(%s)\n", __func__, szPortName);
@@ -355,7 +376,7 @@ CALL int* API_Connect(char* szPortName) {
     return (int*)(uintptr_t)atoi(number);
 }
 
-CALL int API_Close(int* hDevice) {
+int CALL API_Close(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
 
     y3_dll.close();
@@ -363,22 +384,22 @@ CALL int API_Close(int* hDevice) {
     return 0;
 }
 
-CALL int API_Start(int* hDevice) {
+int CALL API_Start(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 0;
 }
 
-CALL int API_Stop(int* hDevice) {
+int CALL API_Stop(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 0;
 }
 
-CALL float API_GetFirmVersion(int* hDevice) {
+float CALL API_GetFirmVersion(int* hDevice) {
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
     return 1;
 }
 
-CALL uint32_t API_GetFirmName(int* hDevice) {
+uint32_t CALL API_GetFirmName(int* hDevice) {
     uint32_t result = 0;
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
 
@@ -395,7 +416,7 @@ CALL uint32_t API_GetFirmName(int* hDevice) {
     return result;
 }
 
-CALL uint32_t API_GetTargetCode(int* hDevice) {
+uint32_t CALL API_GetTargetCode(int* hDevice) {
     uint32_t result = 1162760014;
     dprintf("Y3: %s(%p)\n", __func__, hDevice);
 
@@ -412,27 +433,27 @@ CALL uint32_t API_GetTargetCode(int* hDevice) {
     return result;
 }
 
-CALL uint32_t API_GetStatus(int* hDevice) {
+uint32_t CALL API_GetStatus(int* hDevice) {
     // dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL uint32_t API_GetCounter(int* hDevice) {
+uint32_t CALL API_GetCounter(int* hDevice) {
     // dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL int API_ClearError(int* hDevice) {
+int CALL API_ClearError(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL int API_Reset(int* hDevice, bool isHardReset) {
+int CALL API_Reset(int* hDevice, bool isHardReset) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo) {
+int CALL API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo) {
     // dprintf("Y3: %s(%p), %d\n", __func__, hDevice, numCards);
     //  ret = num cards
     //  numCards = max cards
@@ -467,47 +488,47 @@ CALL int API_GetCardInfo(int* hDevice, int numCards, struct CardInfo* pCardInfo)
     return 0;
 }
 
-CALL int API_GetCardInfoCharSize() {
+int CALL API_GetCardInfoCharSize() {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL int API_FirmwareUpdate(int* hDevice, uint32_t address, uint32_t size,
+int CALL API_FirmwareUpdate(int* hDevice, uint32_t address, uint32_t size,
                             uint8_t* buffer) {
     dprintf("Y3: %s\n", __func__);
     return 1;  // not supported
 }
 
-CALL int API_Calibration(int* hDevice, int calib) {
+int CALL API_Calibration(int* hDevice, int calib) {
     dprintf("Y3: %s\n", __func__);
     return 1;
 }
 
-CALL int API_GetCalibrationResult(int* hDevice, int calib, uint32_t* result) {
+int CALL API_GetCalibrationResult(int* hDevice, int calib, uint32_t* result) {
     dprintf("Y3: %s\n", __func__);
     return 1;
 }
 
-CALL uint32_t API_GetProcTime(int* hDevice) {
+uint32_t CALL API_GetProcTime(int* hDevice) {
     // dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL uint32_t API_GetMemStatus(int* hDevice) {
+uint32_t CALL API_GetMemStatus(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
-CALL uint32_t API_GetMemCounter(int* hDevice) {
-    dprintf("Y3: %s\n", __func__);
-    return 0;
-}
-
-CALL int API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam) {
+uint32_t CALL API_GetMemCounter(int* hDevice) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }
 
-CALL int API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam) {
+int CALL API_SetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam) {
+    dprintf("Y3: %s\n", __func__);
+    return 0;
+}
+
+int CALL API_GetParameter(int* hDevice, uint32_t uParam, uint32_t* pParam) {
     dprintf("Y3: %s\n", __func__);
     return 0;
 }

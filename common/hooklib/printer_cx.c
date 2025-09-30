@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <windows.h>
 #include <wtypes.h>
@@ -519,7 +520,7 @@ static int __stdcall hook_CXCMD_Print(int slotId, int id, int color, int bufferI
 
     // convert image from seperate CMY arrays to one RGB array
     int size = IMAGE_BUFFER_SIZE * 3;
-    uint8_t* raw_image = malloc(size);
+    uint8_t* raw_image = (uint8_t*)malloc(size);
     for (int i = 0; i < IMAGE_BUFFER_SIZE; i++) {
         // 0 is "white" and we don't really care about that
         raw_image[i * 3] = 0xFF - (bufferIndex == 0 ? back_buffer : front_buffer)[1][i];

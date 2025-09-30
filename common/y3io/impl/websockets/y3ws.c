@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -160,7 +161,7 @@ static void y3ws_read_cards(char* output_data, size_t* output_size) {
         // ReSharper disable once CppRedundantCastExpression
         cJSON* path_str = cJSON_CreateString(fpatha);
         cJSON_AddItemToObject(card, "path", path_str);
-        cJSON* card_id = cJSON_CreateNumber((double)((uint64_t)buf[0] >> 32 | buf[1] >> 24 | buf[2] >> 16 | buf[3] >> 8 | buf[4]));
+        cJSON* card_id = cJSON_CreateNumber((double)((uint64_t)buf[0] >> 32 | (uint64_t)buf[1] >> 24 | (uint64_t)buf[2] >> 16 | (uint64_t)buf[3] >> 8 | buf[4]));
         cJSON_AddItemToObject(card, "card_id", card_id);
 
     } while (FindNextFileW(hFind, &ffd) != 0 && count++ < MAX_CARDS);
@@ -176,7 +177,7 @@ static void y3ws_read_cards(char* output_data, size_t* output_size) {
 
 static void y3ws_read_card_image(char* file_name, char* output_data, size_t* output_size) {
     wchar_t path[MAX_PATH];
-    swprintf(path, MAX_PATH, L"%ls\\%s", cfg.card_path, file_name);
+    swprintf(path, MAX_PATH, L"%ls\\%S", cfg.card_path, file_name);
 
     HANDLE hImage = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hImage == INVALID_HANDLE_VALUE) {

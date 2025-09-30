@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "imageutil.h"
 
@@ -17,7 +18,7 @@ int ConvertDataToBitmap(
 
     if (cbInput < (dwWidth * dwHeight * dwBitCount / 8)) return -3;
 
-    PBYTE pBuffer = (PBYTE)malloc(cbInput);
+    PBYTE pBuffer = malloc(cbInput);
     if (!pBuffer) return -2;
 
     BYTE dwColors = (BYTE)(dwBitCount / 8);
@@ -148,7 +149,7 @@ int WriteDataToBitmapFile(
 
     DWORD cbResult;
     DWORD cbBuffer = dwImageSize + 0x500;
-    PBYTE pbBuffer = (PBYTE)calloc(cbBuffer, 1);
+    PBYTE pbBuffer = calloc(cbBuffer, 1);
     if (!pbBuffer) return -2;
 
     if (ConvertDataToBitmap(dwBitCount, dwWidth, dwHeight, pbInput, dwImageSize, pbBuffer, cbBuffer, &cbResult, pFlip) < 0) {
