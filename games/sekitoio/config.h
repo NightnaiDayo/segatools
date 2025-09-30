@@ -11,7 +11,6 @@ struct sekito_kb_config {
     uint8_t vk_stratagem;
     uint8_t vk_stratagem_lock;
     uint8_t vk_hougu;
-    uint8_t vk_ryuuha;
 
     uint8_t vk_tenkey_0;
     uint8_t vk_tenkey_1;
@@ -26,15 +25,13 @@ struct sekito_kb_config {
     uint8_t vk_tenkey_clear;
     uint8_t vk_tenkey_enter;
 
-    uint8_t vk_vol_down;
-    uint8_t vk_vol_up;
-
     uint8_t vk_terminal_up;
     uint8_t vk_terminal_right;
     uint8_t vk_terminal_down;
     uint8_t vk_terminal_left;
     uint8_t vk_terminal_left_2;
     uint8_t vk_terminal_right_2;
+    uint8_t vk_terminal_reserve;
     uint8_t vk_terminal_cancel;
     uint8_t vk_terminal_decide;
 

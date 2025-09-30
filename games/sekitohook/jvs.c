@@ -51,6 +51,7 @@ HRESULT sekito_jvs_init(struct jvs_node** out) {
 }
 
 void sekito_jvs_set_terminal(bool is_terminal) {
+    dprintf("JVS I/O: Terminal: %d\n", is_terminal);
     io_is_terminal = is_terminal;
 }
 
@@ -185,36 +186,41 @@ static void sekito_jvs_read_switches(void* ctx, struct io3_switch_state* out) {
 
     if (io_is_terminal) {
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_CANCEL) {
-            out->p2 |= 1 << 0;
+            out->p2 |= 1 << 8;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_DECIDE) {
-            out->p2 |= 1 << 1;
+            out->p2 |= 1 << 9;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_LEFT) {
-            out->p1 |= 1 << 3;
+            out->p1 |= 1 << 11;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_UP) {
-            out->p1 |= 1 << 5;
+            out->p1 |= 1 << 13;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_RIGHT) {
-            out->p1 |= 1 << 2;
+            out->p1 |= 1 << 10;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_DOWN) {
-            out->p1 |= 1 << 4;
+            out->p1 |= 1 << 12;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_LEFT_2) {
-            out->p2 |= 1 << 3;
+            out->p2 |= 1 << 11;
         }
 
         if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_RIGHT_2) {
-            out->p2 |= 1 << 2;
+            out->p2 |= 1 << 10;
         }
+
+        if (gamebtn & SEKITO_IO_GAMEBTN_TERMINAL_RESERVE) {
+            out->p2 |= 1 << 3;
+        }
+
     }
 
 }

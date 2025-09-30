@@ -1,5 +1,5 @@
 @echo off
-set SEGATOOLS_CONFIG_PATH=.\segatools_satellite.ini
+set SEGATOOLS_CONFIG_PATH=.\segatools_terminal.ini
 
 pushd %~dp0
 

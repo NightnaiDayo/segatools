@@ -4,18 +4,18 @@
     Devices
 
     USB:    837-14572 "Type 3" I/O Board
-    COM12:  Aime
+    COM12:  837-15084 "Gen 2" Aime Reader
 
     [Satellite]
 
-    USB:    Printer
+    USB:    Sinfonia CHC-C320 Printer
     COM1:   837-15093-06 LED Controller Board
     COM10:  601-13160-01 "Flat Panel Reader" Y3CR BD SIE F720MM Board
     COM11:  Printer Camera
 
     [Terminal]
 
-    COM1:   Aime
+    COM1:   837-15084 "Gen 2" Aime Reader
     COM11:  837-15093-06 LED Controller Board
 */
 
@@ -106,7 +106,7 @@ static DWORD CALLBACK sekito_pre_startup(void)
         goto fail;
     }
 
-    // LED: terminal uses COM 11 and satellite use COM 2
+    // LED: terminal uses COM 11 and satellite use COM 1
     unsigned int led_port_no[2] = {is_terminal ? 11 : 1, 0};
 
     hr = sekito_dll_init(&sekito_hook_cfg.dll, sekito_hook_mod);
@@ -122,7 +122,7 @@ static DWORD CALLBACK sekito_pre_startup(void)
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 12, 3,
+    hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 12, 2,
         sekito_hook_mod);
 
     if (FAILED(hr)) {
@@ -130,14 +130,12 @@ static DWORD CALLBACK sekito_pre_startup(void)
     }
 
     if (is_terminal) {
-
-        hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 1, 3,
+        hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 1, 2,
             sekito_hook_mod);
 
         if (FAILED(hr)) {
             goto fail;
         }
-
     }
 
     sekito_jvs_set_terminal(is_terminal);
@@ -146,6 +144,7 @@ static DWORD CALLBACK sekito_pre_startup(void)
     if (FAILED(hr)) {
         goto fail;
     }
+
     hr = amvideo_hook_init(&sekito_hook_cfg.amvideo, sekito_hook_mod);
 
     if (FAILED(hr)) {

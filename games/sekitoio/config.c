@@ -18,7 +18,6 @@ void sekito_kb_config_load(
     cfg->vk_stratagem = GetPrivateProfileIntW(L"keyboard", L"stratagem", 'D', filename);
     cfg->vk_stratagem_lock = GetPrivateProfileIntW(L"keyboard", L"stratagem_lock", 'F', filename);
     cfg->vk_hougu = GetPrivateProfileIntW(L"keyboard", L"hougu", 'G', filename);
-    cfg->vk_ryuuha = GetPrivateProfileIntW(L"keyboard", L"ryuuha", 'H', filename);
 
     cfg->vk_tenkey_0 = GetPrivateProfileIntW(L"keyboard", L"tenkey_0", VK_NUMPAD0, filename);
     cfg->vk_tenkey_1 = GetPrivateProfileIntW(L"keyboard", L"tenkey_1", VK_NUMPAD1, filename);
@@ -33,9 +32,6 @@ void sekito_kb_config_load(
     cfg->vk_tenkey_clear = GetPrivateProfileIntW(L"keyboard", L"tenkey_clear", VK_DECIMAL, filename);
     cfg->vk_tenkey_enter = GetPrivateProfileIntW(L"keyboard", L"tenkey_enter", VK_RETURN, filename);
 
-    cfg->vk_vol_down = GetPrivateProfileIntW(L"keyboard", L"vol_down", VK_NEXT, filename);
-    cfg->vk_vol_up = GetPrivateProfileIntW(L"keyboard", L"vol_up", VK_PRIOR, filename);
-
     cfg->vk_terminal_decide = GetPrivateProfileIntW(L"keyboard", L"decide", 'A', filename);
     cfg->vk_terminal_cancel = GetPrivateProfileIntW(L"keyboard", L"cancel", 'S', filename);
     cfg->vk_terminal_up = GetPrivateProfileIntW(L"keyboard", L"up", VK_UP, filename);
@@ -44,6 +40,7 @@ void sekito_kb_config_load(
     cfg->vk_terminal_left = GetPrivateProfileIntW(L"keyboard", L"left", VK_LEFT, filename);
     cfg->vk_terminal_left_2 = GetPrivateProfileIntW(L"keyboard", L"left2", 'Q', filename);
     cfg->vk_terminal_right_2 = GetPrivateProfileIntW(L"keyboard", L"right2", 'W', filename);
+    cfg->vk_terminal_reserve = GetPrivateProfileIntW(L"keyboard", L"reserve", 'E', filename);
 
     cfg->x_down = GetPrivateProfileIntW(L"keyboard", L"trackball_left", VK_LEFT, filename);
     cfg->x_up = GetPrivateProfileIntW(L"keyboard", L"trackball_right", VK_RIGHT, filename);

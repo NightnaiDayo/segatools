@@ -141,6 +141,10 @@ static void sekito_kb_get_gamebtns(uint32_t* gamebtn_out) {
         gamebtn |= SEKITO_IO_GAMEBTN_TERMINAL_RIGHT_2;
     }
 
+    if (GetAsyncKeyState(config.vk_terminal_reserve) & 0x8000) {
+        gamebtn |= SEKITO_IO_GAMEBTN_TERMINAL_RESERVE;
+    }
+
     *gamebtn_out = gamebtn;
 }
 
