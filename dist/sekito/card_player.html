@@ -120,9 +120,13 @@
 
     function fetch_next_card(){
         var p = cards[current_card_fetch].path;
-        if (!p.includes("_front")){
-            current_card_fetch++;
-            fetch_next_card();
+        if (p.includes("holo")){
+            if (++current_card_fetch >= cards.length){
+                document.getElementById("status").innerText = "Connected to "+game_id+".";
+                state = 3;
+            } else {
+                fetch_next_card();
+            }
             return;
         }
         send({
