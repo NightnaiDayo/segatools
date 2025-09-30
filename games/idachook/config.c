@@ -76,6 +76,13 @@ void indrun_config_load(
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"indrun", L"enable", 1, filename);
+    GetPrivateProfileStringW(
+        L"indrun",
+        L"spike",
+        L"",
+        cfg->patch_file,
+        _countof(cfg->patch_file),
+        filename);
 }
 
 void idac_hook_config_load(
