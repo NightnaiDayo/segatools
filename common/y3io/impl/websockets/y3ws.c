@@ -263,6 +263,8 @@ static void y3ws_handle(const char* input_data, uint32_t input_length, char* out
         dprintf("Y3WS: Invalid JSON received!\n");
         dprintf("Y3WS: Message was: %s\n", input_data);
         dprintf("Y3WS: Error at: %s\n", error_ptr);
+        y3ws_make_error_packet("Invalid JSON", output_data, output_size);
+        goto end;
     }
 
     const cJSON* ver = cJSON_GetObjectItemCaseSensitive(json, "version");
