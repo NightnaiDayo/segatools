@@ -105,6 +105,15 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
             L"rumbleDuration",
             1000,
             filename);
+
+    /* New: base damper fraction (user-adjustable, default 0.20) */
+    int base_damper_percent = GetPrivateProfileIntW(
+        L"dinput",
+        L"baseDamperFraction",
+        20,
+        filename);
+
+    cfg->ffb_base_damper_fraction = (double) base_damper_percent / 100.0;
 }
 
 void idac_xi_config_load(struct idac_xi_config *cfg, const wchar_t *filename)
