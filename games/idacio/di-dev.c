@@ -18,12 +18,11 @@ static IDirectInputEffect *idac_di_fx_rumble = NULL;
 static IDirectInputEffect *idac_di_fx_spring = NULL;
 static IDirectInputEffect *idac_di_fx_damper = NULL;
 
-/* FFB board scale */
+/* Max FFB Board value is 127 */
 static const double idac_di_ffb_scale = 127.0;
 
-/* Macro: get baseline damper fraction from config (default medium = 0.28) */
-#define BASE_DAMPER() (idac_di_cfg && idac_di_cfg->ffb_base_damper_fraction > 0.0 ? \
-                       idac_di_cfg->ffb_base_damper_fraction : 0.20)
+static float idac_di_base_damper = 0.20f;  // default baseline damper
+
 
 /* ------------------------------------------------------------
    Device init / poll / start
@@ -40,6 +39,11 @@ HRESULT idac_di_dev_init(
     idac_di_cfg = cfg;
     idac_di_dev = dev;
     idac_di_wnd = wnd;
+	
+	idac_di_base_damper =
+    (cfg->ffb_base_damper_fraction > 0.0f)
+        ? cfg->ffb_base_damper_fraction
+        : 0.20f;
 
     return S_OK;
 }
@@ -110,8 +114,10 @@ HRESULT idac_di_ffb_init(void)
 
 void idac_di_ffb_toggle(bool active)
 {
-    if (active) return;
-
+    if (active) {
+		return;
+	}
+	
     if (idac_di_fx_constant) {
         IDirectInputEffect_Stop(idac_di_fx_constant);
         IDirectInputEffect_Release(idac_di_fx_constant);
@@ -280,7 +286,11 @@ void idac_di_ffb_damper(uint8_t force)
     cond.lNegativeCoefficient = cond.lPositiveCoefficient;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
-    cond.lDeadBand = DI_FFNOMINALMAX / 50; /* small deadband ~2% */
+    LONG deadband_percent = idac_di_cfg->ffb_deadband;
+	if (deadband_percent > 100) deadband_percent = 100;  // clamp
+	cond.lDeadBand = (DI_FFNOMINALMAX * deadband_percent) / 100;  // e.g. 2 → 2%
+
+
 
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
@@ -321,7 +331,7 @@ void idac_di_ffb_damper(uint8_t force)
     cond.lOffset = 0;
 
     LONG nominal = (LONG)(((double)force / idac_di_ffb_scale) * (cfg_strength / 2));
-    LONG min_baseline = (LONG)(DI_FFNOMINALMAX * BASE_DAMPER());
+    LONG min_baseline = (LONG)(DI_FFNOMINALMAX * idac_di_base_damper);
 
     if (nominal < min_baseline) nominal = min_baseline;
 
@@ -353,15 +363,28 @@ void idac_di_ffb_damper(uint8_t force)
         }
     }
 
-    if (idac_di_fx_damper == NULL) {
-        IDirectInputEffect *damper_obj = NULL;
-        hr = IDirectInputDevice8_CreateEffect(idac_di_dev, &GUID_Damper, &fx, &damper_obj, NULL);
+if (idac_di_fx_damper == NULL) {
+    IDirectInputEffect *damper_obj = NULL;
+
+    hr = IDirectInputDevice8_CreateEffect(
+        idac_di_dev,
+        &GUID_Damper,
+        &fx,
+        &damper_obj,
+        NULL
+    );
+
+    if (SUCCEEDED(hr)) {
+        hr = IDirectInputEffect_Start(damper_obj, INFINITE, 0);
+
         if (SUCCEEDED(hr)) {
-            hr = IDirectInputEffect_Start(damper_obj, INFINITE, 0);
-            if (SUCCEEDED(hr)) idac_di_fx_damper = damper_obj;
-            else IDirectInputEffect_Release(damper_obj);
+            idac_di_fx_damper = damper_obj;
         } else {
-            dprintf("DirectInput: Create damper effect failed: %08x\n", (int)hr);
+            dprintf("DirectInput: Failed to start damper effect: %08x\n", (int)hr);
+            IDirectInputEffect_Release(damper_obj);
         }
-    }
+    } else {
+        dprintf("DirectInput: Create damper effect failed: %08x\n", (int)hr);
+		}
+	}
 }
