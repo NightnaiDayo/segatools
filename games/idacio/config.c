@@ -114,6 +114,13 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
         filename);
 
     cfg->ffb_base_damper_fraction = (double) base_damper_percent / 100.0;
+	
+	cfg->ffb_deadband = GetPrivateProfileIntW(
+			L"dinput",
+			L"deadband",
+			2,
+			filename);
+
 }
 
 void idac_xi_config_load(struct idac_xi_config *cfg, const wchar_t *filename)
