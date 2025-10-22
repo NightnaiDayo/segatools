@@ -18,55 +18,84 @@ void swdc_di_config_load(struct swdc_di_config *cfg, const wchar_t *filename)
 
     GetPrivateProfileStringW(
             L"dinput",
-            L"deviceName",
-            L"",
-            cfg->device_name,
-            _countof(cfg->device_name),
-            filename);
-
+			L"deviceName",
+			L"",
+			cfg->device_name,
+			_countof(cfg->device_name),
+			filename);
     GetPrivateProfileStringW(
-            L"dinput",
-            L"pedalsName",
-            L"",
-            cfg->pedals_name,
-            _countof(cfg->pedals_name),
-            filename);
-
+			L"dinput",
+			L"pedalsName",
+			L"",
+			cfg->pedals_name,
+			_countof(cfg->pedals_name),
+			filename);
     GetPrivateProfileStringW(
-            L"dinput",
-            L"brakeAxis",
-            L"RZ",
-            cfg->brake_axis,
-            _countof(cfg->brake_axis),
-            filename);
-
+			L"dinput",
+			L"brakeAxis",
+			L"RZ",
+			cfg->brake_axis,
+			_countof(cfg->brake_axis),
+			filename);
     GetPrivateProfileStringW(
-            L"dinput",
-            L"accelAxis",
-            L"Y",
-            cfg->accel_axis,
-            _countof(cfg->accel_axis),
-            filename);
+			L"dinput",
+			L"accelAxis",
+			L"Y",
+			cfg->accel_axis,
+			_countof(cfg->accel_axis),
+			filename);
 
-    cfg->start = GetPrivateProfileIntW(L"dinput", L"start", 0, filename);
-    cfg->view_chg = GetPrivateProfileIntW(L"dinput", L"viewChg", 0, filename);
-    cfg->paddle_left = GetPrivateProfileIntW(L"dinput", L"paddleLeft", 0, filename);
-    cfg->paddle_right = GetPrivateProfileIntW(L"dinput", L"paddleRight", 0, filename);
-    cfg->wheel_green = GetPrivateProfileIntW(L"dinput", L"wheelGreen", 0, filename);
-    cfg->wheel_red = GetPrivateProfileIntW(L"dinput", L"wheelRed", 0, filename);
-    cfg->wheel_blue = GetPrivateProfileIntW(L"dinput", L"wheelBlue", 0, filename);
-    cfg->wheel_yellow = GetPrivateProfileIntW(L"dinput", L"wheelYellow", 0, filename);
+    cfg->start = GetPrivateProfileIntW(
+				L"dinput",
+				L"start",
+				0,
+				filename);
+    cfg->view_chg = GetPrivateProfileIntW(
+				L"dinput",
+				L"viewChg",
+				0,
+				filename);
+    cfg->paddle_left = GetPrivateProfileIntW(
+				L"dinput",
+				L"paddleLeft",
+				0,
+				filename);
+    cfg->paddle_right = GetPrivateProfileIntW(
+				L"dinput",
+				L"paddleRight",
+				0,
+				filename);
+    cfg->wheel_green = GetPrivateProfileIntW(
+				L"dinput",
+				L"wheelGreen",
+				0,
+				filename);
+    cfg->wheel_red = GetPrivateProfileIntW(
+				L"dinput",
+				L"wheelRed",
+				0,
+				filename);
+    cfg->wheel_blue = GetPrivateProfileIntW(
+				L"dinput",
+				L"wheelBlue",
+				0,
+				filename);
+    cfg->wheel_yellow = GetPrivateProfileIntW(
+				L"dinput",
+				L"wheelYellow",
+				0,
+				filename);
 
     cfg->reverse_brake_axis = GetPrivateProfileIntW(
-                            L"dinput",
-                            L"reverseBrakeAxis",
-                            0,
-                            filename);
+				L"dinput",
+				L"reverseBrakeAxis",
+				0,
+				filename);
     cfg->reverse_accel_axis = GetPrivateProfileIntW(
-                            L"dinput",
-                            L"reverseAccelAxis",
-                            0,
-                            filename);
+				L"dinput",
+				L"reverseAccelAxis",
+				0,
+				filename);
 
     // FFB configuration
     cfg->ffb_constant_force_strength = GetPrivateProfileIntW(
@@ -92,14 +121,22 @@ void swdc_di_config_load(struct swdc_di_config *cfg, const wchar_t *filename)
             L"rumbleDuration",
             1000,
             filename);
-            
-    // --- Base damper fraction as percentage (whole number) ---
+
+    /* New: base damper fraction (user-adjustable, default 0.20) */
     int base_damper_percent = GetPrivateProfileIntW(
-            L"dinput",
-			L"baseDamperFraction",
-			20,
+        L"dinput",
+        L"baseDamperFraction",
+        20,
+        filename);
+
+    cfg->ffb_base_damper_fraction = (double) base_damper_percent / 100.0;
+	
+	cfg->ffb_deadband = GetPrivateProfileIntW(
+			L"dinput",
+			L"deadband",
+			2,
 			filename);
-    cfg->ffb_base_damper_fraction = (double)base_damper_percent / 100.0;
+
 }
 
 void swdc_xi_config_load(struct swdc_xi_config *cfg, const wchar_t *filename)
@@ -118,13 +155,13 @@ void swdc_xi_config_load(struct swdc_xi_config *cfg, const wchar_t *filename)
                            L"linearSteering",
                            0,
                            filename);
-    
+
     cfg->left_stick_deadzone = GetPrivateProfileIntW(
-                               L"xinput",
-                               L"leftStickDeadzone",
-                               7849,
-                               filename);
-    
+                                L"xinput",
+                                L"leftStickDeadzone",
+                                7849,
+                                filename);
+        
     cfg->right_stick_deadzone = GetPrivateProfileIntW(
                                 L"xinput",
                                 L"rightStickDeadzone",
@@ -137,18 +174,34 @@ void swdc_io_config_load(struct swdc_io_config *cfg, const wchar_t *filename)
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    cfg->vk_test = GetPrivateProfileIntW(L"io4", L"test", VK_F1, filename);
-    cfg->vk_service = GetPrivateProfileIntW(L"io4", L"service", VK_F2, filename);
-    cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", VK_F3, filename);
-    cfg->restrict_ = GetPrivateProfileIntW(L"io4", L"restrict", 128, filename);
+    cfg->vk_test    = GetPrivateProfileIntW(
+					L"io4",
+					L"test",
+					VK_F1,
+					filename);
+    cfg->vk_service = GetPrivateProfileIntW(
+					L"io4",
+					L"service",
+					VK_F2,
+					filename);
+    cfg->vk_coin    = GetPrivateProfileIntW(
+					L"io4",
+					L"coin",
+					VK_F3,
+					filename);
+    cfg->restrict_  = GetPrivateProfileIntW(
+					L"io4",
+					L"restrict",
+					128,
+					filename);
 
     GetPrivateProfileStringW(
-            L"io4",
-            L"mode",
-            L"xinput",
-            cfg->mode,
-            _countof(cfg->mode),
-            filename);
+				L"io4",
+				L"mode",
+				L"xinput",
+				cfg->mode,
+				_countof(cfg->mode),
+				filename);
 
     swdc_di_config_load(&cfg->di, filename);
     swdc_xi_config_load(&cfg->xi, filename);
