@@ -110,6 +110,16 @@ static BOOL WINAPI hook_MoveFileW(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName);
 
+static BOOL WINAPI hook_CopyFileA(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists);
+
+static BOOL WINAPI hook_CopyFileW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists);
+
 static BOOL WINAPI hook_MoveFileExA(
         const char *lpExistingFileName,
         const char *lpNewFileName,
@@ -253,6 +263,16 @@ static BOOL (WINAPI *next_MoveFileW)(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName);
 
+static BOOL (WINAPI *next_CopyFileA)(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists);
+
+static BOOL (WINAPI *next_CopyFileW)(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists);
+
 static BOOL (WINAPI *next_MoveFileExA)(
         const char *lpExistingFileName,
         const char *lpNewFileName,
@@ -386,6 +406,14 @@ static const struct hook_symbol path_hook_syms[] = {
         .name   = "MoveFileW",
         .patch  = hook_MoveFileW,
         .link   = (void **) &next_MoveFileW,
+    }, {
+        .name   = "CopyFileA",
+        .patch  = hook_CopyFileA,
+        .link   = (void **) &next_CopyFileA,
+    }, {
+        .name   = "CopyFileW",
+        .patch  = hook_CopyFileW,
+        .link   = (void **) &next_CopyFileW,
     }, {
         .name   = "MoveFileExA",
         .patch  = hook_MoveFileExA,
@@ -1128,6 +1156,75 @@ static BOOL WINAPI hook_MoveFileW(
     ok = next_MoveFileW(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+
+static BOOL WINAPI hook_CopyFileA(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists)
+{
+    char *oldTrans;
+    char *newTrans;
+    BOOL ok;
+
+    ok = path_transform_a(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_a(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileA(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        bFailIfExists);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+static BOOL WINAPI hook_CopyFileW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists)
+{
+    wchar_t *oldTrans;
+    wchar_t *newTrans;
+    BOOL ok;
+
+    ok = path_transform_w(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_w(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileW(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        bFailIfExists);
 
     free(oldTrans);
     free(newTrans);
