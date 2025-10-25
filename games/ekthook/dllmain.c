@@ -18,6 +18,7 @@
     COM3:   837-15093-06 LED Controller Board
 */
 
+#include <stdio.h>
 #include <windows.h>
 
 #include <stdlib.h>
@@ -34,6 +35,7 @@
 
 #include "ekthook/config.h"
 #include "ekthook/io4.h"
+#include "hooklib/createprocess.h"
 #include "hooklib/printer_cx.h"
 
 #include "platform/platform.h"
@@ -51,6 +53,7 @@ static struct ekt_hook_config ekt_hook_cfg;
 
 static void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
     netenv_hook_apply_hooks(hmodule);
+    createprocess_hook_apply_hooks(hmodule);
 }
 
 static DWORD CALLBACK ekt_pre_startup(void)
@@ -68,6 +71,10 @@ static DWORD CALLBACK ekt_pre_startup(void)
 
     dvd_hook_init(&ekt_hook_cfg.dvd, ekt_hook_mod);
     serial_hook_init();
+
+    wchar_t video_path_hook[MAX_PATH];
+    swprintf(video_path_hook, MAX_PATH, L"file createnew %ls\\SDGY\\EtUpload\\live\\video_0.ts 524288", ekt_hook_cfg.platform.vfs.appdata);
+    createprocess_push_hook_w(L"fsutil", L"", video_path_hook, true);
 
     /* Hook external DLL APIs */
 
