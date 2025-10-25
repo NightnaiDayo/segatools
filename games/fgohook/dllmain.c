@@ -143,7 +143,7 @@ static DWORD CALLBACK fgo_pre_startup(void)
         goto fail;
     }
 
-    hr = createprocess_push_hook_a("am/amdaemon.exe", "inject -d -k fgohook.dll ", "", false);
+    hr = createprocess_push_hook_a("am/amdaemon.exe", "inject -d -k fgohook.dll ", "", false, false);
 
     if (FAILED(hr)) {
         goto fail;

@@ -11,6 +11,7 @@
 
 #include "hooklib/createprocess.h"
 
+#include "path.h"
 #include "hook/procaddr.h"
 #include "util/dprintf.h"
 
@@ -109,7 +110,7 @@ static size_t process_nsyms_w = 0;
 
 static CRITICAL_SECTION createproc_lock;
 
-HRESULT createprocess_push_hook_w(const wchar_t *name, const wchar_t *head, const wchar_t *tail, bool replace_all) {
+HRESULT createprocess_push_hook_w(const wchar_t *name, const wchar_t *head, const wchar_t *tail, bool replace_all, bool replace_paths) {
     struct process_hook_sym_w *new_mem;
     struct process_hook_sym_w *new_proc;
     HRESULT hr;
@@ -136,6 +137,7 @@ HRESULT createprocess_push_hook_w(const wchar_t *name, const wchar_t *head, cons
     new_proc->head = head;
     new_proc->tail = tail;
     new_proc->replace_all = replace_all;
+    new_proc->replace_paths = replace_paths;
 
     process_syms_w = new_mem;
     process_nsyms_w++;
@@ -144,7 +146,7 @@ HRESULT createprocess_push_hook_w(const wchar_t *name, const wchar_t *head, cons
     return S_OK;
 }
 
-HRESULT createprocess_push_hook_a(const char *name, const char *head, const char *tail, bool replace_all) {
+HRESULT createprocess_push_hook_a(const char *name, const char *head, const char *tail, bool replace_all, bool replace_paths) {
     struct process_hook_sym_a *new_mem;
     struct process_hook_sym_a *new_proc;
 
@@ -171,6 +173,7 @@ HRESULT createprocess_push_hook_a(const char *name, const char *head, const char
     new_proc->head = head;
     new_proc->tail = tail;
     new_proc->replace_all = replace_all;
+    new_proc->replace_paths = replace_paths;
 
     process_syms_a = new_mem;
     process_nsyms_a++;
@@ -305,6 +308,12 @@ BOOL my_ShellExecuteExA(SHELLEXECUTEINFOA *pExecInfo) {
         if (!process_syms_a[i].replace_all) {
             strcat_s(new_args, MAX_PATH, pExecInfo->lpParameters);
         }
+        if (process_syms_a[i].replace_paths) {
+            char result[MAX_PATH];
+            if (path_transform_args_a(pExecInfo->lpParameters, ' ', result, MAX_PATH)) {
+                strcat_s(new_args, MAX_PATH, result);
+            }
+        }
 
         if (process_syms_a[i].tail != NULL) {
             strcat_s(new_args, MAX_PATH, process_syms_a[i].tail);
@@ -329,6 +338,12 @@ BOOL my_ShellExecuteExW(SHELLEXECUTEINFOW *pExecInfo) {
 
         if (!process_syms_w[i].replace_all) {
             wcscat_s(new_args, MAX_PATH, pExecInfo->lpParameters);
+        }
+        if (process_syms_w[i].replace_paths) {
+            wchar_t result[MAX_PATH];
+            if (path_transform_args_w(pExecInfo->lpParameters, ' ', result, MAX_PATH)) {
+                wcscat_s(new_args, MAX_PATH, result);
+            }
         }
 
         if (process_syms_w[i].tail != NULL) {

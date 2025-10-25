@@ -16,7 +16,6 @@
 /* Helpers */
 
 static void path_hook_init(void);
-static BOOL path_transform_a(char **out, const char *src);
 
 /* API hooks */
 
@@ -510,7 +509,7 @@ void path_hook_insert_hooks(HMODULE target)
             _countof(path_hook_syms));
 }
 
-static BOOL path_transform_a(char **out, const char *src)
+BOOL path_transform_a(char **out, const char *src)
 {
     wchar_t *src_w;
     size_t src_c;
@@ -1434,4 +1433,176 @@ static DWORD WINAPI hook_GetPrivateProfileSectionW(
     }
 
     return next_GetPrivateProfileSectionW(lpAppName, lpReturnedString, nSize, trans ? trans: lpFileName);
+}
+
+char** str_split_a(char* a_str, const char a_delim) {
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+BOOL path_transform_args_a(const char* str, char delimiter, char* buf, size_t size) {
+    assert(str != NULL);
+    assert(buf != NULL);
+
+    if (size <= 0) {
+        return FALSE;
+    }
+
+    char* copy = strdup(str);
+    char** tokens = str_split_a(copy, delimiter);
+    char *trans;
+    BOOL ok;
+    BOOL failed = FALSE;
+
+    strcpy(buf, "");
+
+    if (tokens) {
+        int j;
+        for (j = 0; *(tokens + j); j++) {
+            ok = path_transform_a(&trans, *(tokens + j));
+            free(*(tokens + j));
+            if (ok) {
+                strcat_s(buf, size, trans ? trans : *(tokens+j));
+                if (*(tokens + j + 1)) {
+                    strcat_s(buf, size, " ");
+                }
+                free(trans);
+            } else {
+                failed = true;
+            }
+        }
+        free(tokens);
+    }
+
+    free(copy);
+
+    return !failed;
+}
+
+wchar_t** str_split_w(wchar_t* a_str, const wchar_t a_delim) {
+    wchar_t** result    = 0;
+    size_t count     = 0;
+    wchar_t* tmp        = a_str;
+    wchar_t* last_comma = 0;
+    wchar_t delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + wcslen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(wchar_t*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        wchar_t* token = wcstok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = wcsdup(token);
+            token = wcstok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+BOOL path_transform_args_w(const wchar_t* str, wchar_t delimiter, wchar_t* buf, size_t size) {
+    assert(str != NULL);
+    assert(buf != NULL);
+
+    if (size <= 0) {
+        return FALSE;
+    }
+
+    wchar_t* copy = wcsdup(str);
+    wchar_t** tokens = str_split_w(copy, delimiter);
+    wchar_t *trans;
+    BOOL ok;
+    BOOL failed = FALSE;
+
+    wcscpy(buf, L"");
+
+    if (tokens) {
+        int j;
+        for (j = 0; *(tokens + j); j++) {
+            ok = path_transform_w(&trans, *(tokens + j));
+            if (ok) {
+                wcscat_s(buf, size, trans ? trans : *(tokens+j));
+                if (*(tokens + j + 1)) {
+                    wcscat_s(buf, size, L" ");
+                }
+                free(trans);
+            } else {
+                failed = true;
+            }
+            free(*(tokens + j));
+        }
+        free(tokens);
+    }
+
+    free(copy);
+
+    return !failed;
 }

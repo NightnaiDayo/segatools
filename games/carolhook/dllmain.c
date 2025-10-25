@@ -156,7 +156,7 @@ static DWORD CALLBACK carol_pre_startup(void)
         goto fail;
     }
     
-    hr = createprocess_push_hook_a(".\\15312firm\\firmupdate_1113.exe", "inject -d -k carolhook.dll ", NULL, false);
+    hr = createprocess_push_hook_a(".\\15312firm\\firmupdate_1113.exe", "inject -d -k carolhook.dll ", NULL, false, false);
     
     if (FAILED(hr)) {
         goto fail;

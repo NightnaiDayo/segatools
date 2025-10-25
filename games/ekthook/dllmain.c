@@ -72,9 +72,7 @@ static DWORD CALLBACK ekt_pre_startup(void)
     dvd_hook_init(&ekt_hook_cfg.dvd, ekt_hook_mod);
     serial_hook_init();
 
-    wchar_t video_path_hook[MAX_PATH];
-    swprintf(video_path_hook, MAX_PATH, L"file createnew %ls\\SDGY\\EtUpload\\live\\video_0.ts 524288", ekt_hook_cfg.platform.vfs.appdata);
-    createprocess_push_hook_w(L"fsutil", L"", video_path_hook, true);
+    createprocess_push_hook_w(L"fsutil", L"", L"", true, true);
 
     /* Hook external DLL APIs */
 
