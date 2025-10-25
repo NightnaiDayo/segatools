@@ -136,7 +136,7 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
 
     cfg->ffb_deadband = wcstof(value, NULL);
 
-    // Clamp to safe range 0–10%
+    // Clamp to safe range 0-10%
     if (cfg->ffb_deadband < 0.0f)
         cfg->ffb_deadband = 0.0f;
     else if (cfg->ffb_deadband > 10.0f)
