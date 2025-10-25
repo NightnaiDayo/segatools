@@ -18,6 +18,8 @@
     COM3:   837-15093-06 LED Controller Board
 */
 
+#include <assert.h>
+#include <shlwapi.h>
 #include <stdio.h>
 #include <windows.h>
 
@@ -46,6 +48,7 @@
 #include "util/env.h"
 #include "hooklib/y3-dll.h"
 #include "hooklib/y3.h"
+#include "util/lib.h"
 
 static HMODULE ekt_hook_mod;
 static process_entry_t ekt_startup;
@@ -54,6 +57,33 @@ static struct ekt_hook_config ekt_hook_cfg;
 static void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
     netenv_hook_apply_hooks(hmodule);
     createprocess_hook_apply_hooks(hmodule);
+}
+
+static void check_and_display_warning(void) {
+    wchar_t *module_path;
+    wchar_t *file_name;
+
+    module_path = module_file_name(NULL);
+
+    if (module_path != NULL) {
+        file_name = PathFindFileNameW(module_path);
+
+        free(module_path);
+        module_path = NULL;
+
+        _wcslwr(file_name);
+
+        if (wcsstr(file_name, L"ekt.exe") != NULL) {
+            wchar_t recording_flag_path[MAX_PATH];
+            PathCombineW(recording_flag_path, ekt_hook_cfg.platform.vfs.appdata, L"recording_warning_seen");
+            if (!PathFileExistsW(recording_flag_path)) {
+                if (MessageBoxW(NULL, L"This game has an ability during battle to record and upload your entire desktop content (including other windows, task bar, browsers, etc.)\n\nMake sure you trust the server you are playing on.\n\nThis message will not be shown again.", L"Segatools Privacy Warning", MB_ICONWARNING | MB_OKCANCEL) != IDOK) {
+                    ExitProcess(0);
+                }
+                CreateFileW(recording_flag_path, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_NEW, 0, NULL);
+            }
+        }
+    }
 }
 
 static DWORD CALLBACK ekt_pre_startup(void)
@@ -66,6 +96,9 @@ static DWORD CALLBACK ekt_pre_startup(void)
     /* Load config */
 
     ekt_hook_config_load(&ekt_hook_cfg, get_config_path());
+
+    /* Recording warning */
+    check_and_display_warning();
 
     /* Hook Win32 APIs */
 
