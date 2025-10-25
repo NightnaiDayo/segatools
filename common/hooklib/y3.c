@@ -347,12 +347,6 @@ uint32_t CALL API_GetLastError(int* hDevice) {
 uint32_t CALL API_GetErrorMessage(uint32_t errNo, char* szMessage,
                                   int numBytes) {
     dprintf("Y3: %s\n", __func__);
-    if (!y3_config.enable) {
-        strcpy_s(szMessage, numBytes,
-                 "Y3Emu is disabled but emulator DLL is called");
-    } else {
-        strcpy_s(szMessage, numBytes, "No error - Y3Emu");
-    }
     return 0;
 }
 

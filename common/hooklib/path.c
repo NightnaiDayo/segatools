@@ -1550,16 +1550,18 @@ wchar_t** str_split_w(wchar_t* a_str, const wchar_t a_delim) {
 
     result = malloc(sizeof(wchar_t*) * count);
 
+    wchar_t* pt;
+
     if (result)
     {
         size_t idx  = 0;
-        wchar_t* token = wcstok(a_str, delim);
+        wchar_t* token = wcstok_s(a_str, delim, &pt);
 
         while (token)
         {
             assert(idx < count);
             *(result + idx++) = wcsdup(token);
-            token = wcstok(0, delim);
+            token = wcstok_s(0, delim, &pt);
         }
         assert(idx == count - 1);
         *(result + idx) = 0;

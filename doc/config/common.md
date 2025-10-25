@@ -626,6 +626,10 @@ Path to the storage file for SRAM emulation.
 
 Configure Windows path redirection hooks.
 
+All of these paths can have a path-part prepended to them by setting the environment variable
+`SEGATOOLS_VFS_RELATIVE_PATH`. This will only apply if the path set in the configuration is relative. Absolute parts are
+not touched.
+
 ### `enable`
 
 Default: `1`

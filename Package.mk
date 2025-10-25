@@ -260,9 +260,7 @@ $(BUILD_DIR_ZIP)/ekt.zip:
 	$(V)echo ... $@
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/ekt
 	$(V)mkdir -p $(BUILD_DIR_ZIP)/ekt/DEVICE
-	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
-		$(BUILD_DIR_GAMES_64)/ekthook/ekthook.dll \
-		$(DIST_DIR)/ekt/segatools_terminal.ini \
+	$(V)cp $(DIST_DIR)/ekt/segatools_terminal.ini \
 		$(DIST_DIR)/ekt/segatools_satellite.ini \
 		$(DIST_DIR)/ekt/launch_terminal.bat \
 		$(DIST_DIR)/ekt/launch_satellite.bat \
@@ -272,6 +270,14 @@ $(BUILD_DIR_ZIP)/ekt.zip:
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
     	$(BUILD_DIR_ZIP)/ekt/DEVICE
+	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_ZIP)/ekt/inject_x86.exe
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_ZIP)/ekt/inject_x64.exe
+	$(V)cp $(BUILD_DIR_GAMES_32)/ekthook/ekthook.dll \
+		$(BUILD_DIR_ZIP)/ekt/ekthook_x86.dll
+	$(V)cp $(BUILD_DIR_GAMES_64)/ekthook/ekthook.dll \
+		$(BUILD_DIR_ZIP)/ekt/ekthook_x64.dll
 	$(V)strip $(BUILD_DIR_ZIP)/ekt/*.{exe,dll}
 	$(V)cd $(BUILD_DIR_ZIP)/ekt ; zip -r ../ekt.zip *
 
@@ -293,8 +299,6 @@ $(BUILD_DIR_ZIP)/sekito.zip:
 		$(BUILD_DIR_ZIP)/sekito/inject_x86.exe
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_ZIP)/sekito/inject_x64.exe
-	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
-		$(BUILD_DIR_ZIP)/sekito/inject_x86.exe
 	$(V)cp $(BUILD_DIR_GAMES_32)/sekitohook/sekitohook.dll \
 		$(BUILD_DIR_ZIP)/sekito/sekitohook_x86.dll
 	$(V)cp $(BUILD_DIR_GAMES_64)/sekitohook/sekitohook.dll \
