@@ -111,11 +111,24 @@ void idz_di_config_load(struct idz_di_config *cfg, const wchar_t *filename)
 
     cfg->ffb_base_damper_fraction = (double) base_damper_percent / 100.0;
 	
-	cfg->ffb_deadband = GetPrivateProfileIntW(
-			L"dinput",
-			L"deadband",
-			2,
-			filename);		
+    // Read deadband (float for more precise adjustment)
+    wchar_t value[16];
+    GetPrivateProfileStringW(
+            L"dinput",
+            L"deadband",
+            L"2.0",       // default
+            value,
+            _countof(value),
+            filename);
+
+    cfg->ffb_deadband = wcstof(value, NULL);
+
+    // Clamp to safe range 0-10%
+    if (cfg->ffb_deadband < 0.0f)
+        cfg->ffb_deadband = 0.0f;
+    else if (cfg->ffb_deadband > 10.0f)
+        cfg->ffb_deadband = 10.0f;
+        		
 }
 
 void idz_xi_config_load(struct idz_xi_config *cfg, const wchar_t *filename)
