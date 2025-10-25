@@ -26,7 +26,7 @@ struct swdc_di_config {
     uint8_t  ffb_damper_strength;
     double   ffb_base_damper_fraction;   /* NEW: user-adjustable baseline stiffness (percent / 100.0) */
     uint32_t ffb_rumble_duration;
-	uint8_t ffb_deadband;  // deadband in whole percent (0-100)
+	float ffb_deadband;  // deadband in whole percent (0-100)
 
 };
 
