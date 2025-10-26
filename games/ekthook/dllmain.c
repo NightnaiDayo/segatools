@@ -60,8 +60,8 @@ static void unity_hook_callback(HMODULE hmodule, const wchar_t* p) {
 }
 
 static void check_and_display_warning(void) {
-    wchar_t *module_path;
-    wchar_t *file_name;
+    wchar_t* module_path;
+    wchar_t* file_name;
 
     module_path = module_file_name(NULL);
 
@@ -77,7 +77,10 @@ static void check_and_display_warning(void) {
             wchar_t recording_flag_path[MAX_PATH];
             PathCombineW(recording_flag_path, ekt_hook_cfg.platform.vfs.appdata, L"recording_warning_seen");
             if (!PathFileExistsW(recording_flag_path)) {
-                if (MessageBoxW(NULL, L"This game has an ability during battle to record and upload your entire desktop content (including other windows, task bar, browsers, etc.)\n\nMake sure you trust the server you are playing on.\n\nThis message will not be shown again.", L"Segatools Privacy Warning", MB_ICONWARNING | MB_OKCANCEL) != IDOK) {
+                if (MessageBoxW(
+                        NULL,
+                        L"This game has an ability during battle to record and upload your entire desktop content (including other windows, task bar, browsers, etc.)\n\nMake sure you trust the server you are playing on.\n\nThis message will not be shown again.",
+                        L"Segatools Privacy Warning", MB_ICONWARNING | MB_OKCANCEL) != IDOK) {
                     ExitProcess(0);
                 }
                 CreateFileW(recording_flag_path, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_NEW, 0, NULL);
@@ -96,9 +99,6 @@ static DWORD CALLBACK ekt_pre_startup(void)
     /* Load config */
 
     ekt_hook_config_load(&ekt_hook_cfg, get_config_path());
-
-    /* Recording warning */
-    check_and_display_warning();
 
     /* Hook Win32 APIs */
 
@@ -190,6 +190,9 @@ static DWORD CALLBACK ekt_pre_startup(void)
     spike_hook_init(get_config_path());
 
     dprintf("---  End  ekt_pre_startup ---\n");
+
+    /* Recording warning */
+    check_and_display_warning();
 
     /* Jump to EXE start address */
 
