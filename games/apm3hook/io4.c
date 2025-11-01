@@ -6,6 +6,7 @@
 
 #include "board/io4.h"
 
+#include "api/api.h"
 #include "apm3hook/apm3-dll.h"
 
 #include "util/dprintf.h"
@@ -56,11 +57,11 @@ static HRESULT apm3_io4_poll(void *ctx, struct io4_state *state)
     apm3_dll.get_opbtns(&opbtn);
     apm3_dll.get_gamebtns(&gamebtn);
 
-    if (opbtn & APM3_IO_OPBTN_TEST) {
+    if (opbtn & APM3_IO_OPBTN_TEST || api_get_and_clear_test()) {
         state->buttons[0] |= IO4_BUTTON_TEST;
     }
 
-    if (opbtn & APM3_IO_OPBTN_SERVICE) {
+    if (opbtn & APM3_IO_OPBTN_SERVICE || api_get_and_clear_service()) {
         state->buttons[0] |= IO4_BUTTON_SERVICE;
     }
 

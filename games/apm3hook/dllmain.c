@@ -17,6 +17,7 @@
 #include "io4.h"
 #include "mount.h"
 #include "video.h"
+#include "api/api.h"
 
 #include "hook/iohook.h"
 #include "hook/process.h"
@@ -134,6 +135,12 @@ static DWORD CALLBACK apm3_pre_startup(void)
     /* Initialize debug helpers */
 
     spike_hook_init(get_config_path());
+
+    hr = api_init(get_config_path());
+
+    if (FAILED(hr)) {
+        goto fail;
+    }
 
     dprintf("---  End  %s ---\n", __func__);
 
