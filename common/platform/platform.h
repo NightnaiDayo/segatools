@@ -14,6 +14,7 @@
 #include "platform/pcbid.h"
 #include "platform/vfs.h"
 #include "platform/system.h"
+#include "platform/openssl.h"
 
 struct platform_config {
     struct amvideo_config amvideo;
@@ -28,6 +29,7 @@ struct platform_config {
     struct nusec_config nusec;
     struct vfs_config vfs;
     struct system_config system;
+    struct openssl_config openssl;
 };
 
 HRESULT platform_hook_init(

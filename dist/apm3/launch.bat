@@ -17,8 +17,10 @@ if exist %tmp%\SequenceSetting.json (
 :BEGIN
 pushd %~dp0
 
+set DOORSTOP_DISABLE=TRUE
 qprocess amdaemon.exe > NUL
 IF %ERRORLEVEL% NEQ 0 start /min "AM Daemon" inject -d -k apm3hook.dll amdaemon.exe -c daemon_config\common.json daemon_config\server.json config_hook.json
+set DOORSTOP_DISABLE=
 
 REM Add "-screen-fullscreen 0 -popupWindow" if you want to run in windowed mode
 inject -d -k apm3hook.dll APMV3System -logFile output_log.txt

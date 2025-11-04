@@ -664,3 +664,20 @@ Enables the Thinca emulation. This will allow you to enable E-Money on compatibl
 Default: `1`
 
 Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.
+
+## `[openssl]`
+
+Configure the OpenSSL SHA extension bug hook.
+
+### `enable`
+
+Default: `1`
+
+Enables the OpenSSL hook to fix the SHA extension bug on Intel CPUs.
+
+### `override`
+
+Default: `0`
+
+Enables the override to always hook the OpenSSL env variable. By default the
+hook is only applied to Intel CPUs with the SHA extension present.

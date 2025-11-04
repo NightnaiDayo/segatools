@@ -14,6 +14,7 @@
 #include "platform/platform.h"
 #include "platform/vfs.h"
 #include "platform/system.h"
+#include "platform/openssl.h"
 
 HRESULT platform_hook_init(
         const struct platform_config *cfg,
@@ -89,6 +90,12 @@ HRESULT platform_hook_init(
     }
 
     hr = system_init(&cfg->system, &cfg->vfs);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    hr = openssl_hook_init(&cfg->openssl);
 
     if (FAILED(hr)) {
         return hr;

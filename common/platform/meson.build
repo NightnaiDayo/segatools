@@ -38,5 +38,7 @@ platform_lib = static_library(
         'vfs.h',
         'system.c',
         'system.h',
+        'openssl.c',
+        'openssl.h'
     ],
 )
