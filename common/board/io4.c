@@ -106,8 +106,8 @@ HRESULT io4_hook_init(
     const struct io4_config *cfg,
     const struct io4_ops *ops,
     void *ctx,
-    const wchar_t* window_name)
-{
+    const wchar_t* window_name,
+    const bool window_name_is_partial_match) {
     HRESULT hr;
 
     assert(cfg != NULL);
@@ -126,7 +126,7 @@ HRESULT io4_hook_init(
     }
 
     if (window_name != NULL && cfg->foreground_only) {
-        fgdet_init(window_name);
+        fgdet_init(window_name, window_name_is_partial_match);
     }
 
     io4_ops = ops;

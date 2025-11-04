@@ -9,6 +9,7 @@
 static HWND window_handle;
 static const wchar_t* window_title = NULL;
 static bool foreground_state = true;
+static bool partial_match;
 static wchar_t scanned_title[256];
 
 static HWND get_window(){
@@ -21,19 +22,26 @@ static HWND get_window(){
 	if (GetWindowTextW(hwnd, scanned_title, sizeof(scanned_title)) == 0) {
 	    return NULL;
 	}
-	if (wcsstr(scanned_title, window_title) == NULL){
-	    return NULL;
-	}
+    if (partial_match) {
+        if (wcsstr(scanned_title, window_title) == NULL) {
+            return NULL;
+        }
+    } else {
+        if (wcscmp(scanned_title, window_title) != 0) {
+            return NULL;
+        }
+    }
     dprintf("FG-Detect: Program window detected\n");
     window_handle = hwnd;
     return window_handle;
 }
 
-void fgdet_init(const wchar_t* wnd_title){
+void fgdet_init(const wchar_t* wnd_title, const bool wnd_partial_match) {
     assert(wnd_title != NULL);
 
     window_handle = NULL;
     window_title = wnd_title;
+    partial_match = wnd_partial_match;
     dprintf("FG-Detect: Searching for \"%ls\"\n", window_title);
 }
 
