@@ -44,6 +44,7 @@ void platform_config_load(struct platform_config *cfg, const wchar_t *filename)
     vfs_config_load(&cfg->vfs, filename);
     system_config_load(&cfg->system, filename);
     openssl_config_load(&cfg->openssl, filename);
+    ewf_config_load(&cfg->ewf, filename);
 }
 
 void amvideo_config_load(struct amvideo_config *cfg, const wchar_t *filename)
@@ -373,4 +374,12 @@ void openssl_config_load(struct openssl_config *cfg, const wchar_t *filename)
 
     cfg->enable = GetPrivateProfileIntW(L"openssl", L"enable", 1, filename);
     cfg->override = GetPrivateProfileIntW(L"openssl", L"override", 0, filename);
+}
+
+void ewf_config_load(struct ewf_config* cfg, const wchar_t* filename) {
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    cfg->enable = GetPrivateProfileIntW(L"ewf", L"enable", 0, filename);
+    cfg->full = GetPrivateProfileIntW(L"ewf", L"full", 0, filename);
 }

@@ -681,3 +681,31 @@ Default: `0`
 
 Enables the override to always hook the OpenSSL env variable. By default the
 hook is only applied to Intel CPUs with the SHA extension present.
+
+## `[ewf]`
+
+Configure Enhanced Write Filter / Unified Write Filter emulation.
+
+### `enable`
+
+Default: `0`
+
+Enables the EWF/UWF hook. This will cause anything the game writes to the following paths to become virtualized to
+reduce disk I/O:
+
+* C:\Users\AppUser\temp\alib.conf
+* C:\Users\AppUser\temp\cacert.pem
+* C:\Users\AppUser\temp\first_ar.conf
+* C:\Users\AppUser\temp\last_pras.log
+* C:\Users\AppUser\temp\last_shime.log
+* C:\Users\AppUser\temp\play_history.csv
+* and their equivalent Windows XP variants
+
+### `full`
+
+Default: `0`
+
+Enabling full virtualization will virtualize ALL writes to the C:\ drive. Using this setting is highly discouraged
+unless you know what you're doing!
+
+The Windows directory is always excluded from virtualization.
