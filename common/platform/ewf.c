@@ -362,6 +362,9 @@ static HRESULT ewf_handle_open(struct irp* irp) {
     } else if (irp->open_creation == CREATE_ALWAYS) {
         if (f != NULL) {
             SetLastError(ERROR_ALREADY_EXISTS);
+#if LOG_EWF
+            dprintf("EWF: File was truncated\n");
+#endif
             f->length = 0;
             free(f->data);
         } else {
@@ -379,6 +382,9 @@ static HRESULT ewf_handle_open(struct irp* irp) {
         }
     } else if (irp->open_creation == TRUNCATE_EXISTING) {
         if (f != NULL) {
+#if LOG_EWF
+            dprintf("EWF: File was truncated\n");
+#endif
             f->length = 0;
             free(f->data);
         } else {
@@ -411,14 +417,17 @@ static HRESULT ewf_handle_read(struct irp* irp, const struct ewf_real_handle* fi
     dprintf("EWF: Read %d/%d bytes from %ls\n", (int) n, (int) f->length, f->path);
 #endif
 
-    if (f->length == 0) {
+    if (n == 0) {
         return S_FALSE;
+    }
+    if (f->length == 0) {
+        return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
     }
 
     memcpy(irp->read.bytes, f->data, n);
-    irp->read.pos = n;
+    irp->read.pos += n;
 
-    return S_OK;
+    return n < irp->read.nbytes ? HRESULT_FROM_WIN32(ERROR_HANDLE_EOF) : S_OK;
 }
 
 static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_handle* file) {
