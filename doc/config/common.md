@@ -409,6 +409,12 @@ Default `1`
 
 Enable JVS port emulation. Disable to use the JVS port on a real AMEX.
 
+### `foreground`
+
+Default `0`
+
+Only enables input when the game's main window is focused. This does not work for all games.
+
 ## `[io4]`
 
 Configure emulation of the IO4 board. Same settings also apply to `[io3]`.

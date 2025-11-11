@@ -34,6 +34,7 @@
 
 #include "util/dprintf.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE diva_hook_mod;
 static process_entry_t diva_startup;
@@ -102,6 +103,10 @@ static DWORD CALLBACK diva_pre_startup(void)
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (diva_hook_cfg.amex.jvs.enable && diva_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"Hatsune Miku Project DIVA Arcade Future Tone", false);
     }
 
     /* Initialize debug helpers */

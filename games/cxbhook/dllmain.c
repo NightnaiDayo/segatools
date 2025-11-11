@@ -24,6 +24,7 @@
 
 #include "util/dprintf.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE cxb_hook_mod;
 static process_entry_t cxb_startup;
@@ -101,6 +102,10 @@ static DWORD CALLBACK cxb_pre_startup(void)
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (cxb_hook_cfg.revio.enable && cxb_hook_cfg.revio.foreground) {
+        fgdet_init(L"MT Framework", false);
     }
 
     hr = led_hook_init(&cxb_hook_cfg.led);

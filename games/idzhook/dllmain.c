@@ -41,6 +41,7 @@
 #include "util/dprintf.h"
 #include "util/lib.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE idz_hook_mod;
 static process_entry_t idz_startup;
@@ -134,6 +135,10 @@ static DWORD CALLBACK idz_pre_startup(void)
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (idz_hook_cfg.amex.jvs.enable && idz_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"Direct3D Window", false);
     }
 
     /* Initialize debug helpers */
