@@ -40,15 +40,20 @@ static const wchar_t default_paths[][MAX_PATH] = {
 /* Helper functions */
 #pragma region Helper functions
 
-static wchar_t* atow(const char* string) {
+static HRESULT atow(const char* string, wchar_t** result) {
     if (string == NULL) {
-        return NULL;
+        *result = NULL;
+        return S_FALSE;
     }
     const size_t n = strlen(string);
     wchar_t* widestring = malloc((n + 1) * sizeof(wchar_t));
+    if (widestring == NULL) {
+        return E_OUTOFMEMORY;
+    }
     mbstowcs_s(NULL, widestring, n + 1, string, n);
 
-    return widestring;
+    *result = widestring;
+    return S_OK;
 }
 
 static inline bool wprefix(const wchar_t* pre, const wchar_t* str) {
@@ -87,7 +92,7 @@ static BOOL ewf_needs_virtualization(const wchar_t* path) {
 }
 
 static struct ewf_virtual_file* ewf_get_virtual_file(HANDLE handle) {
-    HANDLE ret = NULL;
+    struct ewf_virtual_file* ret = NULL;
     EnterCriticalSection(&file_table_lock);
     for (int i = 0; i < EWF_MAX_VIRTUAL_FILES; i++) {
         if (virtual_file_table[i].virtual_handle == handle) {
@@ -123,7 +128,7 @@ static struct ewf_virtual_file* ewf_create_virtual_file(const wchar_t* path) {
         if (virtual_file_table[i].virtual_handle == NULL) {
             struct ewf_virtual_file* h = &virtual_file_table[i];
             h->virtual_handle = CreateFileA("NUL", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 0, NULL);
-            if (h->virtual_handle == NULL) {
+            if (h->virtual_handle == INVALID_HANDLE_VALUE) {
                 dprintf("EWF: Could not create handle: Failed to get NUL handle: %lx", GetLastError());
                 break;
             }
@@ -179,7 +184,7 @@ static struct ewf_real_handle* ewf_open_virtual_file(HANDLE virtual_handle) {
         if (handle_table[i].real_handle == NULL) {
             h = &handle_table[i];
             h->real_handle = CreateFileA("NUL", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 0, NULL);
-            if (h->real_handle == NULL) {
+            if (h->real_handle == INVALID_HANDLE_VALUE) {
                 dprintf("EWF: Could not create handle: Failed to get NUL handle: %lx", GetLastError());
                 break;
             }
@@ -478,9 +483,15 @@ static int __cdecl hook_stat64i32(
         return -1;
     }
 
-    wchar_t* wpath = atow(path);
+    wchar_t* wpath = NULL;
     wchar_t* trans;
     BOOL ok;
+
+    HRESULT result = atow(path, &wpath);
+    if (!SUCCEEDED(result)) {
+        _set_errno(ENOMEM);
+        return -1;
+    }
 
     ok = path_transform_w(&trans, wpath);
 
