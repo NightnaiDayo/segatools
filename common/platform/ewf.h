@@ -34,6 +34,8 @@ struct ewf_real_handle {
     HANDLE real_handle;
     // The virtual file the real handle points to.
     struct ewf_virtual_file* virtual_file;
+    // The current read offset.
+    size_t offset;
 };
 
 HRESULT ewf_hook_init(const struct ewf_config* config);

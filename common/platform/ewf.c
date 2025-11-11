@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 
 #include "hook/iohook.h"
@@ -17,6 +16,7 @@
 
 #include "hooklib/path.h"
 #include "util/dprintf.h"
+#include "util/dump.h"
 
 /* EWF hook */
 
@@ -127,9 +127,9 @@ static struct ewf_virtual_file* ewf_create_virtual_file(const wchar_t* path) {
     for (int i = 0; i < EWF_MAX_VIRTUAL_FILES; i++) {
         if (virtual_file_table[i].virtual_handle == NULL) {
             struct ewf_virtual_file* h = &virtual_file_table[i];
-            h->virtual_handle = CreateFileA("NUL", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 0, NULL);
-            if (h->virtual_handle == INVALID_HANDLE_VALUE) {
-                dprintf("EWF: Could not create handle: Failed to get NUL handle: %lx", GetLastError());
+            HRESULT hr = iohook_open_nul_fd(&h->virtual_handle);
+            if (!SUCCEEDED(hr)) {
+                dprintf("EWF: Could not create handle: Failed to get NUL handle: %lx", hr);
                 break;
             }
             dprintf("EWF: Created virtual file: %ls\n", path);
@@ -183,12 +183,13 @@ static struct ewf_real_handle* ewf_open_virtual_file(HANDLE virtual_handle) {
     for (int i = 0; i < EWF_MAX_HANDLES; i++) {
         if (handle_table[i].real_handle == NULL) {
             h = &handle_table[i];
-            h->real_handle = CreateFileA("NUL", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 0, NULL);
-            if (h->real_handle == INVALID_HANDLE_VALUE) {
-                dprintf("EWF: Could not create handle: Failed to get NUL handle: %lx", GetLastError());
+            HRESULT hr = iohook_open_nul_fd(&h->real_handle);
+            if (!SUCCEEDED(hr)) {
+                dprintf("EWF: Could not create handle: Failed to get NUL handle: %lx", hr);
                 break;
             }
             h->virtual_file = file;
+            h->offset = 0;
 #if LOG_EWF
             dprintf("EWF: Virtual file opened: %ls\n", file->path);
 #endif
@@ -273,7 +274,7 @@ static HRESULT ewf_handle_open(struct irp* irp);
 
 static HRESULT ewf_handle_close(const struct irp* irp, const struct ewf_real_handle* file);
 
-static HRESULT ewf_handle_read(struct irp* irp, const struct ewf_real_handle* file);
+static HRESULT ewf_handle_read(struct irp* irp, struct ewf_real_handle* handle);
 
 static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_handle* file);
 
@@ -325,7 +326,7 @@ HRESULT ewf_hook_init(const struct ewf_config* config) {
 static HRESULT ewf_handle_irp(struct irp* irp) {
     assert(irp != NULL);
 
-    const struct ewf_real_handle* h = NULL;
+    struct ewf_real_handle* h = NULL;
 
     if (irp->op == IRP_OP_OPEN) {
         if (!ewf_needs_virtualization(irp->open_filename)) {
@@ -411,28 +412,42 @@ static HRESULT ewf_handle_close(const struct irp* irp, const struct ewf_real_han
     return ewf_close_virtual_file(file->real_handle) ? S_OK : E_FAIL;
 }
 
-static HRESULT ewf_handle_read(struct irp* irp, const struct ewf_real_handle* file) {
+static HRESULT ewf_handle_read(struct irp* irp, struct ewf_real_handle* handle) {
     assert(irp != NULL);
-    assert(file != NULL);
+    assert(handle != NULL);
 
-    const struct ewf_virtual_file* f = file->virtual_file;
-    const size_t n = min(irp->read.nbytes, f->length);
+    const struct ewf_virtual_file* f = handle->virtual_file;
+    size_t pos = handle->offset;
+    size_t to_read = irp->read.nbytes;
+    size_t max = f->length;
 
-#if LOG_EWF
-    dprintf("EWF: Read %d/%d bytes from %ls\n", (int) n, (int) f->length, f->path);
-#endif
-
-    if (n == 0) {
-        return S_FALSE;
-    }
-    if (f->length == 0) {
+    if (pos > max || pos < 0) {
+        dprintf("EWF: Out-of-bounds read from %ls\n", f->path);
         return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
     }
+    if (max == 0 || pos >= max || to_read == 0) {
+#if LOG_EWF
+        dprintf("EWF: Zero read of %d at %d/%d from %ls\n", (int) to_read, (int) pos, (int) max, f->path);
+#endif
+        irp->read.pos = 0;
+        return S_FALSE;
+    }
 
-    memcpy(irp->read.bytes, f->data, n);
-    irp->read.pos += n;
+    if (pos + to_read > max) {
+        to_read = max - pos;
+    }
 
-    return n < irp->read.nbytes ? HRESULT_FROM_WIN32(ERROR_HANDLE_EOF) : S_OK;
+    memcpy(irp->read.bytes, f->data, to_read);
+    irp->read.pos = to_read;
+    handle->offset += to_read;
+
+#if LOG_EWF
+    dprintf("EWF: Read %d/%d bytes (offset %d, max %d) from %ls\n", (int) to_read, (int) irp->read.nbytes, (int) pos,
+            (int) f->length, f->path);
+    dump_iobuf(&irp->read);
+#endif
+
+    return S_OK;
 }
 
 static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_handle* file) {
@@ -442,10 +457,6 @@ static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_han
     struct ewf_virtual_file* f = file->virtual_file;
     const size_t n = irp->write.nbytes;
     const void* data = irp->write.bytes;
-
-#if LOG_EWF
-    dprintf("EWF: Write %d bytes to %ls\n", (int) n, f->path);
-#endif
 
     if (f->length == 0) {
         const size_t initial_buf = max(n, EWF_DEFAULT_FILE_BUFFER_SIZE);
@@ -469,6 +480,13 @@ static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_han
         return E_NOT_SUFFICIENT_BUFFER;
     }
     f->length += n;
+
+#if LOG_EWF
+    dprintf("EWF: Write %d bytes to %ls\n", (int) n, f->path);
+    dump_const_iobuf(&irp->write);
+    dprintf("EWF: File content (%d, allocated %d)\n", (int) f->length, (int) f->alloc_length);
+    dump(f->data, f->length);
+#endif
 
     return S_OK;
 }
