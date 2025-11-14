@@ -18,6 +18,7 @@
 #include "unityhook/hook.h"
 #include "util/dprintf.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE kemono_hook_mod;
 static process_entry_t kemono_startup;
@@ -101,6 +102,10 @@ static DWORD CALLBACK kemono_pre_startup(void) {
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (kemono_hook_cfg.amex.jvs.enable && kemono_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"Parade", false);
     }
 
     kemono_extra_hooks_init();

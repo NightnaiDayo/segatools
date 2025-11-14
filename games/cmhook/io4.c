@@ -10,20 +10,20 @@
 
 #include "util/dprintf.h"
 
-static HRESULT cm_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT cm_io4_poll(void* ctx, struct io4_state* state);
+
 static uint16_t coins;
 
 static const struct io4_ops cm_io4_ops = {
     .poll = cm_io4_poll,
 };
 
-HRESULT cm_io4_hook_init(const struct io4_config *cfg)
-{
+HRESULT cm_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(cm_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &cm_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &cm_io4_ops, NULL, L"MU3CardViewer", false);
 
     if (FAILED(hr)) {
         return hr;
@@ -32,8 +32,7 @@ HRESULT cm_io4_hook_init(const struct io4_config *cfg)
     return cm_dll.init();
 }
 
-static HRESULT cm_io4_poll(void *ctx, struct io4_state *state)
-{
+static HRESULT cm_io4_poll(void* ctx, struct io4_state* state) {
     uint8_t opbtn;
     HRESULT hr;
 

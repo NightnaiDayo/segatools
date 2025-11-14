@@ -6,6 +6,7 @@
 
 struct revio_config {
     bool enable;
+    bool foreground;
     uint8_t test;
     uint8_t service;
     uint8_t coin;

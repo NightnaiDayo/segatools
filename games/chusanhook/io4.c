@@ -16,32 +16,32 @@ struct chunithm_jvs_ir_mask {
 
 // Incorrect IR beam mappings retained for backward compatibility
 static const struct chunithm_jvs_ir_mask chunithm_jvs_ir_masks_v1[] = {
-    { 0, 1 << 13 },
-    { 1 << 13, 0 },
-    { 0, 1 << 12 },
-    { 1 << 12, 0 },
-    { 0, 1 << 11 },
-    { 1 << 11, 0 },
+    {0, 1 << 13},
+    {1 << 13, 0},
+    {0, 1 << 12},
+    {1 << 12, 0},
+    {0, 1 << 11},
+    {1 << 11, 0},
 };
 
 static const struct chunithm_jvs_ir_mask chunithm_jvs_ir_masks[] = {
-    { 1 << 13, 0 },
-    { 0, 1 << 13 },
-    { 1 << 12, 0 },
-    { 0, 1 << 12 },
-    { 1 << 11, 0 },
-    { 0, 1 << 11 },
+    {1 << 13, 0},
+    {0, 1 << 13},
+    {1 << 12, 0},
+    {0, 1 << 12},
+    {1 << 11, 0},
+    {0, 1 << 11},
 };
 
 static HRESULT chusan_io4_poll(void* ctx, struct io4_state* state);
+
 static uint16_t coins;
 
 static const struct io4_ops chusan_io4_ops = {
     .poll = chusan_io4_poll,
 };
 
-HRESULT chusan_io4_hook_init(const struct io4_config* cfg)
-{
+HRESULT chusan_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(chuni_dll.jvs_init != NULL);
@@ -50,19 +50,18 @@ HRESULT chusan_io4_hook_init(const struct io4_config* cfg)
     hr = chuni_dll.jvs_init();
 
     if (FAILED(hr)) {
-        dprintf("USB I/O: Backend error, I/O disconnected: %x\n", (int)hr);
+        dprintf("USB I/O: Backend error, I/O disconnected: %x\n", (int) hr);
 
         return hr;
     }
 
-    io4_hook_init(cfg, &chusan_io4_ops, NULL);
+    io4_hook_init(cfg, &chusan_io4_ops, NULL, L"teaGfx DirectX Release", false);
 
     return S_OK;
 }
 
-static HRESULT chusan_io4_poll(void* ctx, struct io4_state* state)
-{
-    const struct chunithm_jvs_ir_mask *masks;
+static HRESULT chusan_io4_poll(void* ctx, struct io4_state* state) {
+    const struct chunithm_jvs_ir_mask* masks;
     uint8_t opbtn;
     uint8_t beams;
     size_t i;

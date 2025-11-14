@@ -23,7 +23,7 @@ HRESULT apm3_io4_hook_init(const struct io4_config *cfg)
 
     assert(apm3_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &apm3_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &apm3_io4_ops, NULL, NULL, false); // can't use fgdet here because the main window closes
 
     if (FAILED(hr)) {
         return hr;

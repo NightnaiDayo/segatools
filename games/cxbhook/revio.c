@@ -14,6 +14,7 @@
 #include "hook/table.h"
 
 #include "util/dprintf.h"
+#include "util/fg-detect.h"
 
 static int my_cCommIo_Open(char *port);
 static int my_cCommIo_Close();
@@ -31,6 +32,7 @@ static int my_cCommIo_SetAmpMute(int amp_id, int a2);
 int amp_volume[] = {20, 20, 20};
 int last_triggers = 0;
 int last_is_mouse_down = false;
+int prev_out = 0;
 
 static struct hook_symbol revio_syms[] = {
     {
@@ -139,26 +141,32 @@ static int my_cCommIo_GetTrigger()
     uint16_t btns = 0;
     int out = 0;
 
-    cxb_dll.revio_poll(&btns);
+    fgdet_poll();
+    if (fgdet_in_foreground()) {
+        cxb_dll.revio_poll(&btns);
 
-    if (btns & 0x01) {
-        out |= 1 << 4; // test
-    }
+        if (btns & 0x01) {
+            out |= 1 << 4; // test
+        }
 
-    if (btns & 0x02) {
-        out |= 1 << 5; // service?
-    }
+        if (btns & 0x02) {
+            out |= 1 << 5; // service?
+        }
 
-    if (btns & 0x04) {
-        out |= 1 << 1; // up
-    }
+        if (btns & 0x04) {
+            out |= 1 << 1; // up
+        }
 
-    if (btns & 0x08) {
-        out |= 1 << 3; // down
-    }
+        if (btns & 0x08) {
+            out |= 1 << 3; // down
+        }
 
-    if (btns & 0x0F) {
-        out |= 1 << 2; // cancel
+        if (btns & 0x0F) {
+            out |= 1 << 2; // cancel
+        }
+        prev_out = out;
+    } else {
+        out = prev_out;
     }
     
     out &= ~last_triggers;
