@@ -27,7 +27,7 @@ HRESULT ekt_io4_hook_init(const struct io4_config *cfg, bool is_terminal)
 
     assert(ekt_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &ekt_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &ekt_io4_ops, NULL, L"ekt", false);
 
     io_is_terminal = is_terminal;
 

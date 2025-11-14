@@ -44,6 +44,7 @@
 #include "util/dprintf.h"
 #include "util/env.h"
 #include "hooklib/y3.h"
+#include "util/fg-detect.h"
 
 static HMODULE sekito_hook_mod;
 static process_entry_t sekito_startup;
@@ -149,6 +150,10 @@ static DWORD CALLBACK sekito_pre_startup(void)
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (sekito_hook_cfg.amex.jvs.enable && sekito_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"teaGfx DirectX Release", false);
     }
 
     /* Initialize debug helpers */
