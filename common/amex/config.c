@@ -73,6 +73,7 @@ void jvs_config_load(struct jvs_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"jvs", L"enable", 1, filename);
+    cfg->foreground = GetPrivateProfileIntW(L"jvs", L"foreground", 0, filename);
 }
 
 void sram_config_load(struct sram_config *cfg, const wchar_t *filename)

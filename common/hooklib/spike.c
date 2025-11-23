@@ -1,19 +1,16 @@
 #include <windows.h>
-
+#include <inttypes.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
-
+#include <psapi.h>
 #include "hook/pe.h"
-
 #include "hooklib/spike.h"
-
 #include "util/dprintf.h"
 
-static void spike_hook_read_config(const wchar_t *spike_file);
 
 /* Spike functions. Their "style" is named after the libc function they bear
    the closest resemblance to. */
@@ -92,37 +89,127 @@ static void spike_fn_perror(
     OutputDebugStringA(line);
 }
 
-/* Spike inserters */
-
-static void spike_insert_jmp(ptrdiff_t rva, void *proc)
+BOOL is_current_module_x64()
 {
-    uint8_t *base;
-    uint8_t *target;
-    uint8_t *func_ptr;
-    uint32_t delta;
+    HMODULE hModule = GetModuleHandleW(NULL);
+    MODULEINFO moduleInfo = {0};
+    if (!GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo,
+                              sizeof(moduleInfo))) {
+        return FALSE;
+    }
 
-    base = (uint8_t *) GetModuleHandleW(NULL);
+    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)moduleInfo.lpBaseOfDll;
+    PIMAGE_NT_HEADERS ntHeaders =
+        (PIMAGE_NT_HEADERS)((BYTE *)moduleInfo.lpBaseOfDll +
+                            dosHeader->e_lfanew);
 
-    target = base + rva;
-    func_ptr = proc;
-    delta = func_ptr - target - 4; /* -4: EIP delta, after end of target insn */
-
-    pe_patch(target, &delta, sizeof(delta));
+    if (ntHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64) {
+        return TRUE;  
+    } else if (ntHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386) {
+        return FALSE;  
+    } else {
+        return FALSE;  
+    }
 }
 
-static void spike_insert_ptr(ptrdiff_t rva, void *ptr)
-{
+BOOL is_valid_rva(LPCWSTR module_name, uintptr_t rva) {
+    HMODULE module_base = GetModuleHandleW(module_name);
+    if (!module_base) {
+        return false;
+    }
+    PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)module_base;
+    PIMAGE_NT_HEADERS nt_headers = (PIMAGE_NT_HEADERS)((uint8_t *)module_base + dos_header->e_lfanew);
+    DWORD module_size = nt_headers->OptionalHeader.SizeOfImage;
+    return (rva < module_size);
+}
+
+/* Spike inserters */
+
+static void spike_insert_jmp(LPCWSTR module_name, uintptr_t rva, void *proc) {
+    uint8_t *base = (uint8_t *)GetModuleHandleW(module_name);
+    if ( !(is_valid_rva(module_name, rva))) {
+        dprintf("spike: Invalid RVA 0x%llx for module %S\n", (unsigned long long)rva, module_name);
+        return;
+    }
+    uint8_t *target = base + rva;
+    uint8_t *func_ptr = (uint8_t *)proc;
+    uintptr_t target_addr = (uintptr_t)target;
+    uintptr_t func_addr = (uintptr_t)func_ptr;
+
+    if (is_current_module_x64()) {
+        uint64_t relativeOffset = (uint64_t)(func_addr - target_addr - 5);
+        uint8_t absoluteJump[] = {0x48, 0xB8, 0x00, 0x00, 0x00, 0x00,
+                                  0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0};
+        memcpy(absoluteJump + 2, &func_ptr, 8);
+        pe_patch(target, absoluteJump, sizeof(absoluteJump));
+    }
+    else {
+        uint32_t jumpOffset = (uint32_t)(func_addr - target_addr - 5);
+        uint8_t relativeJump[] = {0xE9, 0x00, 0x00, 0x00, 0x00};
+        memcpy(relativeJump + 1, &jumpOffset, 4);
+        pe_patch(target, relativeJump, sizeof(relativeJump));
+    }
+}
+
+static void spike_insert_ptr(LPCWSTR module_name, uintptr_t rva, void *ptr) {
     uint8_t *base;
     uint8_t *target;
-
-    base = (uint8_t *) GetModuleHandleW(NULL);
+    if (!(is_valid_rva(module_name, rva))) {
+        dprintf("spike: Invalid RVA 0x%llx for module %S\n", (unsigned long long)rva, module_name);
+        return;
+    }
+    base = (uint8_t *)GetModuleHandleW(module_name);
     target = base + rva;
 
     pe_patch(target, &ptr, sizeof(ptr));
 }
 
-static void spike_insert_log_levels(ptrdiff_t rva, size_t count)
-{
+static void spike_insert_nop(LPCWSTR module_name, uintptr_t rva, size_t count) {
+    uint8_t *base;
+    uint8_t *target;
+    uint8_t *value;
+    if (!(is_valid_rva(module_name, rva))) {
+        dprintf("spike: Invalid RVA 0x%llx for module %S\n", (unsigned long long)rva, module_name);
+        return;
+    }
+    base = (uint8_t *)GetModuleHandleW(module_name);
+    target = base + rva;
+    value = (uint8_t *)malloc(count);
+    if (value == NULL) {
+        return;
+    }
+    memset(value, 0x90, count);
+
+    HRESULT ret = pe_patch(target, value, count);
+    free(value);
+}
+
+static void spike_insert_data(LPCWSTR module_name, uintptr_t rva, const wchar_t *patch_str) {
+    uint8_t patch_data[32];
+    int length = 0;
+    int byte_count = wcslen(patch_str) / 2;
+    uint8_t *base;
+    uint8_t *target;
+    if (!(is_valid_rva(module_name, rva))) {
+        dprintf("spike: Invalid RVA 0x%llx for module %S\n", (unsigned long long)rva, module_name);
+        return;
+    }
+    base = (uint8_t *)GetModuleHandleW(module_name);
+    target = base + rva;
+    for (int i = 0; i < byte_count; i++) {
+        unsigned int temp;
+        if (swscanf(patch_str + i * 2, L"%2x", &temp) == 1) {
+            patch_data[i] = (unsigned char)temp;
+            length++;
+        } else {
+            break;
+        }
+    }
+
+    pe_patch(target, patch_data, length);
+}
+
+static void spike_insert_log_levels(uintptr_t rva, size_t count) {
     uint8_t *base;
     uint32_t *levels;
     size_t i;
@@ -155,7 +242,7 @@ void spike_hook_init(const wchar_t *ini_file)
         basename = slash + 1;
     } else {
         basename = module;
-    }
+    } 
 
     /* Check our INI file to see if any spikes are configured for this EXE.
        Normally we separate out config reading into a separate module... */
@@ -170,19 +257,19 @@ void spike_hook_init(const wchar_t *ini_file)
 
     if (path[0] != L'\0') {
         dprintf("Spiking %S using config from %S\n", basename, path);
-        spike_hook_read_config(path);
+        spike_hook_read_config(basename, path);
     }
 }
 
-static void spike_hook_read_config(const wchar_t *spike_file)
-{
+void spike_hook_read_config(const wchar_t *target, const wchar_t *spike_file) {
     int match;
     int count;
-    int rva;
-    char line[80];
+    unsigned long long rva;
+    char line[256];
+    wchar_t filename[MAX_PATH];
+    wchar_t patch_data[64];
     char *ret;
     FILE *f;
-
     f = _wfopen(spike_file, L"r");
 
     if (f == NULL) {
@@ -202,46 +289,54 @@ static void spike_hook_read_config(const wchar_t *spike_file)
             continue;
         }
 
-        match = sscanf(line, "levels %i %i", &rva, &count);
+        match = sscanf(line, "levels %lli %i", &rva, &count);
 
         if (match == 2) {
-            spike_insert_log_levels((ptrdiff_t) rva, count);
+            spike_insert_log_levels((uintptr_t)rva, count);
         }
 
-        match = sscanf(line, "j_vprintf %i", &rva);
+        match = sscanf(line, "j_vprintf %lli", &rva);
 
         if (match == 1) {
-            spike_insert_jmp((ptrdiff_t) rva, spike_fn_vprintf);
+            spike_insert_jmp(target, (uintptr_t)rva, spike_fn_vprintf);
         }
 
-        match = sscanf(line, "j_vwprintf %i", &rva);
+        match = sscanf(line, "j_vwprintf %lli", &rva);
 
         if (match == 1) {
-            spike_insert_jmp((ptrdiff_t) rva, spike_fn_vwprintf);
+            spike_insert_jmp(target, (uintptr_t)rva, spike_fn_vwprintf);
         }
 
-        match = sscanf(line, "j_printf %i", &rva);
+        match = sscanf(line, "j_printf %lli", &rva);
 
         if (match == 1) {
-            spike_insert_jmp((ptrdiff_t) rva, spike_fn_printf);
+            spike_insert_jmp(target, (uintptr_t)rva, spike_fn_printf);
         }
 
-        match = sscanf(line, "j_puts %i", &rva);
+        match = sscanf(line, "j_puts %lli", &rva);
 
         if (match == 1) {
-            spike_insert_jmp((ptrdiff_t) rva, spike_fn_puts);
+            spike_insert_jmp(target, (uintptr_t)rva, spike_fn_puts);
         }
 
-        match = sscanf(line, "j_perror %i", &rva);
+        match = sscanf(line, "j_perror %lli", &rva);
 
         if (match == 1) {
-            spike_insert_jmp((ptrdiff_t) rva, spike_fn_perror);
+            spike_insert_jmp(target, (uintptr_t)rva, spike_fn_perror);
         }
 
-        match = sscanf(line, "c_fputs %i", &rva); /* c == "callback" */
+        match = sscanf(line, "c_fputs %lli", &rva); /* c == "callback" */
 
         if (match == 1) {
-            spike_insert_ptr((ptrdiff_t) rva, spike_fn_fputs);
+            spike_insert_ptr(target, (uintptr_t)rva, spike_fn_fputs);
+        }
+        match = sscanf(line, "patch_memory_nop %255ls %lli %i", filename, &rva, &count);
+        if (match == 3 && (_wcsicmp(filename, target) == 0)) {
+            spike_insert_nop((LPCWSTR)filename, (uintptr_t)rva, count);
+        }
+        match = sscanf(line, "patch_memory_data %255ls %lli %64ls", filename, &rva, patch_data);
+        if (match == 3 && (_wcsicmp(filename, target) == 0)) {
+            spike_insert_data((LPCWSTR)filename, (uintptr_t)rva, patch_data);
         }
     }
 

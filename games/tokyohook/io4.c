@@ -26,7 +26,7 @@ HRESULT tokyo_io4_hook_init(const struct io4_config *cfg)
 
     assert(tokyo_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &tokyo_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &tokyo_io4_ops, NULL, L"STAR", false);
 
     if (FAILED(hr)) {
         return hr;

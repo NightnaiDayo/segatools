@@ -20,6 +20,7 @@
 
 #include "util/async.h"
 #include "util/dprintf.h"
+#include "util/fg-detect.h"
 
 #pragma pack(push, 1)
 
@@ -99,12 +100,14 @@ static struct async io4_async;
 static uint8_t io4_system_status;
 static const struct io4_ops *io4_ops;
 static void *io4_ops_ctx;
+static struct io4_state prev_state;
 
 HRESULT io4_hook_init(
-        const struct io4_config *cfg,
-        const struct io4_ops *ops,
-        void *ctx)
-{
+    const struct io4_config *cfg,
+    const struct io4_ops *ops,
+    void *ctx,
+    const wchar_t* window_name,
+    const bool window_name_is_partial_match) {
     HRESULT hr;
 
     assert(cfg != NULL);
@@ -122,9 +125,14 @@ HRESULT io4_hook_init(
         return hr;
     }
 
+    if (window_name != NULL && cfg->foreground_only) {
+        fgdet_init(window_name, window_name_is_partial_match);
+    }
+
     io4_ops = ops;
     io4_ops_ctx = ctx;
     io4_system_status = 0x02; /* idk */
+    memset(&prev_state, 0, sizeof(prev_state));
     iohook_push_handler(io4_handle_irp);
 
     hr = setupapi_add_phantom_dev(&hid_guid, io4_path);
@@ -325,11 +333,18 @@ static HRESULT io4_async_poll(void *ctx, struct irp *irp)
 
     /* Call into ops to poll the underlying inputs */
 
-    memset(&state, 0, sizeof(state));
-    hr = io4_ops->poll(io4_ops_ctx, &state);
+    fgdet_poll();
+    if (fgdet_in_foreground()) { // returns true if fgdet is not enabled
+        memset(&state, 0, sizeof(state));
+        hr = io4_ops->poll(io4_ops_ctx, &state);
 
-    if (FAILED(hr)) {
-        return hr;
+        if (FAILED(hr)) {
+            return hr;
+        }
+
+        memcpy(&prev_state, &state, sizeof(state));
+    } else {
+        state = prev_state; // if we're unfocused, freeze the current input
     }
 
     /* Construct IN report. Values are all little-endian, unlike JVS. */

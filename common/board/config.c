@@ -92,6 +92,7 @@ void io4_config_load(struct io4_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"io4", L"enable", 1, filename);
+    cfg->foreground_only = GetPrivateProfileIntW(L"io4", L"foreground", 0, filename);
 }
 
 void vfd_config_load(struct vfd_config *cfg, const wchar_t *filename)

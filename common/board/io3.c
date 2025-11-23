@@ -26,6 +26,7 @@
 
 #include "util/dprintf.h"
 #include "util/dump.h"
+#include "util/fg-detect.h"
 
 static void io3_transact(
         struct jvs_node *node,
@@ -145,6 +146,8 @@ static uint8_t io3_features[] = {
 
     0x00,
 };
+
+static struct io3_switch_state prev_state = {0};
 
 void io3_init(
         struct io3 *io3,
@@ -423,7 +426,13 @@ static HRESULT io3_cmd_read_switches(
     memset(&state, 0, sizeof(state));
 
     if (io3->ops != NULL) {
-        io3->ops->read_switches(io3->ops_ctx, &state);
+        fgdet_poll();
+        if (fgdet_in_foreground()) { // returns true if fgdet is not enabled
+            io3->ops->read_switches(io3->ops_ctx, &state);
+            memcpy(&prev_state, &state, sizeof(state));
+        } else {
+            state = prev_state;
+        }
     }
 
     hr = iobuf_write_8(resp_buf, state.system); /* Test, Tilt lines */

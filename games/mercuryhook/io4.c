@@ -14,19 +14,18 @@
 bool mercury_io_coin = false;
 uint16_t mercury_io_coins = 0;
 
-static HRESULT mercury_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT mercury_io4_poll(void* ctx, struct io4_state* state);
 
 static const struct io4_ops mercury_io4_ops = {
     .poll = mercury_io4_poll,
 };
 
-HRESULT mercury_io4_hook_init(const struct io4_config *cfg)
-{
+HRESULT mercury_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(mercury_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &mercury_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &mercury_io4_ops, NULL, L"Mercury", false);
 
     if (FAILED(hr)) {
         return hr;
@@ -35,8 +34,7 @@ HRESULT mercury_io4_hook_init(const struct io4_config *cfg)
     return mercury_dll.init();
 }
 
-static HRESULT mercury_io4_poll(void *ctx, struct io4_state *state)
-{
+static HRESULT mercury_io4_poll(void* ctx, struct io4_state* state) {
     uint8_t opbtn;
     uint8_t gamebtn;
     HRESULT hr;
@@ -72,8 +70,7 @@ static HRESULT mercury_io4_poll(void *ctx, struct io4_state *state)
             mercury_io_coin = true;
             mercury_io_coins++;
         }
-    }
-    else {
+    } else {
         mercury_io_coin = false;
     }
 

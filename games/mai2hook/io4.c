@@ -10,20 +10,20 @@
 
 #include "util/dprintf.h"
 
-static HRESULT mai2_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT mai2_io4_poll(void* ctx, struct io4_state* state);
+
 static uint16_t coins;
 
 static const struct io4_ops mai2_io4_ops = {
     .poll = mai2_io4_poll,
 };
 
-HRESULT mai2_io4_hook_init(const struct io4_config *cfg)
-{
+HRESULT mai2_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(mai2_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &mai2_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &mai2_io4_ops, NULL, L"Sinmai", false);
 
     if (FAILED(hr)) {
         return hr;
@@ -32,8 +32,7 @@ HRESULT mai2_io4_hook_init(const struct io4_config *cfg)
     return mai2_dll.init();
 }
 
-static HRESULT mai2_io4_poll(void *ctx, struct io4_state *state)
-{
+static HRESULT mai2_io4_poll(void* ctx, struct io4_state* state) {
     uint8_t opbtn;
     uint16_t player1;
     uint16_t player2;

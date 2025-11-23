@@ -10,12 +10,14 @@
 
 #include "util/dprintf.h"
 
-static HRESULT idac_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT idac_io4_poll(void* ctx, struct io4_state* state);
+
 static HRESULT idac_io4_write_gpio(uint8_t* payload, size_t len);
+
 static uint16_t coins;
 
 static const struct io4_ops idac_io4_ops = {
-    .poll       = idac_io4_poll,
+    .poll = idac_io4_poll,
     .write_gpio = idac_io4_write_gpio
 };
 
@@ -36,13 +38,12 @@ static const uint16_t idac_gear_signals[] = {
     0x0014,
 };
 
-HRESULT idac_io4_hook_init(const struct io4_config *cfg)
-{
+HRESULT idac_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(idac_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &idac_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &idac_io4_ops, NULL, L"GameProject", false);
 
     if (FAILED(hr)) {
         return hr;
@@ -51,8 +52,7 @@ HRESULT idac_io4_hook_init(const struct io4_config *cfg)
     return idac_dll.init();
 }
 
-static HRESULT idac_io4_poll(void *ctx, struct io4_state *state)
-{
+static HRESULT idac_io4_poll(void* ctx, struct io4_state* state) {
     uint8_t opbtn;
     uint8_t gamebtn;
     uint8_t gear;
@@ -131,21 +131,20 @@ static HRESULT idac_io4_poll(void *ctx, struct io4_state *state)
     return S_OK;
 }
 
-static HRESULT idac_io4_write_gpio(uint8_t* payload, size_t len) 
-{
+static HRESULT idac_io4_write_gpio(uint8_t* payload, size_t len) {
     assert(idac_dll.led_set_leds != NULL);
-    
+
     // Just fast fail if there aren't enough bytes in the payload
-    if (len < 3) 
+    if (len < 3)
         return S_OK;
-    
+
     // This command is used for lights in IDAC, but it only contains button lights,
     // and only in the first 3 bytes of the payload; everything else is padding to
     // make the payload 62 bytes. The rest of the cabinet lights and the side button
     // lights are handled separately, by the 15070 lights controller.
-    uint32_t lights_data = (uint32_t) ((uint8_t)(payload[0]) << 24 |
-        (uint8_t)(payload[1]) << 16 |
-        (uint8_t)(payload[2]) << 8);
+    uint32_t lights_data = (uint32_t)((uint8_t)(payload[0]) << 24 |
+                                      (uint8_t)(payload[1]) << 16 |
+                                      (uint8_t)(payload[2]) << 8);
 
     // Since Sega uses an odd ordering for the first part of the bitfield,
     // let's normalize the data and just send over bytes for the receiver

@@ -15,6 +15,7 @@ DEFINE_GUID(
 
 struct jvs_config {
     bool enable;
+    bool foreground;
 };
 
 typedef HRESULT (*jvs_provider_t)(struct jvs_node **root);

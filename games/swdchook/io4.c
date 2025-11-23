@@ -11,24 +11,28 @@
 #include "swdchook/swdc-dll.h"
 
 static HANDLE mmf;
+
 static HRESULT init_mmf(void);
+
 static void swdc_set_gamebtns(uint16_t value);
 
-static HRESULT swdc_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT swdc_io4_poll(void* ctx, struct io4_state* state);
+
 static HRESULT swdc_io4_write_gpio(uint8_t* payload, size_t len);
+
 static uint16_t coins;
 
 static const struct io4_ops swdc_io4_ops = {
-    .poll       = swdc_io4_poll,
+    .poll = swdc_io4_poll,
     .write_gpio = swdc_io4_write_gpio
 };
 
-HRESULT swdc_io4_hook_init(const struct io4_config *cfg) {
+HRESULT swdc_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(swdc_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &swdc_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &swdc_io4_ops, NULL, L"Todoroki", false);
 
     if (FAILED(hr)) {
         return hr;
@@ -61,7 +65,7 @@ void swdc_set_gamebtns(uint16_t value) {
     // Update the memory-mapped file
     LPVOID mmf_view = MapViewOfFile(mmf, FILE_MAP_ALL_ACCESS, 0, 0, 2);
     if (mmf_view != NULL) {
-        uint16_t* ptr = (uint16_t*)mmf_view;
+        uint16_t* ptr = (uint16_t *) mmf_view;
         *ptr = value;
 
         UnmapViewOfFile(mmf_view);
@@ -70,7 +74,7 @@ void swdc_set_gamebtns(uint16_t value) {
     // ReleaseMutex(mutex);
 }
 
-static HRESULT swdc_io4_poll(void *ctx, struct io4_state *state) {
+static HRESULT swdc_io4_poll(void* ctx, struct io4_state* state) {
     uint8_t opbtn;
     uint16_t gamebtn;
     struct swdc_io_analog_state analog_state;
@@ -128,7 +132,7 @@ static HRESULT swdc_io4_poll(void *ctx, struct io4_state *state) {
         state->buttons[0] |= 1 << 2;
     }
 
-/* 
+    /* 
     Update steering wheel buttons
 
     Those are connected to the SEGA 838-15415 INDICATOR BD MAIN 
@@ -175,21 +179,20 @@ static HRESULT swdc_io4_poll(void *ctx, struct io4_state *state) {
     return S_OK;
 }
 
-static HRESULT swdc_io4_write_gpio(uint8_t* payload, size_t len) 
-{
+static HRESULT swdc_io4_write_gpio(uint8_t* payload, size_t len) {
     assert(swdc_dll.led_set_leds != NULL);
 
     // Just fast fail if there aren't enough bytes in the payload
-    if (len < 3) 
+    if (len < 3)
         return S_OK;
-    
+
     // This command is used for lights in SWDC, but it only contains button lights,
     // and only in the first 3 bytes of the payload; everything else is padding to
     // make the payload 62 bytes. The rest of the cabinet lights and the side button
     // lights are handled separately, by the 15070 lights controller.
-    uint32_t lights_data = (uint32_t) ((uint8_t)(payload[0]) << 24 |
-        (uint8_t)(payload[1]) << 16 |
-        (uint8_t)(payload[2]) << 8);
+    uint32_t lights_data = (uint32_t)((uint8_t)(payload[0]) << 24 |
+                                      (uint8_t)(payload[1]) << 16 |
+                                      (uint8_t)(payload[2]) << 8);
 
     // Since Sega uses an odd ordering for the first part of the bitfield,
     // let's normalize the data and just send over bytes for the receiver

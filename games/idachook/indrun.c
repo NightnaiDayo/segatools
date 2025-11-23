@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "hook/table.h"
 
@@ -9,10 +10,13 @@
 #include "util/dprintf.h"
 
 #include "indrun.h"
+#include "hooklib/spike.h"
 
 static const wchar_t *target_modules[] = {
     L"IndRun.dll",
 };
+
+static wchar_t spike_file[MAX_PATH] = L"";
 
 static const size_t target_modules_len = _countof(target_modules);
 
@@ -88,9 +92,15 @@ static const struct hook_symbol indrun_kernel32_syms[] = {
 void indrun_hook_init(struct indrun_config *cfg)
 {
     assert(cfg != NULL);
+    wchar_t full_path[MAX_PATH];
 
     if (!cfg->enable) {
        return;
+    }
+
+    if (wcscmp(cfg->patch_file, L"") != 0) {
+        GetCurrentDirectoryW(MAX_PATH, full_path);
+        swprintf_s(spike_file, MAX_PATH, L"%ls\\%ls", full_path, cfg->patch_file);
     }
 
     dprintf("IDAC: Hooks enabled.\n");
@@ -176,6 +186,10 @@ static HMODULE WINAPI hook_LoadLibraryW(const wchar_t *name)
 
             dll_hook_insert_hooks(result);
             app_hook_insert_hooks(result);
+            
+            if (wcscmp(spike_file, L"") != 0) {
+                spike_hook_read_config(target_module, spike_file);
+            }
         }
     }
 

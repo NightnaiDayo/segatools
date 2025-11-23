@@ -409,6 +409,12 @@ Default `1`
 
 Enable JVS port emulation. Disable to use the JVS port on a real AMEX.
 
+### `foreground`
+
+Default `0`
+
+Only enables input when the game's main window is focused. This does not work for all games.
+
 ## `[io4]`
 
 Configure emulation of the IO4 board. Same settings also apply to `[io3]`.
@@ -418,6 +424,13 @@ Configure emulation of the IO4 board. Same settings also apply to `[io3]`.
 Default `1`
 
 Enable IO4 port emulation. Disable to use the IO4 port on a real ALLS.
+
+
+### `foreground`
+
+Default `0`
+
+Only enables input when the game's main window is focused. This does not work for all games, notably APMv3, due to the game switching involved.
 
 ### `test`
 Default `0x31`
