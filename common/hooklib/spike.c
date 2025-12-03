@@ -89,29 +89,6 @@ static void spike_fn_perror(
     OutputDebugStringA(line);
 }
 
-BOOL is_current_module_x64()
-{
-    HMODULE hModule = GetModuleHandleW(NULL);
-    MODULEINFO moduleInfo = {0};
-    if (!GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo,
-                              sizeof(moduleInfo))) {
-        return FALSE;
-    }
-
-    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)moduleInfo.lpBaseOfDll;
-    PIMAGE_NT_HEADERS ntHeaders =
-        (PIMAGE_NT_HEADERS)((BYTE *)moduleInfo.lpBaseOfDll +
-                            dosHeader->e_lfanew);
-
-    if (ntHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64) {
-        return TRUE;  
-    } else if (ntHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386) {
-        return FALSE;  
-    } else {
-        return FALSE;  
-    }
-}
-
 BOOL is_valid_rva(LPCWSTR module_name, uintptr_t rva) {
     HMODULE module_base = GetModuleHandleW(module_name);
     if (!module_base) {
@@ -136,19 +113,18 @@ static void spike_insert_jmp(LPCWSTR module_name, uintptr_t rva, void *proc) {
     uintptr_t target_addr = (uintptr_t)target;
     uintptr_t func_addr = (uintptr_t)func_ptr;
 
-    if (is_current_module_x64()) {
+    #if defined(_WIN64) || defined(__amd64__)
         uint64_t relativeOffset = (uint64_t)(func_addr - target_addr - 5);
         uint8_t absoluteJump[] = {0x48, 0xB8, 0x00, 0x00, 0x00, 0x00,
-                                  0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0};
+                                    0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0};
         memcpy(absoluteJump + 2, &func_ptr, 8);
         pe_patch(target, absoluteJump, sizeof(absoluteJump));
-    }
-    else {
+    #else
         uint32_t jumpOffset = (uint32_t)(func_addr - target_addr - 5);
         uint8_t relativeJump[] = {0xE9, 0x00, 0x00, 0x00, 0x00};
         memcpy(relativeJump + 1, &jumpOffset, 4);
         pe_patch(target, relativeJump, sizeof(relativeJump));
-    }
+    #endif
 }
 
 static void spike_insert_ptr(LPCWSTR module_name, uintptr_t rva, void *ptr) {
@@ -242,7 +218,7 @@ void spike_hook_init(const wchar_t *ini_file)
         basename = slash + 1;
     } else {
         basename = module;
-    } 
+    }
 
     /* Check our INI file to see if any spikes are configured for this EXE.
        Normally we separate out config reading into a separate module... */

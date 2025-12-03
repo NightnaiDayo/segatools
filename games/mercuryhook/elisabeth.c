@@ -23,7 +23,7 @@ static void dll_hook_insert_hooks(HMODULE target);
 static FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name);
 static FARPROC (WINAPI *next_GetProcAddress)(HMODULE hModule, const char *name);
 static int my_USBIntLED_Init();
-static int my_USBIntLED_set();
+static int my_USBIntLED_set(int data1, struct led_data data2);
 
 static const struct hook_symbol win32_hooks[] = {
     {
