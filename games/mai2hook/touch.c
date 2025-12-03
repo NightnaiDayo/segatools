@@ -1,3 +1,6 @@
+#include <synchapi.h>
+#include <windows.h>
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -53,12 +56,14 @@ const char *sensor_to_str(uint8_t sensor)
 }
 
 static CRITICAL_SECTION touch_1p_lock;
+static CONDITION_VARIABLE touch_1p_cv;
 static struct uart touch_1p_uart;
 static uint8_t touch_1p_written_bytes[64];
 static uint8_t touch_1p_readable_bytes[64];
 static bool touch_1p_status = false;
 
 static CRITICAL_SECTION touch_2p_lock;
+static CONDITION_VARIABLE touch_2p_cv;
 static struct uart touch_2p_uart;
 static uint8_t touch_2p_written_bytes[64];
 static uint8_t touch_2p_readable_bytes[64];
@@ -85,6 +90,7 @@ HRESULT touch_hook_init(const struct touch_config *cfg)
         dprintf("Mai2 touch 1P: Init.\n");
 
         InitializeCriticalSection(&touch_1p_lock);
+        InitializeConditionVariable(&touch_1p_cv);
         uart_init(&touch_1p_uart, 3);
         touch_1p_uart.written.bytes = touch_1p_written_bytes;
         touch_1p_uart.written.nbytes = sizeof(touch_1p_written_bytes);
@@ -97,6 +103,7 @@ HRESULT touch_hook_init(const struct touch_config *cfg)
         dprintf("Mai2 touch 2P: Init.\n");
 
         InitializeCriticalSection(&touch_2p_lock);
+        InitializeConditionVariable(&touch_2p_cv);
         uart_init(&touch_2p_uart, 4);
         touch_2p_uart.written.bytes = touch_2p_written_bytes;
         touch_2p_uart.written.nbytes = sizeof(touch_2p_written_bytes);
@@ -116,13 +123,13 @@ static HRESULT touch_handle_irp(struct irp *irp)
     if (uart_match_irp(&touch_1p_uart, irp))
     {
         EnterCriticalSection(&touch_1p_lock);
-        hr = touch_handle_irp_locked(irp, &touch_1p_uart);
+        hr = touch_handle_irp_locked(irp, &touch_1p_uart, &touch_1p_lock, &touch_1p_cv);
         LeaveCriticalSection(&touch_1p_lock);
     }
     else if (uart_match_irp(&touch_2p_uart, irp))
     {
         EnterCriticalSection(&touch_2p_lock);
-        hr = touch_handle_irp_locked(irp, &touch_2p_uart);
+        hr = touch_handle_irp_locked(irp, &touch_2p_uart, &touch_2p_lock, &touch_2p_cv);
         LeaveCriticalSection(&touch_2p_lock);
     }
     else
@@ -133,7 +140,7 @@ static HRESULT touch_handle_irp(struct irp *irp)
     return hr;
 }
 
-static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
+static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart, CRITICAL_SECTION *lock, CONDITION_VARIABLE *cv)
 {
     HRESULT hr;
 
@@ -149,7 +156,7 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         }
     }
 
-    hr = uart_handle_irp(uart, irp);
+    hr = uart_handle_irp_blocking(uart, irp, lock, cv);
 
     if (FAILED(hr) || irp->op != IRP_OP_WRITE)
     {
@@ -175,17 +182,13 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         assert(mai2_dll.touch_update != NULL);
         if (port_no == 3)
         {
-            EnterCriticalSection(&touch_1p_lock);
             touch_1p_status = false;
             mai2_dll.touch_update(touch_1p_status, touch_2p_status);
-            LeaveCriticalSection(&touch_1p_lock);
         }
         else
         {
-            EnterCriticalSection(&touch_2p_lock);
             touch_2p_status = false;
             mai2_dll.touch_update(touch_1p_status, touch_2p_status);
-            LeaveCriticalSection(&touch_2p_lock);
         }
         break;
 
@@ -194,17 +197,13 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
         assert(mai2_dll.touch_update != NULL);
         if (port_no == 3)
         {
-            EnterCriticalSection(&touch_1p_lock);
             touch_1p_status = true;
             mai2_dll.touch_update(touch_1p_status, touch_2p_status);
-            LeaveCriticalSection(&touch_1p_lock);
         }
         else
         {
-            EnterCriticalSection(&touch_2p_lock);
             touch_2p_status = true;
             mai2_dll.touch_update(touch_1p_status, touch_2p_status);
-            LeaveCriticalSection(&touch_2p_lock);
         }
         break;
 
@@ -251,9 +250,25 @@ static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart)
 
 static void touch_auto_scan(const uint8_t player, const uint8_t state[7])
 {
-    struct uart *touch_uart = player == 1 ? &touch_1p_uart : &touch_2p_uart;
+    struct uart *touch_uart;
+    CRITICAL_SECTION *touch_lock;
+    CONDITION_VARIABLE *touch_cv;
+
+    if (player == 1) {
+        touch_uart = &touch_1p_uart;
+        touch_lock = &touch_1p_lock;
+        touch_cv = &touch_1p_cv;
+    } else {
+        touch_uart = &touch_2p_uart;
+        touch_lock = &touch_2p_lock;
+        touch_cv = &touch_2p_cv;
+    }
+
+    EnterCriticalSection(touch_lock);
     touch_uart->readable.bytes[0] = res_start;
     memcpy(&touch_uart->readable.bytes[1], state, 7);
     touch_uart->readable.bytes[8] = res_end;
     touch_uart->readable.pos = 9;
+    LeaveCriticalSection(touch_lock);
+    WakeConditionVariable(touch_cv);
 }

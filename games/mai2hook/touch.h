@@ -30,7 +30,7 @@ const char *sensor_to_str(uint8_t sensor);
 
 HRESULT touch_hook_init(const struct touch_config *cfg);
 static HRESULT touch_handle_irp(struct irp *irp);
-static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart);
+static HRESULT touch_handle_irp_locked(struct irp *irp, struct uart *uart, CRITICAL_SECTION *lock, CONDITION_VARIABLE *cv);
 
 /* Called in mai2io to send touch data.
    Similar to chuni slider_res_auto_scan, but the host does not require periodic updates.
