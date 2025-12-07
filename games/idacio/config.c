@@ -122,18 +122,6 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
         20,
         filename);
 
-    cfg->ffb_base_damper_fraction = (double) base_damper_percent / 100.0;
-	
-    // Read deadband (float for more precise adjustment)
-    wchar_t value[16];
-    GetPrivateProfileStringW(
-            L"dinput",
-            L"deadband",
-            L"2.0",       // default
-            value,
-            _countof(value),
-            filename);
-
     cfg->ffb_deadband = wcstof(value, NULL);
 
     // Clamp to safe range 0-10%
