@@ -42,6 +42,9 @@ const struct dll_bind_sym mai2_dll_syms[] = {
     }, {
         .sym = "mai2_io_led_gs_update",
         .off = offsetof(struct mai2_dll, led_gs_update),
+    }, {
+        .sym = "mai2_io_led_billboard_set",
+        .off = offsetof(struct mai2_dll, led_set_leds),
     },
 };
 

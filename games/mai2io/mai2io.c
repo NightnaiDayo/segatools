@@ -265,3 +265,11 @@ void mai2_io_led_gs_update(uint8_t board, const uint8_t *rgb) {
 #endif
     return;
 }
+
+void mai2_io_led_billboard_set(uint8_t board, uint8_t *rgb) {
+#if 0
+    uint8_t player = board + 1;
+    dprintf("Mai2 LED %dP: Billboard set R:%02X G:%02X B:%02X\n", player, rgb[0], rgb[1], rgb[2]);
+#endif
+    return;
+}

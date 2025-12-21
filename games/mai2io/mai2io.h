@@ -190,3 +190,12 @@ void mai2_io_led_dc_update(uint8_t board, const uint8_t *rgb);
    Minimum API version: 0x0101 */
 
 void mai2_io_led_gs_update(uint8_t board, const uint8_t *rgb);
+
+/* Update the Billboard LEDs. rgb is a pointer to an array.
+
+   maimai DX uses two boards. Board 0 is for the player 1 side (left) and board 1
+   is for the player 2 side (right).
+
+   Minimum API version: 0x0102 */
+
+void mai2_io_led_billboard_set(uint8_t board, uint8_t *rgb);
