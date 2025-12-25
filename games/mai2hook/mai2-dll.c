@@ -63,6 +63,7 @@ HRESULT mai2_dll_init(const struct mai2_dll_config *cfg, HINSTANCE self)
     HINSTANCE owned;
     HINSTANCE src;
     HRESULT hr;
+    size_t sym_count;
 
     assert(cfg != NULL);
     assert(self != NULL);
@@ -107,7 +108,13 @@ HRESULT mai2_dll_init(const struct mai2_dll_config *cfg, HINSTANCE self)
     }
 
     sym = mai2_dll_syms;
-    hr = dll_bind(&mai2_dll, src, &sym, _countof(mai2_dll_syms));
+    sym_count = _countof(mai2_dll_syms);
+
+    if (mai2_dll.api_version < 0x0102) {
+        sym_count--;
+    }
+
+    hr = dll_bind(&mai2_dll, src, &sym, sym_count);
 
     if (FAILED(hr)) {
         if (src != self) {

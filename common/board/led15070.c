@@ -484,11 +484,11 @@ static void led15070_calc_range(
         uint8_t start,
         uint8_t count,
         uint8_t skip,
-        int *out_start,
-        int *out_end)
+        uint8_t *out_start,
+        uint8_t *out_end)
 {
-    int s = start;
-    int c = count;
+    uint16_t s = start;
+    uint16_t c = count;
 
     if (c == 0) {
         *out_start = 0;
@@ -505,14 +505,14 @@ static void led15070_calc_range(
         c -= skip;
     }
 
-    if (s >= led15070_nleds || c <= 0) {
+    if (s >= led15070_nleds || c == 0) {
         *out_start = led15070_nleds;
         *out_end = led15070_nleds;
         return;
     }
 
-    *out_start = s;
-    *out_end = (s + c > led15070_nleds) ? led15070_nleds : s + c;
+    *out_start = (uint8_t) s;
+    *out_end = (s + c > led15070_nleds) ? led15070_nleds : (uint8_t) (s + c);
 }
 
 static HRESULT led15070_req_set_multi_flash_8bit(int board, const struct led15070_req_any *req)
@@ -520,8 +520,8 @@ static HRESULT led15070_req_set_multi_flash_8bit(int board, const struct led1507
     uint8_t idx_start = req->payload[0];
     uint8_t idx_count = req->payload[1];
     uint8_t idx_skip = req->payload[2];
-    int start;
-    int end;
+    uint8_t start;
+    uint8_t end;
 
     // TODO: useful?
 #if defined(LOG_LED15070)
@@ -563,8 +563,8 @@ static HRESULT led15070_req_set_multi_fade_8bit(int board, const struct led15070
     uint8_t idx_start = req->payload[0];
     uint8_t idx_count = req->payload[1];
     uint8_t idx_skip = req->payload[2];
-    int start;
-    int end;
+    uint8_t start;
+    uint8_t end;
 #if defined(LOG_LED15070)
     dprintf("LED 15070: Set LED - Multi fade 8bit (board %u, start %u, count %u, skip %u)\n",
            board, idx_start, idx_count, idx_skip);
