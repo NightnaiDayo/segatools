@@ -11,7 +11,7 @@
     version and the low byte is the minor version (as defined by the Semantic
     Versioning standard).
 
-    The latest API version as of this writing is 0x0100.
+    The latest API version as of this writing is 0x0101.
  */
 uint16_t aime_io_get_api_version(void);
 
@@ -85,3 +85,36 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm);
     Minimum API version: 0x0100
 */
 void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b);
+
+/*
+    VFD text forwarding. This is intended to pass through the text payload
+    plus the most recent VFD state so external handlers can emulate scrolling
+    or layout if desired.
+
+    - text: Pointer to raw text bytes (not null-terminated)
+    - text_len: Length of the text buffer
+    - state: Current VFD state at the time of rendering
+
+    The encoding field uses VFD encoding values (0=GB2312, 1=Big5,
+    2=Shift-JIS, 3=KSC5601).
+
+    Minimum API version: 0x0101
+*/
+struct aime_io_vfd_state {
+    uint8_t encoding;
+    uint8_t text_speed;
+    uint8_t scroll_enabled;
+    uint8_t h_scroll;
+    uint16_t cursor_x;
+    uint8_t cursor_y;
+    uint16_t wnd_x0;
+    uint8_t wnd_y0;
+    uint16_t wnd_x1;
+    uint8_t wnd_y1;
+    uint8_t rotate;
+};
+
+void aime_io_set_vfd_text(
+        const uint8_t *text,
+        size_t text_len,
+        const struct aime_io_vfd_state *state);

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include "board/config.h"
+#include "board/aime-dll.h"
 #include "board/vfd.h"
 #include "board/vfd-cmd.h"
 
@@ -29,7 +30,7 @@ static struct uart vfd_uart;
 static uint8_t vfd_written[4096];
 static uint8_t vfd_readable[4096];
 
-static int encoding = VFD_ENC_SHIFT_JIS;
+static struct aime_io_vfd_state vfd_state;
 
 HRESULT vfd_handle_get_version(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart);
 HRESULT vfd_handle_reset(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart);
@@ -58,6 +59,8 @@ HRESULT vfd_hook_init(struct vfd_config *cfg, unsigned int default_port_no)
     }
 
     utf_enabled = cfg->utf_conversion;
+    memset(&vfd_state, 0, sizeof(vfd_state));
+    vfd_state.encoding = VFD_ENC_SHIFT_JIS;
 
     unsigned int port_no = cfg->port_no;
     if (port_no == 0){
@@ -93,13 +96,13 @@ void print_vfd_text(const char* str, int len){
         memset(encoded, 0, 1024 * sizeof(wchar_t));
 
         int codepage = 0;
-        if (encoding == VFD_ENC_GB2312){
+        if (vfd_state.encoding == VFD_ENC_GB2312){
             codepage = 936;
-        } else if (encoding == VFD_ENC_BIG5){
+        } else if (vfd_state.encoding == VFD_ENC_BIG5){
             codepage = 950;
-        } else if (encoding == VFD_ENC_SHIFT_JIS){
+        } else if (vfd_state.encoding == VFD_ENC_SHIFT_JIS){
             codepage = 932;
-        } else if (encoding == VFD_ENC_KSC5601) {
+        } else if (vfd_state.encoding == VFD_ENC_KSC5601) {
             codepage = 949;
         }
 
@@ -113,6 +116,10 @@ void print_vfd_text(const char* str, int len){
 
         dprintf("VFD: Text: %s\n", str);
 
+    }
+
+    if (aime_dll.set_vfd_text != NULL) {
+        aime_dll.set_vfd_text((const uint8_t *) str, len, &vfd_state);
     }
 }
 
@@ -244,7 +251,8 @@ HRESULT vfd_handle_get_version(struct const_iobuf* reader, struct iobuf* writer,
 HRESULT vfd_handle_reset(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
     dprintf("VFD: Reset\n");
 
-    encoding = VFD_ENC_SHIFT_JIS;
+    memset(&vfd_state, 0, sizeof(vfd_state));
+    vfd_state.encoding = VFD_ENC_SHIFT_JIS;
 
     return S_FALSE;
 }
@@ -283,6 +291,7 @@ HRESULT vfd_handle_set_h_scroll(struct const_iobuf* reader, struct iobuf* writer
     iobuf_read_8(reader, &x);
 
     dprintf("VFD: Horizontal Scroll, X=%d\n", x);
+    vfd_state.h_scroll = x;
     return S_FALSE;
 }
 HRESULT vfd_handle_draw_image(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
@@ -311,6 +320,8 @@ HRESULT vfd_handle_set_cursor(struct const_iobuf* reader, struct iobuf* writer, 
     iobuf_read_8(reader, &y);
 
     dprintf("VFD: Set Cursor, x=%d,y=%d\n", x, y);
+    vfd_state.cursor_x = x;
+    vfd_state.cursor_y = y;
 
     return S_FALSE;
 }
@@ -326,7 +337,7 @@ HRESULT vfd_handle_set_encoding(struct const_iobuf* reader, struct iobuf* writer
         return E_FAIL;
     }
 
-    encoding = b;
+    vfd_state.encoding = b;
 
     return S_FALSE;
 }
@@ -340,6 +351,10 @@ HRESULT vfd_handle_set_text_wnd(struct const_iobuf* reader, struct iobuf* writer
     iobuf_read_8(reader, &y1);
 
     dprintf("VFD: Set Text Window, p0:%d,%d, p1:%d,%d\n", x0, y0, x1, y1);
+    vfd_state.wnd_x0 = x0;
+    vfd_state.wnd_y0 = y0;
+    vfd_state.wnd_x1 = x1;
+    vfd_state.wnd_y1 = y1;
     return S_FALSE;
 }
 HRESULT vfd_handle_set_text_speed(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
@@ -347,6 +362,7 @@ HRESULT vfd_handle_set_text_speed(struct const_iobuf* reader, struct iobuf* writ
     iobuf_read_8(reader, &b);
 
     dprintf("VFD: Set Text Speed, %d\n", b);
+    vfd_state.text_speed = b;
     return S_FALSE;
 }
 HRESULT vfd_handle_write_text(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
@@ -363,10 +379,12 @@ HRESULT vfd_handle_write_text(struct const_iobuf* reader, struct iobuf* writer, 
 }
 HRESULT vfd_handle_enable_scroll(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
     dprintf("VFD: Enable Scrolling\n");
+    vfd_state.scroll_enabled = 1;
     return S_FALSE;
 }
 HRESULT vfd_handle_disable_scroll(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
     dprintf("VFD: Disable Scrolling\n");
+    vfd_state.scroll_enabled = 0;
     return S_FALSE;
 }
 HRESULT vfd_handle_rotate(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
@@ -374,6 +392,7 @@ HRESULT vfd_handle_rotate(struct const_iobuf* reader, struct iobuf* writer, stru
     iobuf_read_8(reader, &b);
 
     dprintf("VFD: Rotate, %d\n", b);
+    vfd_state.rotate = b;
     return S_FALSE;
 }
 HRESULT vfd_handle_create_char(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){

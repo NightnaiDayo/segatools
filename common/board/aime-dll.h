@@ -15,6 +15,10 @@ struct aime_dll {
             size_t luid_size);
     HRESULT (*nfc_get_felica_id)(uint8_t unit_no, uint64_t *IDm);
     void (*led_set_color)(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b);
+    void (*set_vfd_text)(
+            const uint8_t *text,
+            size_t text_len,
+            const struct aime_io_vfd_state *state);
 };
 
 struct aime_dll_config {
