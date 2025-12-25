@@ -19,6 +19,7 @@ struct aime_dll {
             const uint8_t *text,
             size_t text_len,
             const struct aime_io_vfd_state *state);
+    void (*set_vfd_state)(const struct aime_io_vfd_state *state);
 };
 
 struct aime_dll_config {

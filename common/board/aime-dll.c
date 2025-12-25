@@ -10,7 +10,7 @@
 
 enum {
     AIME_DLL_SYM_COUNT_V100 = 5,
-    AIME_DLL_SYM_COUNT_V101 = 6,
+    AIME_DLL_SYM_COUNT_V101 = 7,
 };
 
 const struct dll_bind_sym aime_dll_syms[] = {
@@ -32,6 +32,9 @@ const struct dll_bind_sym aime_dll_syms[] = {
     }, {
         .sym = "aime_io_set_vfd_text",
         .off = offsetof(struct aime_dll, set_vfd_text),
+    }, {
+        .sym = "aime_io_set_vfd_state",
+        .off = offsetof(struct aime_dll, set_vfd_state),
     },
 };
 

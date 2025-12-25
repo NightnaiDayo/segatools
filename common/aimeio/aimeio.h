@@ -118,3 +118,11 @@ void aime_io_set_vfd_text(
         const uint8_t *text,
         size_t text_len,
         const struct aime_io_vfd_state *state);
+
+/*
+    VFD state change notification. Called when the VFD state changes even
+    when no text is written.
+
+    Minimum API version: 0x0101
+*/
+void aime_io_set_vfd_state(const struct aime_io_vfd_state *state);

@@ -361,3 +361,8 @@ void aime_io_set_vfd_text(
     (void) text_len;
     (void) state;
 }
+
+void aime_io_set_vfd_state(const struct aime_io_vfd_state *state)
+{
+    (void) state;
+}
