@@ -8,6 +8,11 @@
 #include "util/dll-bind.h"
 #include "util/dprintf.h"
 
+enum {
+    MAI2_DLL_SYM_COUNT_V101 = 11,
+    MAI2_DLL_SYM_COUNT_V102 = 12,
+};
+
 const struct dll_bind_sym mai2_dll_syms[] = {
     {
         .sym = "mai2_io_init",
@@ -108,11 +113,9 @@ HRESULT mai2_dll_init(const struct mai2_dll_config *cfg, HINSTANCE self)
     }
 
     sym = mai2_dll_syms;
-    sym_count = _countof(mai2_dll_syms);
-
-    if (mai2_dll.api_version < 0x0102) {
-        sym_count--;
-    }
+    sym_count = (mai2_dll.api_version < 0x0102)
+            ? MAI2_DLL_SYM_COUNT_V101
+            : MAI2_DLL_SYM_COUNT_V102;
 
     hr = dll_bind(&mai2_dll, src, &sym, sym_count);
 
