@@ -104,7 +104,7 @@ struct aime_io_vfd_state {
     uint8_t encoding;
     uint8_t text_speed;
     uint8_t scroll_enabled;
-    uint8_t h_scroll;
+    uint16_t h_scroll;
     uint16_t cursor_x;
     uint8_t cursor_y;
     uint16_t wnd_x0;
@@ -112,6 +112,9 @@ struct aime_io_vfd_state {
     uint16_t wnd_x1;
     uint8_t wnd_y1;
     uint8_t rotate;
+    uint8_t brightness;
+    uint8_t screen_on;
+    uint32_t clear_seq;
 };
 
 void aime_io_vfd_set_text(

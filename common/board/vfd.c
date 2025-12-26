@@ -305,12 +305,16 @@ HRESULT vfd_handle_clear_screen(struct const_iobuf* reader, struct iobuf* writer
                 uint8_t b;
                 iobuf_read_8(reader, &b);
                 dprintf("VFD: Brightness (compat), %d\n", b);
+                vfd_state.brightness = b;
+                vfd_publish_state();
                 return S_FALSE;
             }
         }
     }
 
     dprintf("VFD: Clear Screen\n");
+    vfd_state.clear_seq++;
+    vfd_publish_state();
 
     return S_FALSE;
 }
@@ -324,6 +328,8 @@ HRESULT vfd_handle_set_brightness(struct const_iobuf* reader, struct iobuf* writ
     }
 
     dprintf("VFD: Brightness, %d\n", b);
+    vfd_state.brightness = b;
+    vfd_publish_state();
 
     return S_FALSE;
 }
@@ -337,6 +343,8 @@ HRESULT vfd_handle_set_screen_on(struct const_iobuf* reader, struct iobuf* write
     }
 
     dprintf("VFD: Screen Power, %d\n", b);
+    vfd_state.screen_on = b;
+    vfd_publish_state();
     return S_FALSE;
 }
 HRESULT vfd_handle_set_h_scroll(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
@@ -344,7 +352,7 @@ HRESULT vfd_handle_set_h_scroll(struct const_iobuf* reader, struct iobuf* writer
     iobuf_read_be16(reader, &x);
 
     dprintf("VFD: Horizontal Scroll, X=%d\n", x);
-    vfd_state.h_scroll = (x > 0xFF) ? 0xFF : (uint8_t) x;
+    vfd_state.h_scroll = x;
     vfd_publish_state();
     return S_FALSE;
 }
