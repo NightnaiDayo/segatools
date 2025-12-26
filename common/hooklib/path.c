@@ -129,19 +129,6 @@ static BOOL WINAPI hook_MoveFileExW(
         const wchar_t *lpNewFileName,
         uint32_t dwFlags);
 
-        
-static BOOL WINAPI hook_CopyFileA(
-        const LPCSTR lpExistingFileName,
-        const LPCSTR lpNewFileName,
-        BOOL   bFailIfExists
-);
-
-static BOOL WINAPI hook_CopyFileW(
-        const LPCWSTR  lpExistingFileName,
-        const LPCWSTR  lpNewFileName,
-        BOOL   bFailIfExists
-);
-
 static BOOL WINAPI hook_CopyFileExA(
         LPCSTR             lpExistingFileName,
         LPCSTR             lpNewFileName,
@@ -492,14 +479,6 @@ static const struct hook_symbol path_hook_syms[] = {
         .patch  = hook_MoveFileW,
         .link   = (void **) &next_MoveFileW,
     }, {
-        .name   = "CopyFileA",
-        .patch  = hook_CopyFileA,
-        .link   = (void **) &next_CopyFileA,
-    }, {
-        .name   = "CopyFileW",
-        .patch  = hook_CopyFileW,
-        .link   = (void **) &next_CopyFileW,
-    }, {
         .name   = "MoveFileExA",
         .patch  = hook_MoveFileExA,
         .link   = (void **) &next_MoveFileExA,
@@ -517,7 +496,7 @@ static const struct hook_symbol path_hook_syms[] = {
         .link   = (void **) &next_CopyFileW,
     }, {
         .name   = "CopyFileExA",
-        .patch  = hook_CopyFileExW,
+        .patch  = hook_CopyFileExA,
         .link   = (void **) &next_CopyFileExA,
     }, {
         .name   = "CopyFileExW",
@@ -1406,75 +1385,6 @@ static BOOL WINAPI hook_MoveFileExW(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName,
         dwFlags);
-
-    free(oldTrans);
-    free(newTrans);
-
-    return ok;
-}
-
-static BOOL WINAPI hook_CopyFileA(
-        const LPCSTR lpExistingFileName,
-        const LPCSTR lpNewFileName,
-        BOOL   bFailIfExists
-)
-{
-    char *oldTrans;
-    char *newTrans;
-    BOOL ok;
-
-    ok = path_transform_a(&oldTrans, lpExistingFileName);
-
-    if (!ok) {
-        return FALSE;
-    }
-
-    ok = path_transform_a(&newTrans, lpNewFileName);
-
-    if (!ok) {
-        free(oldTrans);
-
-        return FALSE;
-    }
-
-    ok = next_CopyFileA(
-        oldTrans ? oldTrans : lpExistingFileName,
-        newTrans ? newTrans : lpNewFileName,
-        bFailIfExists);
-
-    free(oldTrans);
-    free(newTrans);
-
-    return ok;
-}
-
-static BOOL WINAPI hook_CopyFileW(
-        const LPCWSTR  lpExistingFileName,
-        const LPCWSTR  lpNewFileName,
-        BOOL   bFailIfExists
-) {
-    wchar_t *oldTrans;
-    wchar_t *newTrans;
-    BOOL ok;
-
-    ok = path_transform_w(&oldTrans, lpExistingFileName);
-
-    if (!ok) {
-        return FALSE;
-    }
-
-    ok = path_transform_w(&newTrans, lpNewFileName);
-
-    if (!ok) {
-        free(oldTrans);
-
-        return FALSE;
-    }
-
-    ok = next_CopyFileW(
-        oldTrans ? oldTrans : lpExistingFileName,
-        newTrans ? newTrans : lpNewFileName,
-        bFailIfExists);
 
     free(oldTrans);
     free(newTrans);
