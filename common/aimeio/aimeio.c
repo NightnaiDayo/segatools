@@ -352,7 +352,7 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm)
 void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b)
 {}
 
-void aime_io_set_vfd_text(
+void aime_io_vfd_set_text(
         const uint8_t *text,
         size_t text_len,
         const struct aime_io_vfd_state *state)
@@ -362,7 +362,7 @@ void aime_io_set_vfd_text(
     (void) state;
 }
 
-void aime_io_set_vfd_state(const struct aime_io_vfd_state *state)
+void aime_io_vfd_set_state(const struct aime_io_vfd_state *state)
 {
     (void) state;
 }

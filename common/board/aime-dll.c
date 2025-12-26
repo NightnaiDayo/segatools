@@ -30,11 +30,11 @@ const struct dll_bind_sym aime_dll_syms[] = {
         .sym = "aime_io_led_set_color",
         .off = offsetof(struct aime_dll, led_set_color),
     }, {
-        .sym = "aime_io_set_vfd_text",
-        .off = offsetof(struct aime_dll, set_vfd_text),
+        .sym = "aime_io_vfd_set_text",
+        .off = offsetof(struct aime_dll, vfd_set_text),
     }, {
-        .sym = "aime_io_set_vfd_state",
-        .off = offsetof(struct aime_dll, set_vfd_state),
+        .sym = "aime_io_vfd_set_state",
+        .off = offsetof(struct aime_dll, vfd_set_state),
     },
 };
 

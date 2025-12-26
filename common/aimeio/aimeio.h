@@ -114,7 +114,7 @@ struct aime_io_vfd_state {
     uint8_t rotate;
 };
 
-void aime_io_set_vfd_text(
+void aime_io_vfd_set_text(
         const uint8_t *text,
         size_t text_len,
         const struct aime_io_vfd_state *state);
@@ -125,4 +125,4 @@ void aime_io_set_vfd_text(
 
     Minimum API version: 0x0101
 */
-void aime_io_set_vfd_state(const struct aime_io_vfd_state *state);
+void aime_io_vfd_set_state(const struct aime_io_vfd_state *state);

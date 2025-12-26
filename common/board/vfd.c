@@ -54,8 +54,8 @@ static bool utf_enabled;
 
 static void vfd_publish_state(void)
 {
-    if (aime_dll.set_vfd_state != NULL) {
-        aime_dll.set_vfd_state(&vfd_state);
+    if (aime_dll.vfd_set_state != NULL) {
+        aime_dll.vfd_set_state(&vfd_state);
     }
 }
 
@@ -126,9 +126,35 @@ void print_vfd_text(const char* str, int len){
 
     }
 
-    if (aime_dll.set_vfd_text != NULL) {
-        aime_dll.set_vfd_text((const uint8_t *) str, len, &vfd_state);
+    if (aime_dll.vfd_set_text != NULL) {
+        aime_dll.vfd_set_text((const uint8_t *) str, len, &vfd_state);
     }
+}
+
+static void vfd_read_text_until_sync(struct const_iobuf *reader)
+{
+    int len;
+
+    if (reader->pos >= reader->nbytes) {
+        return;
+    }
+
+    len = 0;
+    while (reader->pos + len < reader->nbytes &&
+            reader->bytes[reader->pos + len] != VFD_SYNC_BYTE &&
+            reader->bytes[reader->pos + len] != VFD_SYNC_BYTE2) {
+        len++;
+    }
+
+    if (len <= 0) {
+        return;
+    }
+
+    char *str = malloc(len);
+    memset(str, 0, len);
+    iobuf_read(reader, str, len);
+    print_vfd_text(str, len);
+    free(str);
 }
 
 static HRESULT vfd_handle_irp(struct irp *irp)
@@ -193,6 +219,10 @@ static HRESULT vfd_handle_irp(struct irp *irp)
                 hr = vfd_handle_set_text_wnd(&reader, writer, &vfd_uart);
             } else if (cmd == VFD_CMD_SET_TEXT_SPEED) {
                 hr = vfd_handle_set_text_speed(&reader, writer, &vfd_uart);
+            } else if (cmd == VFD_CMD_WRITE_STATIC) {
+                dprintf("VFD: Write Static Text\n");
+                vfd_read_text_until_sync(&reader);
+                hr = S_FALSE;
             } else if (cmd == VFD_CMD_WRITE_TEXT) {
                 hr = vfd_handle_write_text(&reader, writer, &vfd_uart);
             } else if (cmd == VFD_CMD_ENABLE_SCROLL) {
@@ -214,22 +244,7 @@ static HRESULT vfd_handle_irp(struct irp *irp)
 
             // if no sync byte is sent, we are just getting plain text...
 
-            if (reader.pos < reader.nbytes){
-                int len = 0;
-
-                // read chars until we hit a new sync byte or the data ends
-                while (reader.pos + len + 1 < reader.nbytes && reader.bytes[reader.pos + len] != VFD_SYNC_BYTE && reader.bytes[reader.pos + len] != VFD_SYNC_BYTE2){
-                    len++;
-                }
-
-                char* str = malloc(len);
-                memset(str, 0, len);
-                iobuf_read(&reader, str, len);
-                print_vfd_text(str, len);
-                free(str);
-
-                reader.pos += len;
-            }
+            vfd_read_text_until_sync(&reader);
 
         }
 
@@ -245,7 +260,16 @@ static HRESULT vfd_handle_irp(struct irp *irp)
 }
 
 HRESULT vfd_handle_get_version(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
-    dprintf("VFD: Get Version\n");
+    uint8_t subcmd;
+
+    if (reader->pos < reader->nbytes &&
+            reader->bytes[reader->pos] != VFD_SYNC_BYTE &&
+            reader->bytes[reader->pos] != VFD_SYNC_BYTE2) {
+        iobuf_read_8(reader, &subcmd);
+        dprintf("VFD: Get Version (0x%02x)\n", subcmd);
+    } else {
+        dprintf("VFD: Get Version\n");
+    }
 
     struct vfd_resp_board_info resp;
 
@@ -265,6 +289,27 @@ HRESULT vfd_handle_reset(struct const_iobuf* reader, struct iobuf* writer, struc
     return S_FALSE;
 }
 HRESULT vfd_handle_clear_screen(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
+    if (reader->pos + 1 <= reader->nbytes) {
+        uint8_t next = reader->bytes[reader->pos];
+        bool next_is_sync = (next == VFD_SYNC_BYTE || next == VFD_SYNC_BYTE2);
+
+        if (!next_is_sync && next <= 4) {
+            bool end_or_sync = (reader->pos + 1 >= reader->nbytes);
+
+            if (!end_or_sync) {
+                uint8_t follow = reader->bytes[reader->pos + 1];
+                end_or_sync = (follow == VFD_SYNC_BYTE || follow == VFD_SYNC_BYTE2);
+            }
+
+            if (end_or_sync) {
+                uint8_t b;
+                iobuf_read_8(reader, &b);
+                dprintf("VFD: Brightness (compat), %d\n", b);
+                return S_FALSE;
+            }
+        }
+    }
+
     dprintf("VFD: Clear Screen\n");
 
     return S_FALSE;
@@ -295,29 +340,44 @@ HRESULT vfd_handle_set_screen_on(struct const_iobuf* reader, struct iobuf* write
     return S_FALSE;
 }
 HRESULT vfd_handle_set_h_scroll(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
-    uint8_t x;
-    iobuf_read_8(reader, &x);
+    uint16_t x;
+    iobuf_read_be16(reader, &x);
 
     dprintf("VFD: Horizontal Scroll, X=%d\n", x);
-    vfd_state.h_scroll = x;
+    vfd_state.h_scroll = (x > 0xFF) ? 0xFF : (uint8_t) x;
     vfd_publish_state();
     return S_FALSE;
 }
 HRESULT vfd_handle_draw_image(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
-    int w, h;
-    uint16_t x0, x1;
+    uint16_t x0;
+    uint16_t w;
+    uint16_t h_lines;
+    uint16_t h_pixels;
     uint8_t y0, y1;
-    uint8_t image[2048];
+    size_t payload;
+    size_t remaining;
 
     iobuf_read_be16(reader, &x0);
     iobuf_read_8(reader, &y0);
-    iobuf_read_be16(reader, &x1);
+    iobuf_read_be16(reader, &w);
     iobuf_read_8(reader, &y1);
-    w = x1 - x0;
-    h = y1 - y0;
-    iobuf_read(reader, image, w*h);
 
-    dprintf("VFD: Draw image, %dx%d\n", w, h);
+    if (y1 >= y0) {
+        h_lines = (uint16_t) (y1 - y0 + 1);
+    } else {
+        h_lines = 0;
+    }
+
+    h_pixels = (uint16_t) (h_lines * 8);
+    dprintf("VFD: Draw image, %dx%d @%d,%d\n", w, h_pixels, x0, y0);
+
+    payload = (size_t) w * (size_t) h_pixels;
+    remaining = reader->nbytes - reader->pos;
+    if (payload > remaining) {
+        payload = remaining;
+    }
+
+    reader->pos += payload;
     return S_FALSE;
 }
 
@@ -353,15 +413,20 @@ HRESULT vfd_handle_set_encoding(struct const_iobuf* reader, struct iobuf* writer
     return S_FALSE;
 }
 HRESULT vfd_handle_set_text_wnd(struct const_iobuf* reader, struct iobuf* writer, struct uart* vfd_uart){
-    uint16_t x0, x1;
-    uint8_t y0, y1;
+    uint16_t x0, w;
+    uint8_t y0, h;
+    uint16_t x1;
+    uint8_t y1;
 
     iobuf_read_be16(reader, &x0);
     iobuf_read_8(reader, &y0);
-    iobuf_read_be16(reader, &x1);
-    iobuf_read_8(reader, &y1);
+    iobuf_read_be16(reader, &w);
+    iobuf_read_8(reader, &h);
 
-    dprintf("VFD: Set Text Window, p0:%d,%d, p1:%d,%d\n", x0, y0, x1, y1);
+    x1 = (uint16_t) (x0 + w);
+    y1 = (uint8_t) (y0 + h);
+
+    dprintf("VFD: Set Text Window, x=%d,y=%d,w=%d,h=%d\n", x0, y0, w, h);
     vfd_state.wnd_x0 = x0;
     vfd_state.wnd_y0 = y0;
     vfd_state.wnd_x1 = x1;
