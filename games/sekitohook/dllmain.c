@@ -146,12 +146,6 @@ static DWORD CALLBACK sekito_pre_startup(void)
         goto fail;
     }
 
-    hr = amvideo_hook_init(&sekito_hook_cfg.amvideo, sekito_hook_mod);
-
-    if (FAILED(hr)) {
-        goto fail;
-    }
-
     if (sekito_hook_cfg.amex.jvs.enable && sekito_hook_cfg.amex.jvs.foreground) {
         fgdet_init(L"teaGfx DirectX Release", false);
     }
