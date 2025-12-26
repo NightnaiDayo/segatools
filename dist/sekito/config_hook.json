@@ -9,8 +9,5 @@
   },
   "allnet_auth": {
     "type": "1.0"
-  },
-  "aime": {
-    "firmware_path": []
   }
 }
