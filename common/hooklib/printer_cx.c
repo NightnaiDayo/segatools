@@ -15,92 +15,92 @@
 #include "util/dprintf.h"
 
 #pragma region prototypes
-static int __stdcall hook_CXCMD_Retransfer();
+static int WINAPI hook_CXCMD_Retransfer();
 
-static bool __stdcall hook_CXCMD_CheckIfConnected(int* pSlotId, int* pId);
+static bool WINAPI hook_CXCMD_CheckIfConnected(int* pSlotId, int* pId);
 
-static int __stdcall hook_CXCMD_xImageOut();
+static int WINAPI hook_CXCMD_xImageOut();
 
-static int __stdcall hook_CXCMD_MoveCard(int slotId, int id, int dest, int flip, int filmInit, int immed);
+static int WINAPI hook_CXCMD_MoveCard(int slotId, int id, int dest, int flip, int filmInit, int immed);
 
-static int __stdcall hook_CXCMD_xWriteMagData();
+static int WINAPI hook_CXCMD_xWriteMagData();
 
-static int __stdcall hook_CXCMD_SecurityPrint(int slotId, int id, int color, int bufferIndex, int immed);
+static int WINAPI hook_CXCMD_SecurityPrint(int slotId, int id, int color, int bufferIndex, int immed);
 
-static int __stdcall hook_CXCMD_ScanPrinterNext();
+static int WINAPI hook_CXCMD_ScanPrinterNext();
 
-static int __stdcall hook_CXCMD_Print(int slotId, int id, int color, int bufferIndex, int immed);
+static int WINAPI hook_CXCMD_Print(int slotId, int id, int color, int bufferIndex, int immed);
 
-static int __stdcall hook_CXCMD_RezeroUnit(int slotId, int id, int action);
+static int WINAPI hook_CXCMD_RezeroUnit(int slotId, int id, int action);
 
-static int __stdcall hook_CXCMD_WriteMagData();
+static int WINAPI hook_CXCMD_WriteMagData();
 
-static int __stdcall hook_CXCMD_LogSense(int iSlot, int iID, int iPage, uint8_t* pbyBuffer);
+static int WINAPI hook_CXCMD_LogSense(int iSlot, int iID, int iPage, uint8_t* pbyBuffer);
 
-static int __stdcall hook_CXCMD_StandardInquiry(int iSlot, int iID, uint8_t* pbyBuffer);
+static int WINAPI hook_CXCMD_StandardInquiry(int iSlot, int iID, uint8_t* pbyBuffer);
 
-static int __stdcall hook_CXCMD_ModeSense(int iSlot, int iID, int iPC, int iPage, uint8_t* pbyBuffer);
+static int WINAPI hook_CXCMD_ModeSense(int iSlot, int iID, int iPC, int iPage, uint8_t* pbyBuffer);
 
-static int __stdcall hook_CXCMD_UpdateFirmware(int iSlot, int iID, char* pFile, int iDataID);
+static int WINAPI hook_CXCMD_UpdateFirmware(int iSlot, int iID, char* pFile, int iDataID);
 
-static int __stdcall hook_CXCMD_ModeSelect(int iSlot, int iID, int iSp, int iPage, uint8_t* pbyData);
+static int WINAPI hook_CXCMD_ModeSelect(int iSlot, int iID, int iSp, int iPage, uint8_t* pbyData);
 
-static int __stdcall hook_CXCMD_GetPrintingStatus();
+static int WINAPI hook_CXCMD_GetPrintingStatus();
 
-static int __stdcall hook_CXCMD_SendDiagnostic(int iSlot, int iID, int iTestMode, int iTestPatten, int iTestCount);
+static int WINAPI hook_CXCMD_SendDiagnostic(int iSlot, int iID, int iTestMode, int iTestPatten, int iTestCount);
 
-static int __stdcall hook_CXCMD_RetransferAndTurn(int slotId, int id, int immed);
+static int WINAPI hook_CXCMD_RetransferAndTurn(int slotId, int id, int immed);
 
-static int __stdcall hook_CXCMD_LogSelect(int iSlot, int iID, int iMod);
+static int WINAPI hook_CXCMD_LogSelect(int iSlot, int iID, int iMod);
 
-static int __stdcall hook_CXCMD_ReadPosition(int slotId, int id, uint8_t* buffer);
+static int WINAPI hook_CXCMD_ReadPosition(int slotId, int id, uint8_t* buffer);
 
-static int __stdcall hook_CXCMD_SecurityLock();
+static int WINAPI hook_CXCMD_SecurityLock();
 
-static int __stdcall hook_CXCMD_SetPrintingStatus();
+static int WINAPI hook_CXCMD_SetPrintingStatus();
 
-static int __stdcall hook_CXCMD_xReadISOMagData();
+static int WINAPI hook_CXCMD_xReadISOMagData();
 
-static int __stdcall hook_CXCMD_WriteISO3TrackMagData();
+static int WINAPI hook_CXCMD_WriteISO3TrackMagData();
 
-static int __stdcall hook_CXCMD_PasswordSet();
+static int WINAPI hook_CXCMD_PasswordSet();
 
-static int __stdcall hook_CXCMD_GetPrinterStatus();
+static int WINAPI hook_CXCMD_GetPrinterStatus();
 
-static int __stdcall hook_CXCMD_WriteProjectCode();
+static int WINAPI hook_CXCMD_WriteProjectCode();
 
-static int __stdcall hook_CXCMD_LoadCard(int slotId, int id, int dest, int flip, int filmInit, int immed);
+static int WINAPI hook_CXCMD_LoadCard(int slotId, int id, int dest, int flip, int filmInit, int immed);
 
-static int __stdcall hook_CXCMD_ReadMagData();
+static int WINAPI hook_CXCMD_ReadMagData();
 
-static int __stdcall hook_CXCMD_ScanPrinter(int* pSlotId, int* pId);
+static int WINAPI hook_CXCMD_ScanPrinter(int* pSlotId, int* pId);
 
-static int __stdcall hook_CXCMD_xWriteISOMagData();
+static int WINAPI hook_CXCMD_xWriteISOMagData();
 
-static int __stdcall hook_CXCMD_ICControl();
+static int WINAPI hook_CXCMD_ICControl();
 
-static int __stdcall hook_CXCMD_ImageOut(int slotId, int id, uint8_t* plane, int length, int color, int bufferIndex);
+static int WINAPI hook_CXCMD_ImageOut(int slotId, int id, uint8_t* plane, int length, int color, int bufferIndex);
 
-static int __stdcall hook_CXCMD_ReadBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset,
+static int WINAPI hook_CXCMD_ReadBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset,
                                            int iLength);
 
-static int __stdcall hook_CXCMD_xReadMagData();
+static int WINAPI hook_CXCMD_xReadMagData();
 
-static int __stdcall hook_CXCMD_WriteBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset,
+static int WINAPI hook_CXCMD_WriteBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset,
                                             int iLength);
 
-static int __stdcall hook_CXCMD_DefineLUT(int slotId, int id, int color, int length, uint8_t* buffer);
+static int WINAPI hook_CXCMD_DefineLUT(int slotId, int id, int color, int length, uint8_t* buffer);
 
-static int __stdcall hook_CXCMD_ReadISO3TrackMagData();
+static int WINAPI hook_CXCMD_ReadISO3TrackMagData();
 
-static int __stdcall hook_CXCMD_TestUnitReady(int slotId, int id);
+static int WINAPI hook_CXCMD_TestUnitReady(int slotId, int id);
 
-static int __stdcall hook_CXCMD_RetransferAndEject(int slotId, int id, int immed);
+static int WINAPI hook_CXCMD_RetransferAndEject(int slotId, int id, int immed);
 
-static bool __stdcall hook_Lut24_Exchange(const wchar_t* pFile, uint8_t* y, uint8_t* m, uint8_t* c, int sizeY, int sizeM,
+static bool WINAPI hook_Lut24_Exchange(const wchar_t* pFile, uint8_t* y, uint8_t* m, uint8_t* c, int sizeY, int sizeM,
                                           int sizeC);
 
-static bool __stdcall hook_Wdata_create(uint8_t* pbyRdata, uint8_t* pbyGdata, uint8_t* pbyBdata, int iWidth,
+static bool WINAPI hook_Wdata_create(uint8_t* pbyRdata, uint8_t* pbyGdata, uint8_t* pbyBdata, int iWidth,
                                         int iHeight, bool bPortrait, int iAlgorithim, uint8_t* pbyWdata);
 
 static int __cdecl hook_init_accesscodekey(BSTR fileName);
@@ -437,47 +437,47 @@ void printer_cx_hook_insert_hooks(HMODULE target) {
     proc_addr_table_push(target, "accesscode_dll.dll", hook_ac_syms, _countof(hook_ac_syms));
 }
 
-static int __stdcall hook_CXCMD_Retransfer() {
+static int WINAPI hook_CXCMD_Retransfer() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static bool __stdcall hook_CXCMD_CheckIfConnected(int* pSlotId, int* pId) {
+static bool WINAPI hook_CXCMD_CheckIfConnected(int* pSlotId, int* pId) {
     dprintf("CX7000: %s\n", __func__);
     return printer_config.enable;
 }
 
-static int __stdcall hook_CXCMD_xImageOut() {
+static int WINAPI hook_CXCMD_xImageOut() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_MoveCard(int slotId, int id, int dest, int flip, int filmInit, int immed) {
+static int WINAPI hook_CXCMD_MoveCard(int slotId, int id, int dest, int flip, int filmInit, int immed) {
     dprintf("CX7000: %s(%d, %d, %d, %d)\n", __func__, dest, flip, filmInit, immed);
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_xWriteMagData() {
+static int WINAPI hook_CXCMD_xWriteMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_SecurityPrint(int slotId, int id, int color, int bufferIndex, int immed) {
+static int WINAPI hook_CXCMD_SecurityPrint(int slotId, int id, int color, int bufferIndex, int immed) {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ScanPrinterNext() {
+static int WINAPI hook_CXCMD_ScanPrinterNext() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ImageOut(int slotId, int id, uint8_t* plane, int length, int color, int bufferIndex) {
+static int WINAPI hook_CXCMD_ImageOut(int slotId, int id, uint8_t* plane, int length, int color, int bufferIndex) {
     dprintf("CX7000: %s\n", __func__);
 
     assert(color >= 0 && color <= 3);
@@ -496,7 +496,7 @@ static int __stdcall hook_CXCMD_ImageOut(int slotId, int id, uint8_t* plane, int
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_Print(int slotId, int id, int color, int bufferIndex, int immed) {
+static int WINAPI hook_CXCMD_Print(int slotId, int id, int color, int bufferIndex, int immed) {
     dprintf("CX7000: %s(%d, %d, %d)\n", __func__, color, bufferIndex, immed);
 
     assert(bufferIndex >= 0 && bufferIndex <= 1);
@@ -542,18 +542,18 @@ static int __stdcall hook_CXCMD_Print(int slotId, int id, int color, int bufferI
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_RezeroUnit(int slotId, int id, int action) {
+static int WINAPI hook_CXCMD_RezeroUnit(int slotId, int id, int action) {
     dprintf("CX7000: %s\n", __func__);
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_WriteMagData() {
+static int WINAPI hook_CXCMD_WriteMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_LogSense(int iSlot, int iID, int iPage, uint8_t* pbyBuffer) {
+static int WINAPI hook_CXCMD_LogSense(int iSlot, int iID, int iPage, uint8_t* pbyBuffer) {
     dprintf("CX7000: %s\n", __func__);
 
     const int size = 108;
@@ -586,7 +586,7 @@ static int __stdcall hook_CXCMD_LogSense(int iSlot, int iID, int iPage, uint8_t*
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_StandardInquiry(int iSlot, int iID, uint8_t* pbyBuffer) {
+static int WINAPI hook_CXCMD_StandardInquiry(int iSlot, int iID, uint8_t* pbyBuffer) {
     const int size = 96;
     dprintf("CX7000: %s\n", __func__);
 
@@ -600,7 +600,7 @@ static int __stdcall hook_CXCMD_StandardInquiry(int iSlot, int iID, uint8_t* pby
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_ModeSense(int iSlot, int iID, int iPC, int iPage, uint8_t* pbyBuffer) {
+static int WINAPI hook_CXCMD_ModeSense(int iSlot, int iID, int iPC, int iPage, uint8_t* pbyBuffer) {
     dprintf("CX7000: %s(%d, %d)\n", __func__, iPC, iPage);
 
     const int size = 104;
@@ -620,25 +620,25 @@ static int __stdcall hook_CXCMD_ModeSense(int iSlot, int iID, int iPC, int iPage
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_UpdateFirmware(int iSlot, int iID, char* pFile, int iDataID) {
+static int WINAPI hook_CXCMD_UpdateFirmware(int iSlot, int iID, char* pFile, int iDataID) {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // intentionally not implemented
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ModeSelect(int iSlot, int iID, int iSp, int iPage, uint8_t* pbyData) {
+static int WINAPI hook_CXCMD_ModeSelect(int iSlot, int iID, int iSp, int iPage, uint8_t* pbyData) {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_GetPrintingStatus() {
+static int WINAPI hook_CXCMD_GetPrintingStatus() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_SendDiagnostic(int iSlot, int iID, int iTestMode, int iTestPatten, int iTestCount) {
+static int WINAPI hook_CXCMD_SendDiagnostic(int iSlot, int iID, int iTestMode, int iTestPatten, int iTestCount) {
     dprintf("CX7000: %s(%d, %d, %d)\n", __func__, iTestMode, iTestPatten, iTestCount);
     if (iTestMode == 19) {
         dprintf("CX7000: Printer Front Buttons Enabled: %d\n", iTestPatten);
@@ -664,18 +664,18 @@ static int __stdcall hook_CXCMD_SendDiagnostic(int iSlot, int iID, int iTestMode
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_RetransferAndTurn(int slotId, int id, int immed) {
+static int WINAPI hook_CXCMD_RetransferAndTurn(int slotId, int id, int immed) {
     dprintf("CX7000: %s\n", __func__);
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_LogSelect(int iSlot, int iID, int iMod) {
+static int WINAPI hook_CXCMD_LogSelect(int iSlot, int iID, int iMod) {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ReadPosition(int slotId, int id, uint8_t* buffer) {
+static int WINAPI hook_CXCMD_ReadPosition(int slotId, int id, uint8_t* buffer) {
     dprintf("CX7000: %s\n", __func__);
     const int size = 8;
 
@@ -686,60 +686,60 @@ static int __stdcall hook_CXCMD_ReadPosition(int slotId, int id, uint8_t* buffer
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_SecurityLock() {
+static int WINAPI hook_CXCMD_SecurityLock() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_SetPrintingStatus() {
+static int WINAPI hook_CXCMD_SetPrintingStatus() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_xReadISOMagData() {
+static int WINAPI hook_CXCMD_xReadISOMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_WriteISO3TrackMagData() {
+static int WINAPI hook_CXCMD_WriteISO3TrackMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_PasswordSet() {
+static int WINAPI hook_CXCMD_PasswordSet() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_GetPrinterStatus() {
+static int WINAPI hook_CXCMD_GetPrinterStatus() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_WriteProjectCode() {
+static int WINAPI hook_CXCMD_WriteProjectCode() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_LoadCard(int slotId, int id, int dest, int flip, int filmInit, int immed) {
+static int WINAPI hook_CXCMD_LoadCard(int slotId, int id, int dest, int flip, int filmInit, int immed) {
     dprintf("CX7000: %s(%d, %d, %d, %d)\n", __func__, dest, flip, filmInit, immed);
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_ReadMagData() {
+static int WINAPI hook_CXCMD_ReadMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ScanPrinter(int* pSlotId, int* pId) {
+static int WINAPI hook_CXCMD_ScanPrinter(int* pSlotId, int* pId) {
     dprintf("CX7000: %s\n", __func__);
 
     if (!printer_config.enable) {
@@ -752,19 +752,19 @@ static int __stdcall hook_CXCMD_ScanPrinter(int* pSlotId, int* pId) {
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_xWriteISOMagData() {
+static int WINAPI hook_CXCMD_xWriteISOMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ICControl() {
+static int WINAPI hook_CXCMD_ICControl() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ReadBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset,
+static int WINAPI hook_CXCMD_ReadBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset,
                                            int iLength) {
     dprintf("CX7000: %s(%d, %d, %d)\n", __func__, iMode, iBufferID, iLength);
 
@@ -843,13 +843,13 @@ static int __stdcall hook_CXCMD_ReadBuffer(int iSlot, int iID, int iMode, int iB
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_xReadMagData() {
+static int WINAPI hook_CXCMD_xReadMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_WriteBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset, // NOLINT(*-non-const-parameter)
+static int WINAPI hook_CXCMD_WriteBuffer(int iSlot, int iID, int iMode, int iBufferID, uint8_t* pbyData, int iOffset, // NOLINT(*-non-const-parameter)
                                             int iLength) {
     dprintf("CX7000: %s(%d, %d, %d, %d)\n", __func__, iMode, iBufferID, iOffset, iLength);
     if (iMode == 2 && iBufferID == 82 && iLength == 4) {
@@ -863,19 +863,19 @@ static int __stdcall hook_CXCMD_WriteBuffer(int iSlot, int iID, int iMode, int i
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_DefineLUT(int slotId, int id, int color, int length, uint8_t* buffer) {
+static int WINAPI hook_CXCMD_DefineLUT(int slotId, int id, int color, int length, uint8_t* buffer) {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_ReadISO3TrackMagData() {
+static int WINAPI hook_CXCMD_ReadISO3TrackMagData() {
     dprintf("CX7000: %s\n", __func__);
     dprintf("CX7000: Unimplemented\n"); // unused
     return CX_ERROR_USB_COM_3201;
 }
 
-static int __stdcall hook_CXCMD_TestUnitReady(int slotId, int id) {
+static int WINAPI hook_CXCMD_TestUnitReady(int slotId, int id) {
     dprintf("CX7000: %s\n", __func__);
 
     if (!printer_config.enable) {
@@ -885,12 +885,12 @@ static int __stdcall hook_CXCMD_TestUnitReady(int slotId, int id) {
     return CX_OK;
 }
 
-static int __stdcall hook_CXCMD_RetransferAndEject(int slotId, int id, int immed) {
+static int WINAPI hook_CXCMD_RetransferAndEject(int slotId, int id, int immed) {
     dprintf("CX7000: %s\n", __func__);
     return CX_OK;
 }
 
-static bool __stdcall hook_Lut24_Exchange(const wchar_t* pFile, uint8_t* y, uint8_t* m, uint8_t* c, int sizeY, int sizeM,
+static bool WINAPI hook_Lut24_Exchange(const wchar_t* pFile, uint8_t* y, uint8_t* m, uint8_t* c, int sizeY, int sizeM,
                                           int sizeC) {
     dprintf("CX7000: %s(%ls)\n", __func__, pFile);
 
@@ -899,7 +899,7 @@ static bool __stdcall hook_Lut24_Exchange(const wchar_t* pFile, uint8_t* y, uint
     return true;
 }
 
-static bool __stdcall hook_Wdata_create(uint8_t* pbyRdata, uint8_t* pbyGdata, uint8_t* pbyBdata, int iWidth,
+static bool WINAPI hook_Wdata_create(uint8_t* pbyRdata, uint8_t* pbyGdata, uint8_t* pbyBdata, int iWidth,
                                         int iHeight, bool bPortrait, int iAlgorithim, uint8_t* pbyWdata) {
     dprintf("CX7000: %s(%d, %d, %d)\n", __func__, iHeight, bPortrait, iAlgorithim);
 
