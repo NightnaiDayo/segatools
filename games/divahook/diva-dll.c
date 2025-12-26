@@ -30,8 +30,27 @@ const struct dll_bind_sym diva_dll_syms[] = {
     }, {
         .sym = "diva_io_slider_set_leds",
         .off = offsetof(struct diva_dll, slider_set_leds),
+    }, {
+        .sym = "diva_io_led_init",
+        .off = offsetof(struct diva_dll, led_init),
+    }, {
+        .sym = "diva_io_led_set_leds",
+        .off = offsetof(struct diva_dll, led_set_leds),
     }
 };
+
+/* Helper function to determine upon dll_bind failure whether the required functions were found
+   NOTE: relies on symbols order declared above */
+static HRESULT has_enough_symbols(uint16_t version, uint8_t count)
+{
+    if ( version < 0x0101 && count == 7 )
+        return S_OK;
+
+    if ( version >= 0x0101 && count == 9 )
+        return S_OK;
+
+    return E_FAIL;
+}
 
 struct diva_dll diva_dll;
 
@@ -92,16 +111,24 @@ HRESULT diva_dll_init(const struct diva_dll_config *cfg, HINSTANCE self)
     }
 
     sym = diva_dll_syms;
+    const struct dll_bind_sym *init_sym = &sym[0];
     hr = dll_bind(&diva_dll, src, &sym, _countof(diva_dll_syms));
 
     if (FAILED(hr)) {
         if (src != self) {
-            dprintf("Diva IO: Custom IO DLL does not provide function "
-                    "\"%s\". Please contact your IO DLL's developer for "
-                    "further assistance.\n",
-                    sym->sym);
+            // Might still be ok depending on external dll API version
+            int bind_count = sym - init_sym;
+            if ( has_enough_symbols(diva_dll.api_version, bind_count) == S_OK )
+            {
+                hr = S_OK;
+            } else {
+                dprintf("Diva IO: Custom IO DLL does not provide function "
+                        "\"%s\". Please contact your IO DLL's developer for "
+                        "further assistance.\n",
+                        sym->sym);
 
-            goto end;
+                goto end;
+            }
         } else {
             dprintf("Internal error: could not reflect \"%s\"\n", sym->sym);
         }

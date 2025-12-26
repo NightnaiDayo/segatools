@@ -8,8 +8,8 @@ struct led_data {
    uint8_t rgba[480 * 4];
 };
 
-struct elisabeth_config {
+struct elizabeth_config {
     bool enable;
 };
 
-HRESULT elisabeth_hook_init(struct elisabeth_config *cfg);
+HRESULT elizabeth_hook_init(struct elizabeth_config *cfg);

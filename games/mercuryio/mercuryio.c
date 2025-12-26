@@ -7,7 +7,8 @@
 
 #include "mercuryio/mercuryio.h"
 #include "mercuryio/config.h"
-#include "mercuryhook/elisabeth.h"
+#include "mercuryhook/elizabeth.h"
+
 #include "util/env.h"
 
 static unsigned int __stdcall mercury_io_touch_thread_proc(void *ctx);

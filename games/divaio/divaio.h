@@ -1,21 +1,45 @@
 #pragma once
 
+/*
+   DIVA CUSTOM IO API
+
+   Changelog:
+
+   - 0x0100: Initial API version
+   - 0x0101: Add partition and button led support
+*/
+
 #include <windows.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
 enum {
-    DIVA_IO_OPBTN_TEST = 0x01,
-    DIVA_IO_OPBTN_SERVICE = 0x02
+    DIVA_IO_OPBTN_TEST     = 0x01,
+    DIVA_IO_OPBTN_SERVICE  = 0x02
 };
 
 enum {
-    DIVA_IO_GAMEBTN_CIRCLE = 0x01,
-    DIVA_IO_GAMEBTN_CROSS = 0x02,
-    DIVA_IO_GAMEBTN_SQUARE = 0x04,
-    DIVA_IO_GAMEBTN_TRIANGLE = 0x08,
-    DIVA_IO_GAMEBTN_START = 0x10,
+    DIVA_IO_GAMEBTN_CIRCLE    = 0x01,
+    DIVA_IO_GAMEBTN_CROSS     = 0x02,
+    DIVA_IO_GAMEBTN_SQUARE    = 0x04,
+    DIVA_IO_GAMEBTN_TRIANGLE  = 0x08,
+    DIVA_IO_GAMEBTN_START     = 0x10,
+};
+
+enum {
+    /* These are the bitmasks to use when checking which
+       lights are triggered on incoming IO3 GPIO writes. */
+    DIVA_IO_LED_LEFT_PARTITION_RED    = 1 << 1, 
+    DIVA_IO_LED_LEFT_PARTITION_GREEN  = 1 << 0, 
+    DIVA_IO_LED_LEFT_PARTITION_BLUE   = 1 << 15, 
+    DIVA_IO_LED_RIGHT_PARTITION_RED   = 1 << 14, 
+    DIVA_IO_LED_RIGHT_PARTITION_GREEN = 1 << 13, 
+    DIVA_IO_LED_RIGHT_PARTITION_BLUE  = 1 << 12, 
+    DIVA_IO_LED_BTN_TRIANGLE          = 1 << 6, 
+    DIVA_IO_LED_BTN_CROSS             = 1 << 3, 
+    DIVA_IO_LED_BTN_SQUARE            = 1 << 5,
+    DIVA_IO_LED_BTN_CIRCLE            = 1 << 2 
 };
 
 /* Get the version of the Project Diva IO API that this DLL supports. This
@@ -118,3 +142,34 @@ void diva_io_slider_stop(void);
    Minimum API version: 0x0100 */
 
 void diva_io_slider_set_leds(const uint8_t *rgb);
+
+/* Initialize LED emulation. This function will be called before any
+   other diva_io_led_*() function calls.
+
+   All subsequent calls may originate from arbitrary threads and some may
+   overlap with each other. Ensuring synchronization inside your IO DLL is
+   your responsibility. 
+   
+   Minimum API version: 0x0101 */
+
+HRESULT diva_io_led_init(void);
+
+/* Update the cabinet button LEDs. rgb is a pointer to an array up to 10 bytes.
+
+   The LEDs are laid out as follows:
+   [0]: LEFT PARTITION RED LED
+   [1]: LEFT PARTITION GREEN LED
+   [2]: LEFT PARTITION BLUE LED
+   [3]: RIGHT PARTITION RED LED
+   [4]: RIGHT PARTITION GREEN LED
+   [5]: RIGHT PARTITION BLUE LED
+   [6]: BTN TRIANGLE LED
+   [7]: BTN CROSS LED
+   [8]: BTN SQUARE LED
+   [9]: BTN CIRCLE LED
+
+   The LED is turned on when the byte is 255 and turned off when the byte is 0.
+
+   Minimum API version: 0x0101 */
+
+void diva_io_led_set_leds(uint8_t board, const uint8_t *rgb);

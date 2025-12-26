@@ -15,6 +15,7 @@
 
 #include "platform/vfs.h"
 
+#include "ewf.h"
 #include "util/dprintf.h"
 
 static void vfs_fixup_path(wchar_t *path, size_t max_count, bool use_relative_envvar);

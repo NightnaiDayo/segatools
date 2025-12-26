@@ -7,7 +7,9 @@
 
 #include "divaio/divaio.h"
 #include "divaio/config.h"
+
 #include "util/env.h"
+#include "util/dprintf.h"
 
 static unsigned int __stdcall diva_io_slider_thread_proc(void *ctx);
 
@@ -19,7 +21,7 @@ static struct diva_io_config diva_io_cfg;
 
 uint16_t diva_io_get_api_version(void)
 {
-    return 0x0100;
+    return 0x0101;
 }
 
 HRESULT diva_io_jvs_init(void)
@@ -131,4 +133,27 @@ static unsigned int __stdcall diva_io_slider_thread_proc(void *ctx)
     }
 
     return 0;
+}
+
+HRESULT diva_io_led_init(void)
+{
+    return S_OK;
+}
+
+void diva_io_led_set_leds(uint8_t board, const uint8_t *rgb)
+{
+#if 0
+    dprintf("DIVA LED: LEFT PARTITION RED:    %02X\n", rgb[0]);
+    dprintf("DIVA LED: LEFT PARTITION GREEN:  %02X\n", rgb[1]);
+    dprintf("DIVA LED: LEFT PARTITION BLUE:   %02X\n", rgb[2]);
+    dprintf("DIVA LED: RIGHT PARTITION RED:   %02X\n", rgb[3]);
+    dprintf("DIVA LED: RIGHT PARTITION GREEN: %02X\n", rgb[4]);
+    dprintf("DIVA LED: RIGHT PARTITION BLUE:  %02X\n", rgb[5]);
+    dprintf("DIVA LED: BTN TRIANGLE:          %02X\n", rgb[6]);
+    dprintf("DIVA LED: BTN CROSS:             %02X\n", rgb[7]);
+    dprintf("DIVA LED: BTN SQUARE:            %02X\n", rgb[8]);
+    dprintf("DIVA LED: BTN CIRCLE:            %02X\n", rgb[9]);
+#endif
+
+    return;
 }

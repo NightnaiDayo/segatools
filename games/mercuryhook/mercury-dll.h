@@ -3,7 +3,7 @@
 #include <windows.h>
 
 #include "mercuryio/mercuryio.h"
-#include "mercuryhook/elisabeth.h"
+#include "mercuryhook/elizabeth.h"
 
 struct mercury_dll {
     uint16_t api_version;

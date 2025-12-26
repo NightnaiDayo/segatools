@@ -101,5 +101,11 @@ HRESULT platform_hook_init(
         return hr;
     }
 
+    hr = ewf_hook_init(&cfg->ewf);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     return S_OK;
 }

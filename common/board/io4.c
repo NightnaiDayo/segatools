@@ -241,12 +241,20 @@ static HRESULT io4_handle_write(struct irp *irp)
         return S_OK;
 
     case IO4_CMD_SET_PWM_OUTPUT:
-        dprintf("USB I/O: PWM Out\n");
+        // dprintf("USB I/O: PWM Out\n");
+
+        if (io4_ops->write_pwm != NULL) {
+            return io4_ops->write_pwm(out.payload, IO4_REPORT_OUT_PAYLOAD_LEN);
+        }
 
         return S_OK;
 
     case IO4_CMD_SET_UNIQUE_OUTPUT:
         // dprintf("USB I/O: Unique Out\n");
+
+        if (io4_ops->write_unique != NULL) {
+            return io4_ops->write_unique(out.payload, IO4_REPORT_OUT_PAYLOAD_LEN);
+        }
 
         return S_OK;
 

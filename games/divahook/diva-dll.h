@@ -13,6 +13,8 @@ struct diva_dll {
     void (*slider_start)(diva_io_slider_callback_t callback);
     void (*slider_stop)(void);
     void (*slider_set_leds)(const uint8_t *rgb);
+    HRESULT (*led_init)(void);
+    void (*led_set_leds)(uint8_t board, const uint8_t *rgb);
 };
 
 struct diva_dll_config {

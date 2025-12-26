@@ -71,6 +71,7 @@ static uint16_t led15070_fw_sum;
 static uint8_t led15070_host_adr = 0x01;
 
 #define led15070_nboards 2
+#define led15070_nleds 32
 
 typedef struct {
     CRITICAL_SECTION lock;
@@ -79,8 +80,10 @@ typedef struct {
     struct uart boarduart;
     uint8_t written_bytes[520];
     uint8_t readable_bytes[520];
-    uint8_t gs[32][4];
-    uint8_t dc[32][3];
+    uint8_t gs[led15070_nleds][4];
+    uint8_t gs_fade[led15070_nleds][4];
+    bool gs_fade_pending[led15070_nleds];
+    uint8_t dc[led15070_nleds][3];
     uint8_t fet[3];
     uint8_t gs_palette[8][3];
     wchar_t eeprom_path[MAX_PATH];
@@ -150,6 +153,8 @@ HRESULT led15070_hook_init(
         v->boarduart.readable.nbytes = sizeof(v->readable_bytes);
 
         memset(v->gs, 0, sizeof(v->gs));
+        memset(v->gs_fade, 0, sizeof(v->gs_fade));
+        memset(v->gs_fade_pending, 0, sizeof(v->gs_fade_pending));
         memset(v->dc, 0, sizeof(v->dc));
         memset(v->fet, 0, sizeof(v->fet));
         memset(v->gs_palette, 0, sizeof(v->gs_palette));
@@ -454,6 +459,8 @@ static HRESULT led15070_req_set_normal_8bit(int board, const struct led15070_req
     led15070_per_board_vars[board].gs[idx][0] = req->payload[1]; // R
     led15070_per_board_vars[board].gs[idx][1] = req->payload[2]; // G
     led15070_per_board_vars[board].gs[idx][2] = req->payload[3]; // B
+    led15070_per_board_vars[board].gs[idx][3] = 0;
+    led15070_per_board_vars[board].gs_fade_pending[idx] = false;
 
     if (!led15070_per_board_vars[board].enable_response)
         return S_OK;
@@ -473,31 +480,65 @@ static HRESULT led15070_req_set_normal_8bit(int board, const struct led15070_req
     return led15070_frame_encode(&led15070_per_board_vars[board].boarduart.readable, &resp, sizeof(resp.hdr) + resp.hdr.nbytes);
 }
 
+static void led15070_calc_range(
+        uint8_t start,
+        uint8_t count,
+        uint8_t skip,
+        uint8_t *out_start,
+        uint8_t *out_end)
+{
+    uint16_t s = start;
+    uint16_t c = count;
+
+    if (c == 0) {
+        *out_start = 0;
+        *out_end = 0;
+        return;
+    }
+
+    if (c >= led15070_nleds) {
+        c = led15070_nleds;
+    }
+
+    if (skip > 0 && skip <= c) {
+        s += skip;
+        c -= skip;
+    }
+
+    if (s >= led15070_nleds || c == 0) {
+        *out_start = led15070_nleds;
+        *out_end = led15070_nleds;
+        return;
+    }
+
+    *out_start = (uint8_t) s;
+    *out_end = (s + c > led15070_nleds) ? led15070_nleds : (uint8_t) (s + c);
+}
+
 static HRESULT led15070_req_set_multi_flash_8bit(int board, const struct led15070_req_any *req)
 {
     uint8_t idx_start = req->payload[0];
-    uint8_t idx_end = req->payload[1];
+    uint8_t idx_count = req->payload[1];
     uint8_t idx_skip = req->payload[2];
+    uint8_t start;
+    uint8_t end;
 
     // TODO: useful?
 #if defined(LOG_LED15070)
-    dprintf("LED 15070: Set LED - Multi flash 8bit (board %u, start %u, end %u, skip %u)\n",
-           board, idx_start, idx_end, idx_skip);
+    dprintf("LED 15070: Set LED - Multi flash 8bit (board %u, start %u, count %u, skip %u)\n",
+           board, idx_start, idx_count, idx_skip);
 #endif
 
-    if (idx_skip > 0 && idx_skip <= (idx_end - idx_start + 1)) {
-        idx_start += idx_skip;
-    }
+    led15070_calc_range(idx_start, idx_count, idx_skip, &start, &end);
 
-    int i = idx_start;
-    do {
+    for (int i = start; i < end; i++) {
         led15070_per_board_vars[board].gs[i][0] = req->payload[3]; // R
         led15070_per_board_vars[board].gs[i][1] = req->payload[4]; // G
         led15070_per_board_vars[board].gs[i][2] = req->payload[5]; // B
         /* Always 0, tells the controller to immediately change to this color */
         led15070_per_board_vars[board].gs[i][3] = req->payload[6]; // Speed
-        i++;
-    } while (i < idx_end);
+        led15070_per_board_vars[board].gs_fade_pending[i] = false;
+    }
 
     if (!led15070_per_board_vars[board].enable_response)
         return S_OK;
@@ -520,25 +561,24 @@ static HRESULT led15070_req_set_multi_flash_8bit(int board, const struct led1507
 static HRESULT led15070_req_set_multi_fade_8bit(int board, const struct led15070_req_any *req)
 {
     uint8_t idx_start = req->payload[0];
-    uint8_t idx_end = req->payload[1];
+    uint8_t idx_count = req->payload[1];
     uint8_t idx_skip = req->payload[2];
+    uint8_t start;
+    uint8_t end;
 #if defined(LOG_LED15070)
-    dprintf("LED 15070: Set LED - Multi fade 8bit (board %u, start %u, end %u, skip %u)\n",
-           board, idx_start, idx_end, idx_skip);
+    dprintf("LED 15070: Set LED - Multi fade 8bit (board %u, start %u, count %u, skip %u)\n",
+           board, idx_start, idx_count, idx_skip);
 #endif
 
-    if (idx_skip > 0 && idx_skip <= (idx_end - idx_start + 1)) {
-        idx_start += idx_skip;
-    }
+    led15070_calc_range(idx_start, idx_count, idx_skip, &start, &end);
 
-    int i = idx_start;
-    do {
-        led15070_per_board_vars[board].gs[i][0] = req->payload[3]; // R
-        led15070_per_board_vars[board].gs[i][1] = req->payload[4]; // G
-        led15070_per_board_vars[board].gs[i][2] = req->payload[5]; // B
-        led15070_per_board_vars[board].gs[i][3] = req->payload[6]; // Speed
-        i++;
-    } while (i < idx_end);
+    for (int i = start; i < end; i++) {
+        led15070_per_board_vars[board].gs_fade[i][0] = req->payload[3]; // R
+        led15070_per_board_vars[board].gs_fade[i][1] = req->payload[4]; // G
+        led15070_per_board_vars[board].gs_fade[i][2] = req->payload[5]; // B
+        led15070_per_board_vars[board].gs_fade[i][3] = req->payload[6]; // Speed
+        led15070_per_board_vars[board].gs_fade_pending[i] = true;
+    }
 
     if (!led15070_per_board_vars[board].enable_response)
         return S_OK;
@@ -767,12 +807,56 @@ static HRESULT led15070_req_dc_update(int board, const struct led15070_req_any *
 
 static HRESULT led15070_req_gs_update(int board, const struct led15070_req_any *req)
 {
+    _led15070_per_board_vars *v = &led15070_per_board_vars[board];
 #if defined(LOG_LED15070)
     dprintf("LED 15070: GS update (board %u)\n", board);
 #endif
 
-    if (led_gs_update)
-        led_gs_update(board, (const uint8_t*)led15070_per_board_vars[board].gs);
+    if (led_gs_update) {
+        bool has_fade = false;
+        uint8_t payload[led15070_nleds][4];
+
+        for (int i = 0; i < led15070_nleds; i++) {
+            if (v->gs_fade_pending[i]) {
+                has_fade = true;
+                break;
+            }
+        }
+
+        if (has_fade) {
+            for (int i = 0; i < led15070_nleds; i++) {
+                payload[i][0] = v->gs[i][0];
+                payload[i][1] = v->gs[i][1];
+                payload[i][2] = v->gs[i][2];
+                payload[i][3] = 0;
+            }
+
+            led_gs_update(board, (const uint8_t*)payload);
+
+            for (int i = 0; i < led15070_nleds; i++) {
+                if (v->gs_fade_pending[i]) {
+                    payload[i][0] = v->gs_fade[i][0];
+                    payload[i][1] = v->gs_fade[i][1];
+                    payload[i][2] = v->gs_fade[i][2];
+                    payload[i][3] = v->gs_fade[i][3];
+                    v->gs_fade_pending[i] = false;
+                } else {
+                    payload[i][0] = v->gs[i][0];
+                    payload[i][1] = v->gs[i][1];
+                    payload[i][2] = v->gs[i][2];
+                    payload[i][3] = v->gs[i][3];
+                }
+            }
+
+            led_gs_update(board, (const uint8_t*)payload);
+        } else {
+            led_gs_update(board, (const uint8_t*)v->gs);
+        }
+    } else {
+        for (int i = 0; i < led15070_nleds; i++) {
+            v->gs_fade_pending[i] = false;
+        }
+    }
 
     if (!led15070_per_board_vars[board].enable_response)
         return S_OK;

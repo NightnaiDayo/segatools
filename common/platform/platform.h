@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "ewf.h"
 #include "platform/amvideo.h"
 #include "platform/clock.h"
 #include "platform/dns.h"
@@ -30,6 +31,7 @@ struct platform_config {
     struct vfs_config vfs;
     struct system_config system;
     struct openssl_config openssl;
+    struct ewf_config ewf;
 };
 
 HRESULT platform_hook_init(

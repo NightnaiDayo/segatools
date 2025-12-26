@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "mercuryhook/elisabeth.h"
+#include "mercuryhook/elizabeth.h"
 #include "mercuryhook/mercury-dll.h"
 
 #include "hook/table.h"
@@ -17,13 +17,13 @@
 
 #include "util/dprintf.h"
 
-/* Hooks targeted DLLs dynamically loaded by elisabeth. */
+/* Hooks targeted DLLs dynamically loaded by elizabeth. */
 
 static void dll_hook_insert_hooks(HMODULE target);
 static FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name);
 static FARPROC (WINAPI *next_GetProcAddress)(HMODULE hModule, const char *name);
 static int my_USBIntLED_Init();
-static int my_USBIntLED_set();
+static int my_USBIntLED_set(int data1, struct led_data data2);
 
 static const struct hook_symbol win32_hooks[] = {
     {
@@ -33,13 +33,13 @@ static const struct hook_symbol win32_hooks[] = {
     }
 };
 
-HRESULT elisabeth_hook_init(struct elisabeth_config *cfg)
+HRESULT elizabeth_hook_init(struct elizabeth_config *cfg)
 {
     if (!cfg->enable) {
         return S_OK;
     }
     dll_hook_insert_hooks(NULL);
-    dprintf("Elisabeth: Init\n");
+    dprintf("elizabeth: Init\n");
     return S_OK;
 }
 
@@ -75,7 +75,7 @@ FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name)
 /* Intercept the call to initialize the LED board. */
 static int my_USBIntLED_Init()
 {
-    dprintf("Elisabeth: my_USBIntLED_Init hit!\n");
+    dprintf("elizabeth: my_USBIntLED_Init hit!\n");
     return 1;
 }
 

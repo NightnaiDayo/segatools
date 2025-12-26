@@ -30,6 +30,8 @@ struct io4_ops {
     HRESULT (*poll)(void* ctx, struct io4_state* state);
 
     HRESULT (*write_gpio)(uint8_t* payload, size_t len);
+    HRESULT (*write_pwm)(uint8_t* payload, size_t len);
+    HRESULT (*write_unique)(uint8_t* payload, size_t len);
 };
 
 HRESULT io4_hook_init(

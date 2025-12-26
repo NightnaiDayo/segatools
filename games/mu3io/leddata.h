@@ -20,4 +20,4 @@ struct _ongeki_led_data_buf_t {
     uint8_t data_len; // How many bytes to output from the buffer
 };
 
-static uint8_t ongeki_led_board_data_lens[LED_BOARDS_TOTAL] = {9*3, 6*3};
+static uint8_t ongeki_led_board_data_lens[LED_BOARDS_TOTAL] = {61*3, 6*3};
