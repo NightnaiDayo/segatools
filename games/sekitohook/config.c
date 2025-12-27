@@ -100,6 +100,7 @@ void sekito_hook_config_load(
 
     platform_config_load(&cfg->platform, filename);
     aime_config_load(&cfg->aime, filename);
+    aime_config_load_bykey(&cfg->aime_queue, filename, L"aime2");
     io4_config_load(&cfg->io4, filename);
     dvd_config_load(&cfg->dvd, filename);
     led15093_config_load(&cfg->led15093, filename);

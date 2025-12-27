@@ -233,10 +233,6 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no)
     bool sense;
     HRESULT hr;
 
-    if (unit_no != 0) {
-        return S_OK;
-    }
-
     /* Reset presence flags */
 
     aime_io_aime_id_present = false;
@@ -318,7 +314,7 @@ HRESULT aime_io_nfc_get_aime_id(
     assert(luid != NULL);
     assert(luid_size == sizeof(aime_io_aime_id));
 
-    if (unit_no != 0 || !aime_io_aime_id_present) {
+    if (!aime_io_aime_id_present) {
         return S_FALSE;
     }
 
@@ -334,7 +330,7 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm)
 
     assert(IDm != NULL);
 
-    if (unit_no != 0 || !aime_io_felica_id_present) {
+    if (!aime_io_felica_id_present) {
         return S_FALSE;
     }
 

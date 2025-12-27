@@ -27,6 +27,7 @@
 #include "amex/amex.h"
 #include "board/sg-reader.h"
 #include "board/led15093.h"
+#include "board/sg-reader-queue.h"
 #include "gfxhook/gfx.h"
 
 #include "hook/process.h"
@@ -123,15 +124,22 @@ static DWORD CALLBACK sekito_pre_startup(void)
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 12, 2,
-        sekito_hook_mod);
-
-    if (FAILED(hr)) {
-        goto fail;
-    }
-
     if (is_terminal) {
+        hr = sg_reader_queue_hook_init(&sekito_hook_cfg.aime_queue, 12, 2,
+            sekito_hook_mod);
+
+        if (FAILED(hr)) {
+            goto fail;
+        }
+
         hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 1, 2,
+            sekito_hook_mod);
+
+        if (FAILED(hr)) {
+            goto fail;
+        }
+    } else {
+        hr = sg_reader_hook_init(&sekito_hook_cfg.aime, 12, 2,
             sekito_hook_mod);
 
         if (FAILED(hr)) {

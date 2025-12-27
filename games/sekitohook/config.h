@@ -20,6 +20,7 @@
 struct sekito_hook_config {
     struct platform_config platform;
     struct aime_config aime;
+    struct aime_config aime_queue;
     struct io4_config io4;
     struct dvd_config dvd;
     struct led15093_config led15093;
