@@ -10,7 +10,7 @@
 
 enum {
     AIME_DLL_SYM_COUNT_V100 = 5,
-    AIME_DLL_SYM_COUNT_V101 = 7,
+    AIME_DLL_SYM_COUNT_V101 = 13,
 };
 
 const struct dll_bind_sym aime_dll_syms[] = {
@@ -35,6 +35,24 @@ const struct dll_bind_sym aime_dll_syms[] = {
     }, {
         .sym = "aime_io_vfd_set_state",
         .off = offsetof(struct aime_dll, vfd_set_state),
+    }, {
+        .sym = "aime_io_nfc_get_mifare_uid",
+        .off = offsetof(struct aime_dll, nfc_get_mifare_uid),
+    }, {
+        .sym = "aime_io_nfc_mifare_select",
+        .off = offsetof(struct aime_dll, nfc_mifare_select),
+    }, {
+        .sym = "aime_io_nfc_mifare_set_key",
+        .off = offsetof(struct aime_dll, nfc_mifare_set_key),
+    }, {
+        .sym = "aime_io_nfc_mifare_authenticate",
+        .off = offsetof(struct aime_dll, nfc_mifare_authenticate),
+    }, {
+        .sym = "aime_io_nfc_mifare_read_block",
+        .off = offsetof(struct aime_dll, nfc_mifare_read_block),
+    }, {
+        .sym = "aime_io_nfc_felica_transact",
+        .off = offsetof(struct aime_dll, nfc_felica_transact),
     },
 };
 
