@@ -549,7 +549,8 @@ static HRESULT sg_nfc_cmd_radio_on(
     HRESULT hr;
 
     if (nfc->ops->radio_on == NULL) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+        return S_OK;
     }
 
     hr = nfc->ops->radio_on(nfc->ops_ctx);
@@ -559,7 +560,8 @@ static HRESULT sg_nfc_cmd_radio_on(
     }
 
     if (hr == S_FALSE) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+        return S_OK;
     }
 
     sg_res_init(res, req, 0);
@@ -575,7 +577,8 @@ static HRESULT sg_nfc_cmd_radio_off(
     HRESULT hr;
 
     if (nfc->ops->radio_off == NULL) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+        return S_OK;
     }
 
     hr = nfc->ops->radio_off(nfc->ops_ctx);
@@ -585,7 +588,8 @@ static HRESULT sg_nfc_cmd_radio_off(
     }
 
     if (hr == S_FALSE) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+        return S_OK;
     }
 
     sg_res_init(res, req, 0);
@@ -601,7 +605,8 @@ static HRESULT sg_nfc_cmd_to_update_mode(
     HRESULT hr;
 
     if (nfc->ops->to_update_mode == NULL) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+        return S_OK;
     }
 
     hr = nfc->ops->to_update_mode(nfc->ops_ctx);
@@ -611,7 +616,8 @@ static HRESULT sg_nfc_cmd_to_update_mode(
     }
 
     if (hr == S_FALSE) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+        return S_OK;
     }
 
     sg_res_init(res, req, 0);
@@ -808,7 +814,15 @@ static HRESULT sg_nfc_cmd_send_hex_data(
     uint8_t status;
 
     if (nfc->ops->send_hex_data == NULL) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+
+        /* Firmware checksum length? */
+        if (req->payload_len == 0x2b) {
+             /* The firmware is identical flag? */
+            res->status = 0x20;
+        }
+
+        return S_OK;
     }
 
     payload = (const uint8_t *) req + sizeof(*req);
@@ -825,7 +839,13 @@ static HRESULT sg_nfc_cmd_send_hex_data(
     }
 
     if (hr == S_FALSE) {
-        return E_NOTIMPL;
+        sg_res_init(res, req, 0);
+
+        if (req->payload_len == 0x2b) {
+            res->status = 0x20;
+        }
+
+        return S_OK;
     }
 
     sg_res_init(res, req, 0);
