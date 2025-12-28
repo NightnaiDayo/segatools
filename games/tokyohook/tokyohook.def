@@ -15,6 +15,10 @@ EXPORTS
     aime_io_nfc_mifare_authenticate
     aime_io_nfc_mifare_read_block
     aime_io_nfc_felica_transact
+    aime_io_nfc_radio_on
+    aime_io_nfc_radio_off
+    aime_io_nfc_to_update_mode
+    aime_io_nfc_send_hex_data
     amDllVideoClose @2
     amDllVideoGetVBiosVersion @4
     amDllVideoOpen @1
