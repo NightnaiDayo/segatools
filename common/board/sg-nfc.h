@@ -40,6 +40,14 @@ struct sg_nfc_ops {
             uint8_t *res,
             size_t res_size,
             size_t *res_size_written);
+    HRESULT (*radio_on)(void *ctx);
+    HRESULT (*radio_off)(void *ctx);
+    HRESULT (*to_update_mode)(void *ctx);
+    HRESULT (*send_hex_data)(
+            void *ctx,
+            const uint8_t *payload,
+            size_t payload_size,
+            uint8_t *status_out);
 
     // TODO Banapass, AmuseIC
 };

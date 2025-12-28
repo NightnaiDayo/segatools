@@ -56,6 +56,14 @@ static HRESULT sg_reader_nfc_felica_transact(
         uint8_t *res,
         size_t res_size,
         size_t *res_size_written);
+static HRESULT sg_reader_nfc_radio_on(void *ctx);
+static HRESULT sg_reader_nfc_radio_off(void *ctx);
+static HRESULT sg_reader_nfc_to_update_mode(void *ctx);
+static HRESULT sg_reader_nfc_send_hex_data(
+        void *ctx,
+        const uint8_t *payload,
+        size_t payload_size,
+        uint8_t *status_out);
 static void sg_reader_led_set_color(void *ctx, uint8_t r, uint8_t g, uint8_t b);
 
 static const struct sg_nfc_ops sg_reader_nfc_ops = {
@@ -68,6 +76,10 @@ static const struct sg_nfc_ops sg_reader_nfc_ops = {
     .mifare_authenticate = sg_reader_nfc_mifare_authenticate,
     .mifare_read_block = sg_reader_nfc_mifare_read_block,
     .felica_transact = sg_reader_nfc_felica_transact,
+    .radio_on = sg_reader_nfc_radio_on,
+    .radio_off = sg_reader_nfc_radio_off,
+    .to_update_mode = sg_reader_nfc_to_update_mode,
+    .send_hex_data = sg_reader_nfc_send_hex_data,
 };
 
 static const struct sg_led_ops sg_reader_led_ops = {
@@ -333,6 +345,46 @@ static HRESULT sg_reader_nfc_felica_transact(
             res,
             res_size,
             res_size_written);
+}
+
+static HRESULT sg_reader_nfc_radio_on(void *ctx)
+{
+    if (aime_dll.nfc_radio_on == NULL) {
+        return S_FALSE;
+    }
+
+    return aime_dll.nfc_radio_on(0);
+}
+
+static HRESULT sg_reader_nfc_radio_off(void *ctx)
+{
+    if (aime_dll.nfc_radio_off == NULL) {
+        return S_FALSE;
+    }
+
+    return aime_dll.nfc_radio_off(0);
+}
+
+static HRESULT sg_reader_nfc_to_update_mode(void *ctx)
+{
+    if (aime_dll.nfc_to_update_mode == NULL) {
+        return S_FALSE;
+    }
+
+    return aime_dll.nfc_to_update_mode(0);
+}
+
+static HRESULT sg_reader_nfc_send_hex_data(
+        void *ctx,
+        const uint8_t *payload,
+        size_t payload_size,
+        uint8_t *status_out)
+{
+    if (aime_dll.nfc_send_hex_data == NULL) {
+        return S_FALSE;
+    }
+
+    return aime_dll.nfc_send_hex_data(0, payload, payload_size, status_out);
 }
 
 static void sg_reader_led_set_color(void *ctx, uint8_t r, uint8_t g, uint8_t b)

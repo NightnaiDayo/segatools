@@ -46,6 +46,14 @@ struct aime_dll {
             uint8_t *res,
             size_t res_size,
             size_t *res_size_written);
+    HRESULT (*nfc_radio_on)(uint8_t unit_no);
+    HRESULT (*nfc_radio_off)(uint8_t unit_no);
+    HRESULT (*nfc_to_update_mode)(uint8_t unit_no);
+    HRESULT (*nfc_send_hex_data)(
+            uint8_t unit_no,
+            const uint8_t *payload,
+            size_t payload_size,
+            uint8_t *status_out);
     void (*led_set_color)(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b);
     void (*vfd_set_text)(
             const uint8_t *text,

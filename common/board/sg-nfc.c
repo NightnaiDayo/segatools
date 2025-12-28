@@ -76,6 +76,21 @@ static HRESULT sg_nfc_cmd_mifare_authenticate(
         struct sg_res_header *res,
         uint8_t key_type);
 
+static HRESULT sg_nfc_cmd_radio_on(
+        struct sg_nfc *nfc,
+        const struct sg_req_header *req,
+        struct sg_res_header *res);
+
+static HRESULT sg_nfc_cmd_radio_off(
+        struct sg_nfc *nfc,
+        const struct sg_req_header *req,
+        struct sg_res_header *res);
+
+static HRESULT sg_nfc_cmd_to_update_mode(
+        struct sg_nfc *nfc,
+        const struct sg_req_header *req,
+        struct sg_res_header *res);
+
 static HRESULT sg_nfc_cmd_felica_encap(
         struct sg_nfc *nfc,
         const struct sg_nfc_req_felica_encap *req,
@@ -245,13 +260,17 @@ static HRESULT sg_nfc_dispatch(
                 &res->simple,
                 AIME_IO_MIFARE_KEY_BANA);
 
+    case SG_NFC_CMD_RADIO_ON:
+        return sg_nfc_cmd_radio_on(nfc, &req->simple, &res->simple);
+
+    case SG_NFC_CMD_RADIO_OFF:
+        return sg_nfc_cmd_radio_off(nfc, &req->simple, &res->simple);
+
+    case SG_NFC_CMD_TO_UPDATE_MODE:
+        return sg_nfc_cmd_to_update_mode(nfc, &req->simple, &res->simple);
+
     case SG_NFC_CMD_SEND_HEX_DATA:
         return sg_nfc_cmd_send_hex_data(nfc, &req->simple, &res->simple);
-
-    case SG_NFC_CMD_RADIO_ON:
-    case SG_NFC_CMD_RADIO_OFF:
-    case SG_NFC_CMD_TO_UPDATE_MODE:
-        return sg_nfc_cmd_dummy(nfc, &req->simple, &res->simple);
 
     default:
         sg_nfc_dprintf(nfc, "Unimpl command %02x\n", req->simple.hdr.cmd);
@@ -522,6 +541,84 @@ static HRESULT sg_nfc_cmd_mifare_authenticate(
     return S_OK;
 }
 
+static HRESULT sg_nfc_cmd_radio_on(
+        struct sg_nfc *nfc,
+        const struct sg_req_header *req,
+        struct sg_res_header *res)
+{
+    HRESULT hr;
+
+    if (nfc->ops->radio_on == NULL) {
+        return E_NOTIMPL;
+    }
+
+    hr = nfc->ops->radio_on(nfc->ops_ctx);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (hr == S_FALSE) {
+        return E_NOTIMPL;
+    }
+
+    sg_res_init(res, req, 0);
+
+    return S_OK;
+}
+
+static HRESULT sg_nfc_cmd_radio_off(
+        struct sg_nfc *nfc,
+        const struct sg_req_header *req,
+        struct sg_res_header *res)
+{
+    HRESULT hr;
+
+    if (nfc->ops->radio_off == NULL) {
+        return E_NOTIMPL;
+    }
+
+    hr = nfc->ops->radio_off(nfc->ops_ctx);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (hr == S_FALSE) {
+        return E_NOTIMPL;
+    }
+
+    sg_res_init(res, req, 0);
+
+    return S_OK;
+}
+
+static HRESULT sg_nfc_cmd_to_update_mode(
+        struct sg_nfc *nfc,
+        const struct sg_req_header *req,
+        struct sg_res_header *res)
+{
+    HRESULT hr;
+
+    if (nfc->ops->to_update_mode == NULL) {
+        return E_NOTIMPL;
+    }
+
+    hr = nfc->ops->to_update_mode(nfc->ops_ctx);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (hr == S_FALSE) {
+        return E_NOTIMPL;
+    }
+
+    sg_res_init(res, req, 0);
+
+    return S_OK;
+}
+
 static HRESULT sg_nfc_cmd_mifare_read_block(
         struct sg_nfc *nfc,
         const struct sg_nfc_req_mifare_read_block *req,
@@ -706,13 +803,33 @@ static HRESULT sg_nfc_cmd_send_hex_data(
         const struct sg_req_header *req,
         struct sg_res_header *res)
 {
-    sg_res_init(res, req, 0);
+    const uint8_t *payload;
+    HRESULT hr;
+    uint8_t status;
 
-    /* Firmware checksum length? */
-    if (req->payload_len == 0x2b) {
-         /* The firmware is identical flag? */
-        res->status = 0x20;
+    if (nfc->ops->send_hex_data == NULL) {
+        return E_NOTIMPL;
     }
+
+    payload = (const uint8_t *) req + sizeof(*req);
+    status = 0;
+
+    hr = nfc->ops->send_hex_data(
+            nfc->ops_ctx,
+            payload,
+            req->payload_len,
+            &status);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (hr == S_FALSE) {
+        return E_NOTIMPL;
+    }
+
+    sg_res_init(res, req, 0);
+    res->status = status;
 
     return S_OK;
 }

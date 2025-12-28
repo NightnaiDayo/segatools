@@ -27,6 +27,8 @@ static uint8_t aime_io_aime_id[10];
 static uint8_t aime_io_felica_id[8];
 static bool aime_io_aime_id_present;
 static bool aime_io_felica_id_present;
+static bool aime_io_radio_on = true;
+static bool aime_io_update_mode;
 
 static void aime_io_config_read(
         struct aime_io_config *cfg,
@@ -244,6 +246,10 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no)
 
     /* Don't do anything more if the scan key is not held */
 
+    if (!aime_io_radio_on) {
+        return S_OK;
+    }
+
     sense = GetAsyncKeyState(aime_io_cfg.vk_scan) & 0x8000;
 
     if (!sense) {
@@ -453,6 +459,60 @@ HRESULT aime_io_nfc_felica_transact(
     }
 
     return S_FALSE;
+}
+
+HRESULT aime_io_nfc_radio_on(uint8_t unit_no)
+{
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    aime_io_radio_on = true;
+    aime_io_update_mode = false;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_radio_off(uint8_t unit_no)
+{
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    aime_io_radio_on = false;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_to_update_mode(uint8_t unit_no)
+{
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    aime_io_update_mode = true;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_send_hex_data(
+        uint8_t unit_no,
+        const uint8_t *payload,
+        size_t payload_size,
+        uint8_t *status_out)
+{
+    (void) payload;
+    (void) payload_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    if (status_out != NULL) {
+        *status_out = (payload_size == 0x2b) ? 0x20 : 0x00;
+    }
+
+    return S_OK;
 }
 
 void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b)

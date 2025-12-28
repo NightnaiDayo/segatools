@@ -173,6 +173,44 @@ HRESULT aime_io_nfc_felica_transact(
         size_t *res_size_written);
 
 /*
+    Enable the reader's RF field.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_radio_on(uint8_t unit_no);
+
+/*
+    Disable the reader's RF field.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_radio_off(uint8_t unit_no);
+
+/*
+    Put the reader into firmware update mode.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_to_update_mode(uint8_t unit_no);
+
+/*
+    Forward a raw hex-data command to the reader.
+
+    Parameters:
+
+    - payload: Command payload bytes
+    - payload_size: Size of the payload
+    - status_out: Optional pointer to receive the SG status byte
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_send_hex_data(
+        uint8_t unit_no,
+        const uint8_t *payload,
+        size_t payload_size,
+        uint8_t *status_out);
+
+/*
     Change the color and brightness of the card reader's RGB lighting
 
     - unit_no: Always 0 as of the current API version

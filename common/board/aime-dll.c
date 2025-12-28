@@ -10,7 +10,7 @@
 
 enum {
     AIME_DLL_SYM_COUNT_V100 = 5,
-    AIME_DLL_SYM_COUNT_V101 = 13,
+    AIME_DLL_SYM_COUNT_V101 = 17,
 };
 
 const struct dll_bind_sym aime_dll_syms[] = {
@@ -53,6 +53,18 @@ const struct dll_bind_sym aime_dll_syms[] = {
     }, {
         .sym = "aime_io_nfc_felica_transact",
         .off = offsetof(struct aime_dll, nfc_felica_transact),
+    }, {
+        .sym = "aime_io_nfc_radio_on",
+        .off = offsetof(struct aime_dll, nfc_radio_on),
+    }, {
+        .sym = "aime_io_nfc_radio_off",
+        .off = offsetof(struct aime_dll, nfc_radio_off),
+    }, {
+        .sym = "aime_io_nfc_to_update_mode",
+        .off = offsetof(struct aime_dll, nfc_to_update_mode),
+    }, {
+        .sym = "aime_io_nfc_send_hex_data",
+        .off = offsetof(struct aime_dll, nfc_send_hex_data),
     },
 };
 
