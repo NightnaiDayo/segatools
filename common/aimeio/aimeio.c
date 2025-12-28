@@ -349,6 +349,112 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm)
     return S_OK;
 }
 
+HRESULT aime_io_nfc_get_mifare_uid(
+        uint8_t unit_no,
+        uint8_t *uid,
+        size_t uid_size)
+{
+    (void) uid;
+    (void) uid_size;
+
+    if (unit_no != 0 || !aime_io_aime_id_present) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_select(
+        uint8_t unit_no,
+        const uint8_t *uid,
+        size_t uid_size)
+{
+    (void) uid;
+    (void) uid_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_set_key(
+        uint8_t unit_no,
+        uint8_t key_type,
+        const uint8_t *key,
+        size_t key_size)
+{
+    (void) key_type;
+    (void) key;
+    (void) key_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_authenticate(
+        uint8_t unit_no,
+        uint8_t key_type,
+        const uint8_t *payload,
+        size_t payload_size)
+{
+    (void) key_type;
+    (void) payload;
+    (void) payload_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_read_block(
+        uint8_t unit_no,
+        const uint8_t *uid,
+        size_t uid_size,
+        uint8_t block_no,
+        uint8_t *block,
+        size_t block_size)
+{
+    (void) uid;
+    (void) uid_size;
+    (void) block_no;
+    (void) block;
+    (void) block_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_felica_transact(
+        uint8_t unit_no,
+        const uint8_t *req,
+        size_t req_size,
+        uint8_t *res,
+        size_t res_size,
+        size_t *res_size_written)
+{
+    (void) req;
+    (void) req_size;
+    (void) res;
+    (void) res_size;
+    (void) res_size_written;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
 void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b)
 {}
 
