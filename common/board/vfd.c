@@ -23,6 +23,7 @@
 #include "util/dump.h"
 
 #define SUPER_VERBOSE 0
+#define VFD_BRIGHTNESS_MAX 4
 
 static HRESULT vfd_handle_irp(struct irp *irp);
 
@@ -150,9 +151,10 @@ static void vfd_read_text_until_sync(struct const_iobuf *reader)
         return;
     }
 
-    char *str = malloc(len);
-    memset(str, 0, len);
+    char *str = malloc((size_t) len + 1);
+    memset(str, 0, (size_t) len + 1);
     iobuf_read(reader, str, len);
+    str[len] = '\0';
     print_vfd_text(str, len);
     free(str);
 }
@@ -285,6 +287,7 @@ HRESULT vfd_handle_reset(struct const_iobuf* reader, struct iobuf* writer, struc
 
     memset(&vfd_state, 0, sizeof(vfd_state));
     vfd_state.encoding = VFD_ENC_SHIFT_JIS;
+    vfd_publish_state();
 
     return S_FALSE;
 }
@@ -293,7 +296,7 @@ HRESULT vfd_handle_clear_screen(struct const_iobuf* reader, struct iobuf* writer
         uint8_t next = reader->bytes[reader->pos];
         bool next_is_sync = (next == VFD_SYNC_BYTE || next == VFD_SYNC_BYTE2);
 
-        if (!next_is_sync && next <= 4) {
+        if (!next_is_sync && next <= VFD_BRIGHTNESS_MAX) {
             bool end_or_sync = (reader->pos + 1 >= reader->nbytes);
 
             if (!end_or_sync) {
@@ -322,7 +325,7 @@ HRESULT vfd_handle_set_brightness(struct const_iobuf* reader, struct iobuf* writ
     uint8_t b;
     iobuf_read_8(reader, &b);
 
-    if (b > 4){
+    if (b > VFD_BRIGHTNESS_MAX){
         dprintf("VFD: Brightness, invalid argument\n");
         return E_FAIL;
     }
@@ -455,8 +458,9 @@ HRESULT vfd_handle_write_text(struct const_iobuf* reader, struct iobuf* writer, 
     uint8_t len;
     iobuf_read_8(reader, &len);
 
-    char* str = malloc(len);
+    char* str = malloc((size_t) len + 1);
     iobuf_read(reader, str, len);
+    str[len] = '\0';
 
     print_vfd_text(str, len);
     free(str);
