@@ -199,3 +199,17 @@ void mai2_io_led_gs_update(uint8_t board, const uint8_t *rgb);
    Minimum API version: 0x0102 */
 
 void mai2_io_led_billboard_set(uint8_t board, const uint8_t *rgb);
+
+enum {
+    MAI2_IO_LED_CAM_CODE_READER_1P = 0x01,
+    MAI2_IO_LED_CAM_CODE_READER_2P = 0x02,
+    MAI2_IO_LED_CAM_RING = 0x04,
+    MAI2_IO_LED_CAM_REC = 0x08,
+};
+
+/* Update the Code Reader and Player Camera lights. State is a bitmask of
+   MAI2_IO_LED_CAM_* values.
+
+   Minimum API version: 0x0102 */
+
+void mai2_io_led_cam_set(uint8_t state);

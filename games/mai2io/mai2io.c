@@ -273,3 +273,14 @@ void mai2_io_led_billboard_set(uint8_t board, const uint8_t *rgb) {
 #endif
     return;
 }
+
+void mai2_io_led_cam_set(uint8_t state) {
+#if 0
+    dprintf("Mai2 LED cam: CodeReader1P=%s CodeReader2P=%s Ring=%s Rec=%s\n",
+            (state & MAI2_IO_LED_CAM_CODE_READER_1P) ? "ON" : "OFF",
+            (state & MAI2_IO_LED_CAM_CODE_READER_2P) ? "ON" : "OFF",
+            (state & MAI2_IO_LED_CAM_RING) ? "ON" : "OFF",
+            (state & MAI2_IO_LED_CAM_REC) ? "ON" : "OFF");
+#endif
+    return;
+}
