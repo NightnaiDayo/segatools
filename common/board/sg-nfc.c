@@ -511,8 +511,8 @@ static HRESULT sg_nfc_cmd_send_hex_data(
 
     /* Firmware checksum length? */
     if (req->payload_len == 0x2b) {
-         /* The firmware is identical flag? */
-        res->status = 0x20;
+        /* TODO: figure out the proper response for send_hex_data firmware */
+        // res->status = 0x20;
     }
 
     return S_OK;

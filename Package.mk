@@ -290,7 +290,8 @@ $(BUILD_DIR_ZIP)/sekito.zip:
 		$(DIST_DIR)/sekito/launch_terminal.bat \
 		$(DIST_DIR)/sekito/launch_satellite.bat \
 		$(DIST_DIR)/sekito/card_player.html \
-		$(DIST_DIR)/sekito/config_hook.json \
+		$(DIST_DIR)/sekito/config_hook_satellite.json \
+		$(DIST_DIR)/sekito/config_hook_terminal.json \
     	$(BUILD_DIR_ZIP)/sekito
 	$(V)cp pki/billing.pub \
 		pki/ca.crt \
