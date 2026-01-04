@@ -27,6 +27,11 @@ if cc.get_id() != 'msvc'
         language: 'c',
     )
 
+    add_global_arguments(
+        '-Wno-unknown-pragmas',
+        language: 'c',
+    )
+
     add_project_link_arguments(
         '-Wl,--enable-stdcall-fixup',
         '-Wl,--exclude-all-symbols',

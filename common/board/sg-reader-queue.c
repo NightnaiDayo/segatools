@@ -82,7 +82,7 @@ HRESULT sg_reader_queue_hook_init(
         return E_INVALIDARG;
     }
 
-    sg_nfc_init(&sg_reader_nfc, 0x00, &sg_reader_nfc_ops, gen, cfg->proxy_flag, cfg->authdata_path, NULL);
+    sg_nfc_init(&sg_reader_nfc, 0x01, &sg_reader_nfc_ops, gen, cfg->proxy_flag, cfg->authdata_path, NULL);
     sg_led_init(&sg_reader_led, 0x08, &sg_reader_led_ops, gen, NULL);
 
     InitializeCriticalSection(&sg_reader_lock);

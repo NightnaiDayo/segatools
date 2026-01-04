@@ -333,6 +333,7 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/kemono.zip \
 		$(BUILD_DIR_ZIP)/apm3.zip \
 		$(BUILD_DIR_ZIP)/ekt.zip \
+		$(BUILD_DIR_ZIP)/sekito.zip \
 		CHANGELOG.md \
 		README.md \
 

@@ -6,8 +6,5 @@
     "property": {
       "dhcp": true
     }
-  },
-  "allnet_auth": {
-    "type": "1.0"
   }
 }
