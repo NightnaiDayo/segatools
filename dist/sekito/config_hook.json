@@ -1,10 +1,20 @@
 {
-  "common": {
-    "language": "english"
-  },
-  "network": {
-    "property": {
-      "dhcp": true
+    "common":
+    {
+        "language": "english"
+    },
+    "network":
+    {
+        "property":
+        {
+            "dhcp": true
+        }
+    },
+    "credit" :
+    {
+        "coin_selector_AS6DB" :
+        {
+            "enable" : false
+        }
     }
-  }
 }
