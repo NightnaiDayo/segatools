@@ -7,31 +7,71 @@
 
 #include "util/dprintf.h"
 
-const struct idac_di_config *idac_di_cfg;
-static HWND idac_di_wnd;
-static IDirectInputDevice8W *idac_di_dev;
+/* Globals */
+const struct idac_di_config *idac_di_cfg = NULL;
+static HWND idac_di_wnd = NULL;
+static IDirectInputDevice8W *idac_di_dev = NULL;
 
-/* Individual DI Effects */
-static IDirectInputEffect *idac_di_fx;
-static IDirectInputEffect *idac_di_fx_rumble;
-static IDirectInputEffect *idac_di_fx_damper;
+/* Effect handles */
+static IDirectInputEffect *idac_di_fx_constant = NULL;
+static IDirectInputEffect *idac_di_fx_rumble = NULL;
+static IDirectInputEffect *idac_di_fx_spring = NULL;
+static IDirectInputEffect *idac_di_fx_damper = NULL;
 
 /* Max FFB Board value is 127 */
 static const double idac_di_ffb_scale = 127.0;
 
+static float idac_di_base_damper = 0.20f;  // default baseline damper
+
+
+/* ------------------------------------------------------------
+   Device init / poll / start
+   ------------------------------------------------------------ */
 HRESULT idac_di_dev_init(
     const struct idac_di_config *cfg,
     IDirectInputDevice8W *dev,
     HWND wnd)
 {
-    HRESULT hr;
-
+    assert(cfg != NULL);
     assert(dev != NULL);
     assert(wnd != NULL);
 
     idac_di_cfg = cfg;
     idac_di_dev = dev;
     idac_di_wnd = wnd;
+	
+	idac_di_base_damper =
+    (cfg->ffb_base_damper_fraction > 0.0f)
+        ? cfg->ffb_base_damper_fraction
+        : 0.20f;
+
+    return S_OK;
+}
+
+HRESULT idac_di_dev_start(IDirectInputDevice8W *dev, HWND wnd)
+{
+    HRESULT hr;
+
+    assert(dev != NULL);
+    assert(wnd != NULL);
+
+    hr = IDirectInputDevice8_SetCooperativeLevel(dev, wnd, DISCL_BACKGROUND | DISCL_EXCLUSIVE);
+    if (FAILED(hr)) {
+        dprintf("DirectInput: SetCooperativeLevel failed: %08x\n", (int)hr);
+        return hr;
+    }
+
+    hr = IDirectInputDevice8_SetDataFormat(dev, &c_dfDIJoystick);
+    if (FAILED(hr)) {
+        dprintf("DirectInput: SetDataFormat failed: %08x\n", (int)hr);
+        return hr;
+    }
+
+    hr = IDirectInputDevice8_Acquire(dev);
+    if (FAILED(hr)) {
+        dprintf("DirectInput: Acquire failed: %08x\n", (int)hr);
+        return hr;
+    }
 
     return S_OK;
 }
@@ -50,19 +90,12 @@ HRESULT idac_di_dev_poll(
 
     memset(out, 0, sizeof(*out));
 
-    /* Pump our dummy window's message queue just in case DirectInput or an
-       IHV DirectInput driver somehow relies on it */
-
     while (PeekMessageW(&msg, wnd, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
-    hr = IDirectInputDevice8_GetDeviceState(
-        dev,
-        sizeof(out->st),
-        &out->st);
-
+    hr = IDirectInputDevice8_GetDeviceState(dev, sizeof(out->st), &out->st);
     if (FAILED(hr)) {
         dprintf("DirectInput: GetDeviceState error: %08x\n", (int)hr);
     }
@@ -70,99 +103,59 @@ HRESULT idac_di_dev_poll(
     return hr;
 }
 
-HRESULT idac_di_dev_start(IDirectInputDevice8W *dev, HWND wnd) {
-    HRESULT hr;
-
-    assert(dev != NULL);
-    assert(wnd != NULL);
-
-    hr = IDirectInputDevice8_SetCooperativeLevel(
-        dev,
-        wnd,
-        DISCL_BACKGROUND | DISCL_EXCLUSIVE);
-
-    if (FAILED(hr)) {
-        dprintf("DirectInput: SetCooperativeLevel failed: %08x\n", (int)hr);
-        return hr;
-    }
-
-    hr = IDirectInputDevice8_SetDataFormat(dev, &c_dfDIJoystick);
-
-    if (FAILED(hr)) {
-        dprintf("DirectInput: SetDataFormat failed: %08x\n", (int)hr);
-        return hr;
-    }
-
-    hr = IDirectInputDevice8_Acquire(dev);
-
-    if (FAILED(hr)) {
-        dprintf("DirectInput: Acquire failed: %08x\n", (int)hr);
-        return hr;
-    }
-
-    return hr;
-}
-
+/* ------------------------------------------------------------
+   FFB init / toggle
+   ------------------------------------------------------------ */
 HRESULT idac_di_ffb_init(void)
 {
-    HRESULT hr;
-
-    hr = idac_di_dev_start(idac_di_dev, idac_di_wnd);
-
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    return S_OK;
+    if (!idac_di_dev || !idac_di_wnd) return E_FAIL;
+    return idac_di_dev_start(idac_di_dev, idac_di_wnd);
 }
 
 void idac_di_ffb_toggle(bool active)
 {
     if (active) {
-        return;
+		return;
+	}
+	
+    if (idac_di_fx_constant) {
+        IDirectInputEffect_Stop(idac_di_fx_constant);
+        IDirectInputEffect_Release(idac_di_fx_constant);
+        idac_di_fx_constant = NULL;
     }
-
-    /* Stop and release all effects */
-    /* I never programmed DirectInput Effects, so this might be bad practice. */
-    if (idac_di_fx != NULL) {
-        IDirectInputEffect_Stop(idac_di_fx);
-        IDirectInputEffect_Release(idac_di_fx);
-        idac_di_fx = NULL;
-    }
-
-    if (idac_di_fx_rumble != NULL) {
+    if (idac_di_fx_rumble) {
         IDirectInputEffect_Stop(idac_di_fx_rumble);
         IDirectInputEffect_Release(idac_di_fx_rumble);
         idac_di_fx_rumble = NULL;
     }
-
-    if (idac_di_fx_damper != NULL) {
+    if (idac_di_fx_spring) {
+        IDirectInputEffect_Stop(idac_di_fx_spring);
+        IDirectInputEffect_Release(idac_di_fx_spring);
+        idac_di_fx_spring = NULL;
+    }
+    if (idac_di_fx_damper) {
         IDirectInputEffect_Stop(idac_di_fx_damper);
         IDirectInputEffect_Release(idac_di_fx_damper);
         idac_di_fx_damper = NULL;
     }
 }
 
+/* ------------------------------------------------------------
+   Constant force
+   ------------------------------------------------------------ */
 void idac_di_ffb_constant_force(uint8_t direction_ffb, uint8_t force)
 {
-    /* DI expects a magnitude in the range of -10.000 to 10.000 */
-    uint16_t ffb_strength = idac_di_cfg->ffb_constant_force_strength * 100;
-    if (ffb_strength == 0) {
-        return;
-    }
+    uint16_t ffb_strength = idac_di_cfg ? (idac_di_cfg->ffb_constant_force_strength * 100) : 0;
+    if (ffb_strength == 0) return;
 
-    DWORD axis;
-    LONG direction;
+    DWORD axis = DIJOFS_X;
+    LONG direction = 0;
     DIEFFECT fx;
     DICONSTANTFORCE cf;
     HRESULT hr;
 
-    /* Direction 0: move to the right, 1: move to the left */
     LONG magnitude = (LONG)(((double)force / idac_di_ffb_scale) * ffb_strength);
     cf.lMagnitude = (direction_ffb == 0) ? -magnitude : magnitude;
-
-    axis = DIJOFS_X;
-    direction = 0;
 
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
@@ -177,71 +170,50 @@ void idac_di_ffb_constant_force(uint8_t direction_ffb, uint8_t force)
     fx.cbTypeSpecificParams = sizeof(cf);
     fx.lpvTypeSpecificParams = &cf;
 
-    /* Check if the effect already exists */
-    if (idac_di_fx != NULL) {
-        hr = IDirectInputEffect_SetParameters(idac_di_fx, &fx, DIEP_TYPESPECIFICPARAMS);
-        if (SUCCEEDED(hr)) {
-            return; // Successfully updated existing effect
-        }
-        else {
-            dprintf("DirectInput: Failed to update constant force feedback, recreating effect: %08x\n", (int)hr);
-            IDirectInputEffect_Stop(idac_di_fx);
-            IDirectInputEffect_Release(idac_di_fx);
-            idac_di_fx = NULL; // Reset the pointer
-        }
+    if (idac_di_fx_constant) {
+        hr = IDirectInputEffect_SetParameters(idac_di_fx_constant, &fx, DIEP_TYPESPECIFICPARAMS);
+        if (SUCCEEDED(hr)) return;
+        IDirectInputEffect_Stop(idac_di_fx_constant);
+        IDirectInputEffect_Release(idac_di_fx_constant);
+        idac_di_fx_constant = NULL;
     }
 
-    /* Create a new constant force effect */
     IDirectInputEffect *obj;
-    hr = IDirectInputDevice8_CreateEffect(
-        idac_di_dev,
-        &GUID_ConstantForce,
-        &fx,
-        &obj,
-        NULL);
-
+    hr = IDirectInputDevice8_CreateEffect(idac_di_dev, &GUID_ConstantForce, &fx, &obj, NULL);
     if (FAILED(hr)) {
-        dprintf("DirectInput: Constant force feedback creation failed: %08x\n", (int)hr);
+        dprintf("DirectInput: Constant force creation failed: %08x\n", (int)hr);
         return;
     }
 
-    /* Start the effect */
     hr = IDirectInputEffect_Start(obj, INFINITE, 0);
     if (FAILED(hr)) {
-        dprintf("DirectInput: Constant force feedback start failed: %08x\n", (int)hr);
+        dprintf("DirectInput: Constant force start failed: %08x\n", (int)hr);
         IDirectInputEffect_Release(obj);
         return;
     }
 
-    idac_di_fx = obj;
+    idac_di_fx_constant = obj;
 }
 
+/* ------------------------------------------------------------
+   Rumble
+   ------------------------------------------------------------ */
 void idac_di_ffb_rumble(uint8_t force, uint8_t period)
 {
-    /* DI expects a magnitude in the range of -10.000 to 10.000 */
-    uint16_t ffb_strength = idac_di_cfg->ffb_rumble_strength * 100;
-    if (ffb_strength == 0) {
-        return;
-    }
+    uint16_t ffb_strength = idac_di_cfg ? (idac_di_cfg->ffb_rumble_strength * 100) : 0;
+    if (ffb_strength == 0) return;
 
-    uint32_t ffb_duration = idac_di_cfg->ffb_rumble_duration;
-
-    DWORD axis;
-    LONG direction;
+    DWORD axis = DIJOFS_X;
+    LONG direction = 0;
     DIEFFECT fx;
     DIPERIODIC pe;
     HRESULT hr;
-
-    DWORD duration = (DWORD)((double)force * ffb_duration);
 
     memset(&pe, 0, sizeof(pe));
     pe.dwMagnitude = (DWORD)(((double)force / idac_di_ffb_scale) * ffb_strength);
     pe.lOffset = 0;
     pe.dwPhase = 0;
-    pe.dwPeriod = duration;
-
-    axis = DIJOFS_X;
-    direction = 0;
+    pe.dwPeriod = (DWORD)((double)force * (double)(idac_di_cfg ? idac_di_cfg->ffb_rumble_duration : 1));
 
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
@@ -256,35 +228,21 @@ void idac_di_ffb_rumble(uint8_t force, uint8_t period)
     fx.cbTypeSpecificParams = sizeof(pe);
     fx.lpvTypeSpecificParams = &pe;
 
-    /* Check if the effect already exists */
-    if (idac_di_fx_rumble != NULL) {
+    if (idac_di_fx_rumble) {
         hr = IDirectInputEffect_SetParameters(idac_di_fx_rumble, &fx, DIEP_TYPESPECIFICPARAMS);
-        if (SUCCEEDED(hr)) {
-            return;
-        }
-        else {
-            dprintf("DirectInput: Failed to update rumble feedback, recreating effect: %08x\n", (int)hr);
-            IDirectInputEffect_Stop(idac_di_fx_rumble);
-            IDirectInputEffect_Release(idac_di_fx_rumble);
-            idac_di_fx_rumble = NULL;
-        }
+        if (SUCCEEDED(hr)) return;
+        IDirectInputEffect_Stop(idac_di_fx_rumble);
+        IDirectInputEffect_Release(idac_di_fx_rumble);
+        idac_di_fx_rumble = NULL;
     }
 
-    /* Create a new rumble effect */
     IDirectInputEffect *obj;
-    hr = IDirectInputDevice8_CreateEffect(
-        idac_di_dev,
-        &GUID_Sine,
-        &fx,
-        &obj,
-        NULL);
-
+    hr = IDirectInputDevice8_CreateEffect(idac_di_dev, &GUID_Sine, &fx, &obj, NULL);
     if (FAILED(hr)) {
         dprintf("DirectInput: Rumble effect creation failed: %08x\n", (int)hr);
         return;
     }
 
-    /* Start the effect */
     hr = IDirectInputEffect_Start(obj, INFINITE, 0);
     if (FAILED(hr)) {
         dprintf("DirectInput: Rumble effect start failed: %08x\n", (int)hr);
@@ -295,31 +253,44 @@ void idac_di_ffb_rumble(uint8_t force, uint8_t period)
     idac_di_fx_rumble = obj;
 }
 
+/* ------------------------------------------------------------
+   Damper: always-active spring + baseline damper
+   ------------------------------------------------------------ */
 void idac_di_ffb_damper(uint8_t force)
 {
-    /* DI expects a coefficient in the range of -10.000 to 10.000 */
-    uint16_t ffb_strength = idac_di_cfg->ffb_damper_strength * 100;
-    if (ffb_strength == 0) {
+    HRESULT hr;
+    uint16_t cfg_strength = idac_di_cfg ? (idac_di_cfg->ffb_damper_strength * 100) : 0;
+    if (cfg_strength == 0) {
+        if (idac_di_fx_spring) {
+            IDirectInputEffect_Stop(idac_di_fx_spring);
+            IDirectInputEffect_Release(idac_di_fx_spring);
+            idac_di_fx_spring = NULL;
+        }
+        if (idac_di_fx_damper) {
+            IDirectInputEffect_Stop(idac_di_fx_damper);
+            IDirectInputEffect_Release(idac_di_fx_damper);
+            idac_di_fx_damper = NULL;
+        }
         return;
     }
 
-    DWORD axis;
-    LONG direction;
+    DWORD axis = DIJOFS_X;
+    LONG direction = 0;
     DIEFFECT fx;
     DICONDITION cond;
-    HRESULT hr;
 
+    /* ---------- SPRING (centering) ---------- */
     memset(&cond, 0, sizeof(cond));
     cond.lOffset = 0;
-    cond.lPositiveCoefficient = (LONG)(((double)force / idac_di_ffb_scale) * ffb_strength);
-    cond.lNegativeCoefficient = (LONG)(((double)force / idac_di_ffb_scale) * ffb_strength);
-    /* Not sure on this one */
+    cond.lPositiveCoefficient = (LONG)(((double)force / idac_di_ffb_scale) * cfg_strength);
+    cond.lNegativeCoefficient = cond.lPositiveCoefficient;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
-    cond.lDeadBand = 0;
+    LONG deadband_percent = idac_di_cfg->ffb_deadband;
+	if (deadband_percent > 100) deadband_percent = 100;  // clamp
+	cond.lDeadBand = (DI_FFNOMINALMAX * deadband_percent) / 100;  // e.g. 2 → 2%
 
-    axis = DIJOFS_X;
-    direction = 0;
+
 
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
@@ -334,38 +305,86 @@ void idac_di_ffb_damper(uint8_t force)
     fx.cbTypeSpecificParams = sizeof(cond);
     fx.lpvTypeSpecificParams = &cond;
 
-    /* Check if the damper effect already exists */
-    if (idac_di_fx_damper != NULL) {
-        hr = IDirectInputEffect_SetParameters(idac_di_fx_damper, &fx, DIEP_TYPESPECIFICPARAMS);
-        if (SUCCEEDED(hr)) {
-            return;
+    if (idac_di_fx_spring) {
+        hr = IDirectInputEffect_SetParameters(idac_di_fx_spring, &fx, DIEP_TYPESPECIFICPARAMS);
+        if (FAILED(hr)) {
+            IDirectInputEffect_Stop(idac_di_fx_spring);
+            IDirectInputEffect_Release(idac_di_fx_spring);
+            idac_di_fx_spring = NULL;
         }
-        else {
+    }
+
+    if (idac_di_fx_spring == NULL) {
+        IDirectInputEffect *spring_obj = NULL;
+        hr = IDirectInputDevice8_CreateEffect(idac_di_dev, &GUID_Spring, &fx, &spring_obj, NULL);
+        if (SUCCEEDED(hr)) {
+            hr = IDirectInputEffect_Start(spring_obj, INFINITE, 0);
+            if (SUCCEEDED(hr)) idac_di_fx_spring = spring_obj;
+            else IDirectInputEffect_Release(spring_obj);
+        } else {
+            dprintf("DirectInput: Create spring effect failed: %08x\n", (int)hr);
+        }
+    }
+
+    /* ---------- DAMPER (resistance with baseline) ---------- */
+    memset(&cond, 0, sizeof(cond));
+    cond.lOffset = 0;
+
+    LONG nominal = (LONG)(((double)force / idac_di_ffb_scale) * (cfg_strength / 2));
+    LONG min_baseline = (LONG)(DI_FFNOMINALMAX * idac_di_base_damper);
+
+    if (nominal < min_baseline) nominal = min_baseline;
+
+    cond.lPositiveCoefficient = nominal;
+    cond.lNegativeCoefficient = nominal;
+    cond.dwPositiveSaturation = DI_FFNOMINALMAX;
+    cond.dwNegativeSaturation = DI_FFNOMINALMAX;
+    cond.lDeadBand = 0;
+
+    memset(&fx, 0, sizeof(fx));
+    fx.dwSize = sizeof(fx);
+    fx.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+    fx.dwDuration = INFINITE;
+    fx.dwGain = DI_FFNOMINALMAX;
+    fx.dwTriggerButton = DIEB_NOTRIGGER;
+    fx.dwTriggerRepeatInterval = INFINITE;
+    fx.cAxes = 1;
+    fx.rgdwAxes = &axis;
+    fx.rglDirection = &direction;
+    fx.cbTypeSpecificParams = sizeof(cond);
+    fx.lpvTypeSpecificParams = &cond;
+
+    if (idac_di_fx_damper) {
+        hr = IDirectInputEffect_SetParameters(idac_di_fx_damper, &fx, DIEP_TYPESPECIFICPARAMS);
+        if (FAILED(hr)) {
             IDirectInputEffect_Stop(idac_di_fx_damper);
             IDirectInputEffect_Release(idac_di_fx_damper);
             idac_di_fx_damper = NULL;
         }
     }
 
-    /* Create a new damper effect */
-    IDirectInputEffect *obj;
+if (idac_di_fx_damper == NULL) {
+    IDirectInputEffect *damper_obj = NULL;
+
     hr = IDirectInputDevice8_CreateEffect(
         idac_di_dev,
         &GUID_Damper,
         &fx,
-        &obj,
-        NULL);
+        &damper_obj,
+        NULL
+    );
 
-    if (FAILED(hr)) {
-        return;
-    }
+    if (SUCCEEDED(hr)) {
+        hr = IDirectInputEffect_Start(damper_obj, INFINITE, 0);
 
-    /* Start the effect */
-    hr = IDirectInputEffect_Start(obj, fx.dwDuration, 0);
-    if (FAILED(hr)) {
-        IDirectInputEffect_Release(obj);
-        return;
-    }
-
-    idac_di_fx_damper = obj;
+        if (SUCCEEDED(hr)) {
+            idac_di_fx_damper = damper_obj;
+        } else {
+            dprintf("DirectInput: Failed to start damper effect: %08x\n", (int)hr);
+            IDirectInputEffect_Release(damper_obj);
+        }
+    } else {
+        dprintf("DirectInput: Create damper effect failed: %08x\n", (int)hr);
+		}
+	}
 }

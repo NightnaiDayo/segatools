@@ -30,8 +30,9 @@ struct idz_di_config {
     uint8_t ffb_constant_force_strength;
     uint8_t ffb_rumble_strength;
     uint8_t ffb_damper_strength;
-
+	double ffb_base_damper_fraction; /* NEW user-adjustable baseline stiffness */
     uint32_t ffb_rumble_duration;
+	float ffb_deadband;  // deadband in whole percent (0-100)
 };
 
 struct idz_xi_config {
