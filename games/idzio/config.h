@@ -16,6 +16,10 @@ struct idz_di_config {
     wchar_t accel_axis[16];
     uint8_t start;
     uint8_t view_chg;
+    uint8_t up;
+    uint8_t down; 
+    uint8_t left;
+    uint8_t right;
     uint8_t shift_dn;
     uint8_t shift_up;
     uint8_t gear[6];

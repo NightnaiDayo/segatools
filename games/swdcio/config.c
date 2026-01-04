@@ -50,6 +50,10 @@ void swdc_di_config_load(struct swdc_di_config *cfg, const wchar_t *filename)
 
     cfg->start = GetPrivateProfileIntW(L"dinput", L"start", 0, filename);
     cfg->view_chg = GetPrivateProfileIntW(L"dinput", L"viewChg", 0, filename);
+    cfg->up = GetPrivateProfileIntW(L"dinput", L"up", 0, filename);
+    cfg->down = GetPrivateProfileIntW(L"dinput", L"down", 0, filename);
+    cfg->left = GetPrivateProfileIntW(L"dinput", L"left", 0, filename);
+    cfg->right = GetPrivateProfileIntW(L"dinput", L"right", 0, filename);
     cfg->paddle_left = GetPrivateProfileIntW(L"dinput", L"paddleLeft", 0, filename);
     cfg->paddle_right = GetPrivateProfileIntW(L"dinput", L"paddleRight", 0, filename);
     cfg->wheel_green = GetPrivateProfileIntW(L"dinput", L"wheelGreen", 0, filename);

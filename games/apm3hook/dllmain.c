@@ -24,11 +24,6 @@
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 
-#include "platform/clock.h"
-#include "platform/config.h"
-#include "platform/nusec.h"
-#include "platform/security.h"
-
 #include "unityhook/hook.h"
 
 #include "util/dprintf.h"

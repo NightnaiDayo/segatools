@@ -10,7 +10,7 @@
 
 enum {
     MAI2_DLL_SYM_COUNT_V101 = 11,
-    MAI2_DLL_SYM_COUNT_V102 = 12,
+    MAI2_DLL_SYM_COUNT_V102 = 13,
 };
 
 const struct dll_bind_sym mai2_dll_syms[] = {
@@ -50,6 +50,9 @@ const struct dll_bind_sym mai2_dll_syms[] = {
     }, {
         .sym = "mai2_io_led_billboard_set",
         .off = offsetof(struct mai2_dll, led_set_leds),
+    }, {
+        .sym = "mai2_io_led_cam_set",
+        .off = offsetof(struct mai2_dll, led_cam_set),
     },
 };
 

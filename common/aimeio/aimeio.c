@@ -218,7 +218,7 @@ static HRESULT aime_io_generate_aime(
 
 uint16_t aime_io_get_api_version(void)
 {
-    return 0x0100;
+    return 0x0101;
 }
 
 HRESULT aime_io_init(void)
@@ -347,3 +347,18 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm)
 
 void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b)
 {}
+
+void aime_io_vfd_set_text(
+        const uint8_t *text,
+        size_t text_len,
+        const struct aime_io_vfd_state *state)
+{
+    (void) text;
+    (void) text_len;
+    (void) state;
+}
+
+void aime_io_vfd_set_state(const struct aime_io_vfd_state *state)
+{
+    (void) state;
+}

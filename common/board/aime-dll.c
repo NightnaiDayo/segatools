@@ -8,6 +8,11 @@
 #include "util/dll-bind.h"
 #include "util/dprintf.h"
 
+enum {
+    AIME_DLL_SYM_COUNT_V100 = 5,
+    AIME_DLL_SYM_COUNT_V101 = 7,
+};
+
 const struct dll_bind_sym aime_dll_syms[] = {
     {
         .sym = "aime_io_init",
@@ -24,7 +29,13 @@ const struct dll_bind_sym aime_dll_syms[] = {
     }, {
         .sym = "aime_io_led_set_color",
         .off = offsetof(struct aime_dll, led_set_color),
-    }
+    }, {
+        .sym = "aime_io_vfd_set_text",
+        .off = offsetof(struct aime_dll, vfd_set_text),
+    }, {
+        .sym = "aime_io_vfd_set_state",
+        .off = offsetof(struct aime_dll, vfd_set_state),
+    },
 };
 
 struct aime_dll aime_dll;
@@ -42,6 +53,7 @@ HRESULT aime_dll_init(const struct aime_dll_config *cfg, HINSTANCE self)
     HINSTANCE owned;
     HINSTANCE src;
     HRESULT hr;
+    size_t sym_count;
 
     assert(cfg != NULL);
     assert(self != NULL);
@@ -86,7 +98,10 @@ HRESULT aime_dll_init(const struct aime_dll_config *cfg, HINSTANCE self)
     }
 
     sym = aime_dll_syms;
-    hr = dll_bind(&aime_dll, src, &sym, _countof(aime_dll_syms));
+    sym_count = (aime_dll.api_version < 0x0101)
+            ? AIME_DLL_SYM_COUNT_V100
+            : AIME_DLL_SYM_COUNT_V101;
+    hr = dll_bind(&aime_dll, src, &sym, sym_count);
 
     if (FAILED(hr)) {
         if (src != self) {

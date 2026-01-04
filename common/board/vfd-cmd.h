@@ -3,6 +3,7 @@
 #include "board/vfd-frame.h"
 
 enum {
+    VFD_CMD_WRITE_STATIC = 0x00,
     VFD_CMD_GET_VERSION = 0x5B,
     VFD_CMD_RESET = 0x0B,
     VFD_CMD_CLEAR_SCREEN = 0x0C,

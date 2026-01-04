@@ -10,4 +10,6 @@ inject -d -k mercuryhook.dll ../WindowsNoEditor/Mercury/Binaries/Win64/Mercury-W
 
 taskkill /f /im amdaemon.exe > nul 2>&1
 
+echo.
 echo Game processes have terminated
+pause
