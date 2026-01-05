@@ -59,15 +59,15 @@ void swdc_di_config_load(struct swdc_di_config *cfg, const wchar_t *filename)
     cfg->wheel_yellow = GetPrivateProfileIntW(L"dinput", L"wheelYellow", 0, filename);
 
     cfg->reverse_brake_axis = GetPrivateProfileIntW(
-				L"dinput",
-				L"reverseBrakeAxis",
-				0,
-				filename);
+			L"dinput",
+			L"reverseBrakeAxis",
+			0,
+			filename);
     cfg->reverse_accel_axis = GetPrivateProfileIntW(
-				L"dinput",
-				L"reverseAccelAxis",
-				0,
-				filename);
+			L"dinput",
+			L"reverseAccelAxis",
+			0,
+			filename);
 
     // FFB configuration
     cfg->ffb_constant_force_strength = GetPrivateProfileIntW(
@@ -94,33 +94,17 @@ void swdc_di_config_load(struct swdc_di_config *cfg, const wchar_t *filename)
             1000,
             filename);
 
-    /* New: base damper fraction (user-adjustable, default 0.20) */
-    int base_damper_percent = GetPrivateProfileIntW(
-        L"dinput",
-        L"baseDamperFraction",
-        20,
-        filename);
-
-    cfg->ffb_base_damper_fraction = (double) base_damper_percent / 100.0;
+    cfg->ffb_base_damper_fraction = GetPrivateProfileIntW(
+            L"dinput",
+            L"baseDamperFraction",
+            20,
+            filename);
 	
-    // Read deadband (float for more precise adjustment)
-    wchar_t value[16];
-    GetPrivateProfileStringW(
+    cfg->ffb_deadband = GetPrivateProfileIntW(
             L"dinput",
             L"deadband",
-            L"2.0",       // default
-            value,
-            _countof(value),
+            2,
             filename);
-
-    cfg->ffb_deadband = wcstof(value, NULL);
-
-    // Clamp to safe range 0-10%
-    if (cfg->ffb_deadband < 0.0f)
-        cfg->ffb_deadband = 0.0f;
-    else if (cfg->ffb_deadband > 10.0f)
-        cfg->ffb_deadband = 10.0f;
-
 }
 
 void swdc_xi_config_load(struct swdc_xi_config *cfg, const wchar_t *filename)

@@ -24,14 +24,13 @@ struct swdc_di_config {
     bool reverse_brake_axis;
     bool reverse_accel_axis;
 
-    // --- FFB configuration ---
-    uint8_t  ffb_constant_force_strength;
-    uint8_t  ffb_rumble_strength;
-    uint8_t  ffb_damper_strength;
-    double   ffb_base_damper_fraction;   /* NEW: user-adjustable baseline stiffness (percent / 100.0) */
+    // FFB configuration
+    uint8_t ffb_constant_force_strength;
+    uint8_t ffb_rumble_strength;
+    uint8_t ffb_damper_strength;
+    uint8_t ffb_deadband;
+    uint8_t ffb_base_damper_fraction;
     uint32_t ffb_rumble_duration;
-	float ffb_deadband;  // deadband in whole percent (0-100)
-
 };
 
 struct swdc_xi_config {
