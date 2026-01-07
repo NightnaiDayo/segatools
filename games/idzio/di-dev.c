@@ -40,6 +40,8 @@ HRESULT idz_di_dev_init(const struct idz_di_config* cfg,
     idz_di_dev = dev;
     idz_di_wnd = wnd;
 
+    idz_di_rumble_duration = cfg->ffb_rumble_duration;
+
     idz_di_constant_force_strength = cfg->ffb_constant_force_strength > 100
                                         ? 100
                                         : cfg->ffb_constant_force_strength;
@@ -52,12 +54,13 @@ HRESULT idz_di_dev_init(const struct idz_di_config* cfg,
                                 ? 100
                                 : cfg->ffb_damper_strength;
     
-    idz_di_base_damper = cfg->ffb_base_damper_fraction > 20
-                            ? 20
+    idz_di_base_damper = cfg->ffb_base_damper_fraction > 100
+                            ? 100
                             : cfg->ffb_base_damper_fraction;
     
-    idz_di_deadband = cfg->ffb_deadband > 100
-                        ? 100
+    /* Deadband is the only setting from 0.0% to 20.0%*/
+    idz_di_deadband = cfg->ffb_deadband > 200
+                        ? 200
                         : cfg->ffb_deadband;
 
     return S_OK;
@@ -204,9 +207,7 @@ void idz_di_ffb_rumble(uint8_t force, uint8_t period) {
     HRESULT hr;
 
     memset(&pe, 0, sizeof(pe));
-    pe.dwMagnitude = (DWORD)(((uint32_t)force * ffb_strength) / idz_di_ffb_scale);
-    pe.lOffset = 0;
-    pe.dwPhase = 0;
+    pe.dwMagnitude = (DWORD)(((double)force / idz_di_ffb_scale) * ffb_strength);
     pe.dwPeriod = (DWORD)force * idz_di_rumble_duration;
 
     memset(&fx, 0, sizeof(fx));
@@ -250,12 +251,13 @@ void idz_di_ffb_damper(uint8_t force) {
 
     /* SPRING (centering) */
     memset(&cond, 0, sizeof(cond));
-    cond.lOffset = 0;
     cond.lPositiveCoefficient = (LONG)(((uint32_t)force * ffb_strength) / idz_di_ffb_scale);
     cond.lNegativeCoefficient = cond.lPositiveCoefficient;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
-    cond.lDeadBand = (DI_FFNOMINALMAX * (LONG)idz_di_deadband) / 100;  // e.g. 2 → 2%
+    
+    /* If user enters 25, result is 0.025 * DI_FFNOMINALMAX */
+    cond.lDeadBand = (DI_FFNOMINALMAX * (LONG)idz_di_deadband) / 1000;
 
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
@@ -274,22 +276,18 @@ void idz_di_ffb_damper(uint8_t force) {
 
     /* DAMPER (resistance with baseline)  */
     memset(&cond, 0, sizeof(cond));
-    cond.lOffset = 0;
 
     LONG nominal = (LONG)(( (LONG)force * ffb_strength * idz_di_damper_spring_ratio ) / idz_di_ffb_scale);
-    LONG min_baseline = (LONG)(DI_FFNOMINALMAX * idz_di_base_damper);
+    LONG min_baseline = (LONG)(DI_FFNOMINALMAX * (idz_di_base_damper / 100.0));
 
     if (nominal < min_baseline) {
         nominal = min_baseline;
-    } else if (nominal > DI_FFNOMINALMAX) {
-        nominal = DI_FFNOMINALMAX;
     }
 
     cond.lPositiveCoefficient = nominal;
     cond.lNegativeCoefficient = nominal;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
-    cond.lDeadBand = 0;
 
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
