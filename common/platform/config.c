@@ -24,6 +24,7 @@
 #include "platform/vfs.h"
 #include "platform/system.h"
 #include "platform/openssl.h"
+#include "util/dprintf.h"
 
 
 void platform_config_load(struct platform_config *cfg, const wchar_t *filename)
@@ -358,6 +359,10 @@ void vfs_config_load(struct vfs_config *cfg, const wchar_t *filename)
                     filename);
 
         cfg->redirections_from_len[i] = (int)wcslen(cfg->redirections_from[i]);
+
+        if (cfg->redirections_from_len[i] > 0) {
+            dprintf("Vfs: Set up custom redirection from %ls to %ls\n", cfg->redirections_from[i], cfg->redirections_to[i]);
+        }
     }
 }
 

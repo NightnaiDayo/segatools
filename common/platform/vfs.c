@@ -620,7 +620,7 @@ static HRESULT vfs_custom_path_hook(
     assert(src != NULL);
     assert(count != NULL);
 
-    /* Case-insensitive check to see if src starts with vfs_option */
+    /* Case-insensitive check to see if src starts with one of our custom paths */
 
     for (int i = 0; i < MAX_REDIRECTIONS; i++){
 
@@ -635,18 +635,22 @@ static HRESULT vfs_custom_path_hook(
             continue;
         }
 
-        size_t required = wcslen(to);
-        if (required > *count) {
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        }
+        size_t required = wcslen(to) + 1;
 
 #if defined(LOG_CUSTOM_VFS)
-        dprintf("Vfs: Redirection matched: %S -> %S\n", from, to);
+        dprintf("Vfs: Redirection matched: %ls -> %ls\n", from, to);
 #endif
 
         if (dest != NULL) {
+
+            if (required > *count) {
+                return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            }
+
             wcscpy_s(dest, *count, to);
         }
+
+        *count = required;
 
         break;
     }
