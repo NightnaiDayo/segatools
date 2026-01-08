@@ -6,7 +6,6 @@
 #include <stddef.h>
 
 #define EWF_MAX_VIRTUAL_FILES 255
-#define EWF_MAX_HANDLES 50000
 #define EWF_DEFAULT_FILE_BUFFER_SIZE 1024
 
 struct ewf_config {

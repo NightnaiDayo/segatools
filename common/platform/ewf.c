@@ -22,7 +22,8 @@
 
 const static struct ewf_config* ewf_config;
 static struct ewf_virtual_file virtual_file_table[EWF_MAX_VIRTUAL_FILES] = {0};
-static struct ewf_real_handle handle_table[EWF_MAX_HANDLES] = {0};
+static struct ewf_real_handle* handle_table;
+static uint32_t handle_table_size;
 static CRITICAL_SECTION file_table_lock;
 static CRITICAL_SECTION handle_table_lock;
 static wchar_t windows_directory[MAX_PATH];
@@ -179,7 +180,7 @@ static struct ewf_real_handle* ewf_open_virtual_file(HANDLE virtual_handle) {
         return NULL;
     }
     EnterCriticalSection(&handle_table_lock);
-    for (int i = 0; i < EWF_MAX_HANDLES; i++) {
+    for (int i = 0; i < handle_table_size; i++) {
         if (handle_table[i].real_handle == NULL) {
             h = &handle_table[i];
             HRESULT hr = iohook_open_nul_fd(&h->real_handle);
@@ -208,7 +209,7 @@ static struct ewf_real_handle* ewf_get_real_handle(HANDLE real_handle) {
     }
     struct ewf_real_handle* match = NULL;
     EnterCriticalSection(&handle_table_lock);
-    for (int i = 0; i < EWF_MAX_HANDLES; i++) {
+    for (int i = 0; i < handle_table_size; i++) {
         if (handle_table[i].real_handle == real_handle) {
             match = &handle_table[i];
             break;
@@ -221,7 +222,7 @@ static struct ewf_real_handle* ewf_get_real_handle(HANDLE real_handle) {
 static BOOL ewf_close_virtual_file(HANDLE real_handle) {
     const struct ewf_virtual_file* match = NULL;
     EnterCriticalSection(&handle_table_lock);
-    for (int i = 0; i < EWF_MAX_HANDLES; i++) {
+    for (int i = 0; i < handle_table_size; i++) {
         if (handle_table[i].real_handle == real_handle) {
             match = handle_table[i].virtual_file;
             handle_table[i].real_handle = NULL;
@@ -297,6 +298,10 @@ HRESULT ewf_hook_init(const struct ewf_config* config) {
     if (!config->enable) {
         return S_FALSE;
     }
+
+    handle_table_size = config->full ? 50000 : 1024;
+    handle_table = malloc(sizeof(struct ewf_real_handle) * handle_table_size);
+    ZeroMemory(handle_table, handle_table_size);
 
     GetWindowsDirectoryW(windows_directory, MAX_PATH);
 
