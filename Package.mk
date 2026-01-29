@@ -256,6 +256,22 @@ $(BUILD_DIR_ZIP)/apm3.zip:
 	$(V)strip $(BUILD_DIR_ZIP)/apm3/*.{exe,dll}
 	$(V)cd $(BUILD_DIR_ZIP)/apm3 ; zip -r ../apm3.zip *
 
+$(BUILD_DIR_ZIP)/soul.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/soul
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/soul/DEVICE
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_GAMES_64)/soulhook/soulhook.dll \
+		$(DIST_DIR)/soul/segatools.ini \
+		$(DIST_DIR)/soul/launch.bat \
+		$(DIST_DIR)/soul/config_hook.json \
+    	$(BUILD_DIR_ZIP)/soul
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/soul/DEVICE
+	$(V)strip $(BUILD_DIR_ZIP)/soul/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/soul ; zip -r ../soul.zip *
+
 $(BUILD_DIR_ZIP)/doc.zip: \
 		$(DOC_DIR)/config \
 		$(DOC_DIR)/chunihook.md \
@@ -282,6 +298,7 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/fgo.zip \
 		$(BUILD_DIR_ZIP)/kemono.zip \
 		$(BUILD_DIR_ZIP)/apm3.zip \
+		$(BUILD_DIR_ZIP)/soul.zip
 		CHANGELOG.md \
 		README.md \
 

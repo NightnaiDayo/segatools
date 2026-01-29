@@ -1,0 +1,22 @@
+LIBRARY soulhook
+
+EXPORTS
+    aime_io_get_api_version
+    aime_io_init
+    aime_io_led_set_color
+    aime_io_vfd_set_text
+    aime_io_vfd_set_state
+    aime_io_nfc_get_aime_id
+    aime_io_nfc_get_felica_id
+    aime_io_nfc_poll
+    amDllVideoClose @2
+    amDllVideoGetVBiosVersion @4
+    amDllVideoOpen @1
+    amDllVideoSetResolution @3
+    soul_io_get_api_version
+    soul_io_get_gamebtns
+    soul_io_get_opbtns
+    soul_io_init
+    soul_io_poll
+    soul_io_led_init
+    soul_io_led_set_colors
