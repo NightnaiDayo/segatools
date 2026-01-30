@@ -16,6 +16,7 @@
 #include "soulhook/config.h"
 #include "soulhook/io4.h"
 #include "soulhook/soul-dll.h"
+#include "soulhook/soul-gfx.h"
 
 #include "platform/platform.h"
 
@@ -41,6 +42,7 @@ static DWORD CALLBACK soul_pre_startup(void)
     dvd_hook_init(&soul_hook_cfg.dvd, soul_hook_mod);
     touch_screen_hook_init(&soul_hook_cfg.touch, soul_hook_mod);
     serial_hook_init();
+    
 
     /* Initialize emulation hooks */
 
@@ -86,9 +88,9 @@ static DWORD CALLBACK soul_pre_startup(void)
         goto fail;
     }
 
-    /* Initialize debug helpers */
+    /* Initialize gfx helpers */
 
-    spike_hook_init(get_config_path());
+    soulgfx_hook_init();
 
     dprintf("---  End  soul_pre_startup ---\n");
 

@@ -26,5 +26,7 @@ shared_library(
         'io4.h',
         'soul-dll.c',
         'soul-dll.h',
+        'soul-gfx.c',
+        'soul-gfx.h',
     ],
 )

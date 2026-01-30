@@ -23,7 +23,7 @@ HRESULT soul_io4_hook_init(const struct io4_config *cfg)
 
     assert(soul_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &soul_io4_ops, NULL, L"Soul Reverse", false);
+    hr = io4_hook_init(cfg, &soul_io4_ops, NULL, L"WGL", false);
 
     if (FAILED(hr)) {
         return hr;
