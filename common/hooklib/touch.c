@@ -43,6 +43,8 @@ static BOOL WINAPI hook_GetTouchInputInfo(
 
 static HCURSOR WINAPI hook_SetCursor(HCURSOR cursor);
 
+static int WINAPI hook_ShowCursor(BOOL bShow);
+
 static LONG_PTR WINAPI hook_SetWindowLongPtrA(HWND hWnd, int nIndex, LONG_PTR dwNewLong);
 
 /* Link pointers */
@@ -68,6 +70,8 @@ static BOOL (WINAPI *next_GetTouchInputInfo)(
 );
 
 static HCURSOR(WINAPI *next_SetCursor)(HCURSOR cursor);
+
+static int (WINAPI *next_ShowCursor)(BOOL bShow);
 
 static LONG_PTR (WINAPI *next_SetWindowLongPtrA)(HWND hWnd, int nIndex, LONG_PTR dwNewLong);
 
@@ -98,6 +102,11 @@ static const struct hook_symbol touch_hooks[] = {
         .name   = "GetTouchInputInfo",
         .patch  = hook_GetTouchInputInfo,
         .link   = (void **) &next_GetTouchInputInfo
+    },
+    {
+        .name   = "ShowCursor",
+        .patch  = hook_ShowCursor,
+        .link   = (void **) &next_ShowCursor
     },
     {
         .name   = "SetCursor",
@@ -141,6 +150,15 @@ void touch_hook_insert_hooks(HMODULE target)
             _countof(touch_hooks));
 }
 
+static int WINAPI hook_ShowCursor(BOOL bShow)
+{
+    if (touch_config.cursor) {
+        return 1;
+    }
+
+    return next_ShowCursor(bShow);
+}
+
 static HCURSOR WINAPI hook_SetCursor(HCURSOR cursor) {
     if (cursor == 0 && touch_config.cursor)
         return next_SetCursor(defaultCursor);
@@ -153,6 +171,11 @@ static HCURSOR WINAPI hook_SetCursor(HCURSOR cursor) {
 static LRESULT hook_wndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
     if (hWnd == registered_hWnd && (Msg == WM_LBUTTONDOWN || Msg == WM_LBUTTONUP || (touch_held && Msg == WM_MOUSEMOVE))) {
         orig_wndProc(hWnd, WM_TOUCH, 1, 1);
+    }
+
+    if (Msg == WM_SETCURSOR && touch_config.cursor) {
+        SetCursor(defaultCursor);
+        return TRUE;
     }
 
     return orig_wndProc(hWnd, Msg, wParam, lParam);
