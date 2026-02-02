@@ -43,6 +43,8 @@ static BOOL WINAPI hook_GetTouchInputInfo(
 
 static HCURSOR WINAPI hook_SetCursor(HCURSOR cursor);
 
+static LONG_PTR WINAPI hook_SetWindowLongPtrA(HWND hWnd, int nIndex, LONG_PTR dwNewLong);
+
 /* Link pointers */
 
 static ATOM (WINAPI *next_RegisterClassExA)(
@@ -66,6 +68,8 @@ static BOOL (WINAPI *next_GetTouchInputInfo)(
 );
 
 static HCURSOR(WINAPI *next_SetCursor)(HCURSOR cursor);
+
+static LONG_PTR (WINAPI *next_SetWindowLongPtrA)(HWND hWnd, int nIndex, LONG_PTR dwNewLong);
 
 static bool touch_hook_initted;
 static bool touch_held;
@@ -99,6 +103,11 @@ static const struct hook_symbol touch_hooks[] = {
         .name   = "SetCursor",
         .patch  = hook_SetCursor,
         .link   = (void **) &next_SetCursor
+    },
+    {
+        .name   = "SetWindowLongPtrA",
+        .patch  = hook_SetWindowLongPtrA,
+        .link   = (void**) &next_SetWindowLongPtrA
     },
 };
 
@@ -152,7 +161,7 @@ static LRESULT hook_wndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 static ATOM WINAPI hook_RegisterClassExA(
     WNDCLASSEXA* wndClass
 ) {
-    if (wndClass->lpfnWndProc) {
+    if (!touch_config.setwndptr && wndClass->lpfnWndProc) {
         orig_wndProc = wndClass->lpfnWndProc;
         wndClass->lpfnWndProc = (WNDPROC) hook_wndProc;
     }
@@ -180,6 +189,17 @@ static BOOL WINAPI hook_RegisterTouchWindow(
 {
     registered_hWnd = hwnd;
     return true;
+}
+
+// Soul Reverse uses this to initialize wndprocs handling input
+
+static LONG_PTR WINAPI hook_SetWindowLongPtrA(HWND hWnd, int nIndex, LONG_PTR dwNewLong) {
+    if (touch_config.setwndptr && nIndex == -4) {
+        orig_wndProc = (WNDPROC) dwNewLong;
+        dwNewLong = (LONG_PTR) hook_wndProc;
+    }
+
+    return next_SetWindowLongPtrA(hWnd, nIndex, dwNewLong);
 }
 
 // Converting mouse event to touch event
@@ -231,7 +251,7 @@ static BOOL WINAPI hook_GetTouchInputInfo(
             touch_input->x = cursorPos.x * 100;
             touch_input->y = cursorPos.y * 100;
             touch_input->hSource = hTouchInput;
-            touch_input->dwID = 0;
+            touch_input->dwID = 1;
             touch_input->dwFlags = 0;
             if (mouse_state && !mouse_state_old) {
                 touch_input->dwFlags |= TOUCHEVENTF_DOWN;

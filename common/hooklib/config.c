@@ -24,6 +24,7 @@ void touch_screen_config_load(struct touch_screen_config *cfg, const wchar_t *fi
     cfg->enable = GetPrivateProfileIntW(L"touch", L"enable", 1, filename);
     cfg->remap = GetPrivateProfileIntW(L"touch", L"remap", 1, filename);
     cfg->cursor = GetPrivateProfileIntW(L"touch", L"cursor", 1, filename);
+    cfg->setwndptr = GetPrivateProfileIntW(L"touch", L"setwndptr", 0, filename);
 }
 
 void printer_config_load(struct printer_config *cfg, const wchar_t *filename)
