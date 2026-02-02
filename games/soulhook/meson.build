@@ -28,5 +28,7 @@ shared_library(
         'soul-dll.h',
         'soul-gfx.c',
         'soul-gfx.h',
+        'zinput.c',
+        'zinput.h'
     ],
 )

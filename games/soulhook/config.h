@@ -11,6 +11,7 @@
 #include "gfxhook/config.h"
 
 #include "soulhook/soul-dll.h"
+#include "soulhook/zinput.h"
 
 #include "platform/config.h"
 
@@ -24,6 +25,7 @@ struct soul_hook_config {
     struct led15093_config led15093;
     struct gfx_config gfx;
     struct soul_dll_config dll;
+    struct zinput_config zinput;
 };
 
 void soul_dll_config_load(

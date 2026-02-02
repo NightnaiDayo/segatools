@@ -91,6 +91,14 @@ void led15093_config_load(struct led15093_config *cfg, const wchar_t *filename)
     }
 }
 
+void zinput_config_load(struct zinput_config *cfg, const wchar_t *filename)
+{
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    cfg->enable = GetPrivateProfileIntW(L"zinput", L"enable", 1, filename);
+}
+
 void soul_hook_config_load(
         struct soul_hook_config *cfg,
         const wchar_t *filename)
@@ -107,4 +115,5 @@ void soul_hook_config_load(
     led15093_config_load(&cfg->led15093, filename);
     gfx_config_load(&cfg->gfx, filename);
     soul_dll_config_load(&cfg->dll, filename);
+    zinput_config_load(&cfg->zinput, filename);
 }

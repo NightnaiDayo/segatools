@@ -69,6 +69,10 @@ static DWORD CALLBACK soul_pre_startup(void)
     serial_hook_init();
     soulgfx_hook_init();
 
+    /* Hook external DLL APIs */
+
+    zinput_hook_init(&soul_hook_cfg.zinput);
+
     /* Initialize emulation hooks */
 
     hr = platform_hook_init(
