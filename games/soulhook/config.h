@@ -8,6 +8,8 @@
 #include "hooklib/dvd.h"
 #include "hooklib/touch.h"
 
+#include "gfxhook/config.h"
+
 #include "soulhook/soul-dll.h"
 
 #include "platform/config.h"
@@ -20,6 +22,7 @@ struct soul_hook_config {
     struct vfd_config vfd;
     struct touch_screen_config touch;
     struct led15093_config led15093;
+    struct gfx_config gfx;
     struct soul_dll_config dll;
 };
 

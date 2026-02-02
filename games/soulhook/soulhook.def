@@ -15,6 +15,7 @@ EXPORTS
     amDllVideoSetResolution @3
     soul_io_get_api_version
     soul_io_get_gamebtns
+    soul_io_get_analogs
     soul_io_get_opbtns
     soul_io_init
     soul_io_poll

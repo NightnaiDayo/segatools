@@ -14,7 +14,7 @@ void soul_io_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    cfg->vk_test = GetPrivateProfileIntW(L"io4", L"test", '1', filename);
-    cfg->vk_service = GetPrivateProfileIntW(L"io4", L"service", '2', filename);
-    cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", '3', filename);
+    cfg->vk_test = GetPrivateProfileIntW(L"io4", L"test", VK_F1, filename);
+    cfg->vk_service = GetPrivateProfileIntW(L"io4", L"service", VK_F2, filename);
+    cfg->vk_coin = GetPrivateProfileIntW(L"io4", L"coin", VK_F3, filename);
 }

@@ -22,6 +22,9 @@ const struct dll_bind_sym soul_dll_syms[] = {
         .sym = "soul_io_get_gamebtns",
         .off = offsetof(struct soul_dll, get_gamebtns),
     }, {
+        .sym = "soul_io_get_analogs",
+        .off = offsetof(struct soul_dll, get_analogs),
+    }, {
         .sym = "soul_io_led_init",
         .off = offsetof(struct soul_dll, led_init),
     }, {

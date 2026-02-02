@@ -11,9 +11,13 @@ enum {
 };
 
 enum {
-    SOUL_IO_GAMEBTN_A = 0x01,
-    SOUL_IO_GAMEBTN_B = 0x02,
-    SOUL_IO_GAMEBTN_C = 0x04,
+    SOUL_IO_STICK_PUSH = 0x01,
+    SOUL_IO_GAMEBTN_L1 = 0x02,
+    SOUL_IO_GAMEBTN_L2 = 0x04,
+    SOUL_IO_VIEW_STICK_PUSH = 0x08,
+    SOUL_IO_GAMEBTN_A = 0x10,
+    SOUL_IO_GAMEBTN_B = 0x20,
+    SOUL_IO_GAMEBTN_C = 0x40,
 };
 
 /* Get the version of the Soul Reverse IO API that this DLL supports. This
@@ -60,6 +64,13 @@ void soul_io_get_opbtns(uint8_t *opbtn);
    Minimum API version: 0x0100 */
 
 void soul_io_get_gamebtns(uint8_t *gamebtn);
+
+/* Get the positions of the cabinet stick and view stick as of the last poll. 
+   The center position should be equal to or close to 32767.
+
+   Minimum API version: 0x0100 */
+
+void soul_io_get_analogs(int16_t *stick_x, int16_t *stick_y, int16_t *view_x, int16_t *view_y);
 
 /* Initialize LED emulation. This function will be called before any
    other soul_io_led_*() function calls.
