@@ -31,6 +31,7 @@ static HWND get_window(){
             return NULL;
         }
     }
+
     dprintf("FG-Detect: Program window detected\n");
     window_handle = hwnd;
     return window_handle;

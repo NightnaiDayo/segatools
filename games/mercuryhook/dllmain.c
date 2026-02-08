@@ -57,10 +57,9 @@ static DWORD CALLBACK mercury_pre_startup(void)
     /* Hook Win32 APIs */
 
     dvd_hook_init(&mercury_hook_cfg.dvd, mercury_hook_mod);
-    serial_hook_init();
-
     gfx_hook_init(&mercury_hook_cfg.gfx);
     gfx_d3d11_hook_init(&mercury_hook_cfg.gfx, mercury_hook_mod);
+    serial_hook_init();
 
     /* Initialize emulation hooks */
 
@@ -106,9 +105,9 @@ static DWORD CALLBACK mercury_pre_startup(void)
         goto fail;
     }
 
-    /* Start elisabeth Hooks for the LED and IO Board DLLs */
-    elizabeth_hook_init(&mercury_hook_cfg.elizabeth);
+    /* Start elizabeth hooks for the LED and IO board DLLs */
 
+    elizabeth_hook_init(&mercury_hook_cfg.elizabeth);
     touch_hook_init(&mercury_hook_cfg.touch);
 
     /* Initialize debug helpers */

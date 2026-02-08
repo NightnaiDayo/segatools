@@ -76,6 +76,10 @@ static uint8_t idz_di_shift_dn;
 static uint8_t idz_di_shift_up;
 static uint8_t idz_di_view_chg;
 static uint8_t idz_di_start;
+static uint8_t idz_di_up;
+static uint8_t idz_di_down;
+static uint8_t idz_di_left;
+static uint8_t idz_di_right;
 static uint8_t idz_di_gear[6];
 static bool idz_di_use_pedals;
 static bool idz_di_reverse_brake_axis;
@@ -276,6 +280,30 @@ static HRESULT idz_di_config_apply(const struct idz_di_config *cfg)
         return E_INVALIDARG;
     }
 
+    if (cfg->up > 32) {
+        dprintf("Wheel: Invalid up button: %i\n", cfg->up);
+
+        return E_INVALIDARG;
+    }
+
+    if (cfg->down > 32) {
+        dprintf("Wheel: Invalid down button: %i\n", cfg->down);
+        
+        return E_INVALIDARG;
+    }
+
+    if (cfg->left > 32) {
+        dprintf("Wheel: Invalid left button: %i\n", cfg->left);
+
+        return E_INVALIDARG;
+    }
+
+    if (cfg->right > 32) {
+        dprintf("Wheel: Invalid right button: %i\n", cfg->right);
+
+        return E_INVALIDARG;
+    }
+
     if (cfg->shift_dn > 32) {
         dprintf("Wheel: Invalid shift down button: %i\n", cfg->shift_dn);
 
@@ -309,6 +337,10 @@ static HRESULT idz_di_config_apply(const struct idz_di_config *cfg)
     }
     dprintf("Wheel: Start button  . . . : %i\n", cfg->start);
     dprintf("Wheel: View Change button  : %i\n", cfg->view_chg);
+    dprintf("Wheel: Up button . . . . . : %i\n", cfg->up);
+    dprintf("Wheel: Down button  . . .  : %i\n", cfg->down);
+    dprintf("Wheel: Left button . . . . : %i\n", cfg->left);
+    dprintf("Wheel: Right button  . . . : %i\n", cfg->right);
     dprintf("Wheel: Shift Down button . : %i\n", cfg->shift_dn);
     dprintf("Wheel: Shift Up button . . : %i\n", cfg->shift_up);
     dprintf("Wheel: Reverse Brake Axis  : %i\n", cfg->reverse_brake_axis);
@@ -341,6 +373,10 @@ static HRESULT idz_di_config_apply(const struct idz_di_config *cfg)
     idz_di_off_brake = brake_axis->off;
     idz_di_off_accel = accel_axis->off;
     idz_di_start = cfg->start;
+    idz_di_up = cfg->up;
+    idz_di_down = cfg->down;
+    idz_di_left = cfg->left;
+    idz_di_right = cfg->right;
     idz_di_view_chg = cfg->view_chg;
     idz_di_shift_dn = cfg->shift_dn;
     idz_di_shift_up = cfg->shift_up;
@@ -495,6 +531,22 @@ static void idz_di_jvs_read_buttons(uint8_t *gamebtn_out)
 
     if (idz_di_view_chg && state.st.rgbButtons[idz_di_view_chg - 1]) {
         gamebtn |= IDZ_IO_GAMEBTN_VIEW_CHANGE;
+    }
+
+    if (idz_di_up && state.st.rgbButtons[idz_di_up - 1]) {
+        gamebtn |= IDZ_IO_GAMEBTN_UP;
+    }
+
+    if (idz_di_down && state.st.rgbButtons[idz_di_down - 1]) {
+        gamebtn |= IDZ_IO_GAMEBTN_DOWN;
+    }
+
+    if (idz_di_left && state.st.rgbButtons[idz_di_left - 1]) {
+        gamebtn |= IDZ_IO_GAMEBTN_LEFT;
+    }
+
+    if (idz_di_right && state.st.rgbButtons[idz_di_right - 1]) {
+        gamebtn |= IDZ_IO_GAMEBTN_RIGHT;
     }
 
     *gamebtn_out = gamebtn;

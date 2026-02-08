@@ -1,0 +1,35 @@
+{
+    "common":
+    {
+        "language": "english"
+    },
+    "network":
+    {
+        "property":
+        {
+            "dhcp": true
+        }
+    },
+    "credit" :
+    {
+        "coin_selector_AS6DB" :
+        {
+            "enable" : false
+        }
+    },
+    "aime" :
+    {
+        "enable" : true,
+        "unit" :
+        [
+            {
+                "port" : 1,
+                "id" : 1
+            },
+            {
+                "port" : 12,
+                "id" : 2
+            }
+        ]
+    }
+}

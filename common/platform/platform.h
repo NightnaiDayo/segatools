@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#include "ewf.h"
+#include "platform/ewf.h"
 #include "platform/amvideo.h"
 #include "platform/clock.h"
 #include "platform/dns.h"

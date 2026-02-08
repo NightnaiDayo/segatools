@@ -27,6 +27,11 @@ if cc.get_id() != 'msvc'
         language: 'c',
     )
 
+    add_global_arguments(
+        '-Wno-unknown-pragmas',
+        language: 'c',
+    )
+
     add_project_link_arguments(
         '-Wl,--enable-stdcall-fixup',
         '-Wl,--exclude-all-symbols',
@@ -87,6 +92,9 @@ if get_option('log_all') or get_option('log_vfs')
 endif
 if get_option('log_all') or get_option('log_ewf')
     add_project_arguments('-DLOG_EWF', language : 'c')
+endif
+if get_option('log_all') or get_option('log_custom_vfs')
+    add_project_arguments('-DLOG_CUSTOM_VFS', language: 'c')
 endif
 
 shlwapi_lib = cc.find_library('shlwapi')

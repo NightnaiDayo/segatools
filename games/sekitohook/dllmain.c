@@ -23,19 +23,21 @@
 
 #include <stdlib.h>
 
-#include "sekito-dll.h"
 #include "amex/amex.h"
 #include "board/sg-reader.h"
 #include "board/led15093.h"
 #include "board/sg-reader-queue.h"
+
+#include "gfxhook/d3d9.h"
 #include "gfxhook/gfx.h"
 
 #include "hook/process.h"
 #include "hook/iohook.h"
-#include "hooklib/dll.h"
 
+#include "hooklib/dll.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
+#include "hooklib/y3.h"
 
 #include "sekitohook/config.h"
 #include "sekitohook/jvs.h"
@@ -44,7 +46,6 @@
 
 #include "util/dprintf.h"
 #include "util/env.h"
-#include "hooklib/y3.h"
 #include "util/fg-detect.h"
 
 static HMODULE sekito_hook_mod;
@@ -53,10 +54,21 @@ static struct sekito_hook_config sekito_hook_cfg;
 
 static DWORD CALLBACK sekito_pre_startup(void)
 {
+    HMODULE dbghelp;
     HRESULT hr;
     bool is_terminal;
 
     dprintf("--- Begin sekito_pre_startup ---\n");
+
+    /* Pin dbghelp so the path hooks apply to it. */
+
+    dbghelp = LoadLibraryW(L"dbghelp.dll");
+
+    if (dbghelp != NULL) {
+        dprintf("Pinned debug helper library, hMod=%p\n", dbghelp);
+    } else {
+        dprintf("Failed to load debug helper library!\n");
+    }
 
     /* Load config */
 
@@ -66,6 +78,7 @@ static DWORD CALLBACK sekito_pre_startup(void)
 
     dvd_hook_init(&sekito_hook_cfg.dvd, sekito_hook_mod);
     gfx_hook_init(&sekito_hook_cfg.gfx);
+    gfx_d3d9_hook_init(&sekito_hook_cfg.gfx, sekito_hook_mod);
     serial_hook_init();
     sekito_io_init();
 
@@ -107,6 +120,8 @@ static DWORD CALLBACK sekito_pre_startup(void)
         dprintf("Unknown platform ID: %s\n", sekito_hook_cfg.platform.nusec.platform_id);
         goto fail;
     }
+
+    dprintf("System: Cabinet Type: %s\n", is_terminal ? "Terminal" : "Satellite");
 
     // LED: terminal uses COM 11 and satellite use COM 1
     unsigned int led_port_no[2] = {is_terminal ? 11 : 1, 0};

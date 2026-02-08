@@ -212,7 +212,7 @@ static void y3ws_read_card_image(char* file_name, char* output_data, size_t* out
     b64size = base64_encode(buf, size, b64buf);
 
     if (b64size + 100 > *output_size) {
-        dprintf("Y3WS: Encoded file size exceeds buffer: %ls (%lld / %lld)\n", path, b64size, *output_size);
+        dprintf("Y3WS: Encoded file size exceeds buffer: %ls (%llu / %llu)\n", path, (uint64_t) b64size, (uint64_t) *output_size);
         y3ws_make_error_packet("File too large", output_data, output_size);
     }
 

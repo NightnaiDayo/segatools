@@ -177,6 +177,28 @@ static HRESULT mai2_io4_write_gpio(uint8_t* payload, size_t len) {
         dprintf("  Camera Ring:    %s\n", (payload[1] & 0x80) ? "ON" : "OFF");
         dprintf("  Camera Rec:     %s\n", (payload[1] & 0x40) ? "ON" : "OFF");
 #endif
+
+        if (mai2_dll.led_cam_set != NULL) {
+            uint8_t state = 0;
+
+            if (payload[0] & 0x20) {
+                state |= MAI2_IO_LED_CAM_CODE_READER_1P;
+            }
+
+            if (payload[0] & 0x04) {
+                state |= MAI2_IO_LED_CAM_CODE_READER_2P;
+            }
+
+            if (payload[1] & 0x80) {
+                state |= MAI2_IO_LED_CAM_RING;
+            }
+
+            if (payload[1] & 0x40) {
+                state |= MAI2_IO_LED_CAM_REC;
+            }
+
+            mai2_dll.led_cam_set(state);
+        }
     }
     return S_OK;
 }

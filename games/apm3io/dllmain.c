@@ -13,6 +13,7 @@
 
 #include "util/dprintf.h"
 #include "util/str.h"
+#include "util/env.h"
 
 static struct apm3_io_config apm3_io_cfg;
 static const struct apm3_io_backend *apm3_io_backend;
@@ -39,7 +40,7 @@ HRESULT apm3_io_init(void)
         return hr;
     }
 
-    apm3_io_config_load(&apm3_io_cfg, L".\\segatools.ini");
+    apm3_io_config_load(&apm3_io_cfg, get_config_path());
 
     if (wstr_ieq(apm3_io_cfg.mode, L"keyboard")) {
         hr = apm3_kb_init(&apm3_io_cfg.kb, &apm3_io_backend);

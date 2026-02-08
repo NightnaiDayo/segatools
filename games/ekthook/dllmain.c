@@ -142,6 +142,8 @@ static DWORD CALLBACK ekt_pre_startup(void)
         goto fail;
     }
 
+    dprintf("System: Cabinet Type: %s\n", is_terminal ? "Terminal" : "Satellite");
+
     // LED: terminal uses COM 3 and satellite use COM 2
     unsigned int led_port_no[2] = {is_terminal ? 3 : 2, 0};
 
