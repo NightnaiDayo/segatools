@@ -20,6 +20,7 @@
 
 #include "util/dprintf.h"
 #include "util/dump.h"
+#include "util/fg-detect.h"
 
 const char SYNC_BOARD_VER[6] = "190523";
 const char UNIT_BOARD_VER[6] = "190514";
@@ -36,15 +37,18 @@ static uint8_t calc_checksum(const void *ptr, size_t nbytes);
 static HRESULT touch_handle_get_sync_board_ver(const struct touch_req *req);
 static HRESULT touch_handle_next_read(const struct touch_req *req);
 static HRESULT touch_handle_get_unit_board_ver(const struct touch_req *req);
-static HRESULT touch_handle_mystery1(const struct touch_req *req);
-static HRESULT touch_handle_mystery2(const struct touch_req *req);
+static HRESULT touch_handle_get_unit_board_alive(const struct touch_req *req);
+static HRESULT touch_handle_set_onoff_threshold(const struct touch_req *req);
 static HRESULT touch_handle_start_auto_scan(const struct touch_req *req);
 static void touch_res_auto_scan(const bool *state);
 
-uint8_t input_frame_count_0 = 0x7b;
-uint8_t input_frame_count_1 = 0x7b;
-bool touch0_auto = false;
-bool touch1_auto = false;
+static uint8_t input_frame_count_0 = 0;
+static uint8_t input_frame_count_1 = 0;
+static bool touch0_auto = false;
+static bool touch1_auto = false;
+
+static uint8_t prev_dataR[TOUCH_DATA_SIZE] = { 0 };
+static uint8_t prev_dataL[TOUCH_DATA_SIZE] = { 0 };
 
 static CRITICAL_SECTION touch0_lock;
 static struct uart touch0_uart;
@@ -67,7 +71,7 @@ HRESULT touch_hook_init(const struct touch_config *cfg)
 
     InitializeCriticalSection(&touch0_lock);
     InitializeCriticalSection(&touch1_lock);
-    dprintf("Wacca touch: Init\n");
+    dprintf("Wacca Touch: Init\n");
 
     uart_init(&touch0_uart, 3);
     touch0_uart.written.bytes = touch0_written_bytes;
@@ -113,11 +117,11 @@ static HRESULT touch0_handle_irp_locked(struct irp *irp)
     HRESULT hr;
 
     if (irp->op == IRP_OP_OPEN) {
-        dprintf("Wacca touch0: Starting backend\n");
+        dprintf("Wacca Touch0: Starting backend\n");
         hr = mercury_dll.touch_init();
 
         if (FAILED(hr)) {
-            dprintf("Wacca touch: Backend error: %x\n", (int) hr);
+            dprintf("Wacca Touch: Backend error: %x\n", (int) hr);
 
             return hr;
         }
@@ -138,7 +142,7 @@ static HRESULT touch0_handle_irp_locked(struct irp *irp)
 
         if (hr != S_OK) {
             if (FAILED(hr)) {
-                dprintf("Wacca touch: Deframe error: %x\n", (int) hr);
+                dprintf("Wacca Touch: Deframe error: %x\n", (int) hr);
             }
 
             return hr;
@@ -147,7 +151,7 @@ static HRESULT touch0_handle_irp_locked(struct irp *irp)
         hr = touch_req_dispatch(&req);
 
         if (FAILED(hr)) {
-            dprintf("Wacca touch: Processing error: %x\n", (int) hr);
+            dprintf("Wacca Touch: Processing error: %x\n", (int) hr);
         }
 
         return hr;
@@ -160,11 +164,11 @@ static HRESULT touch1_handle_irp_locked(struct irp *irp)
     HRESULT hr;
 
     if (irp->op == IRP_OP_OPEN) {
-        dprintf("Wacca touch1: Starting backend\n");
+        dprintf("Wacca Touch1: Starting backend\n");
         hr = mercury_dll.touch_init();
 
         if (FAILED(hr)) {
-            dprintf("Wacca touch: Backend error: %x\n", (int) hr);
+            dprintf("Wacca Touch: Backend error: %x\n", (int) hr);
 
             return hr;
         }
@@ -186,7 +190,7 @@ static HRESULT touch1_handle_irp_locked(struct irp *irp)
 
         if (hr != S_OK) {
             if (FAILED(hr)) {
-                dprintf("Wacca touch: Deframe error: %x\n", (int) hr);
+                dprintf("Wacca Touch: Deframe error: %x\n", (int) hr);
             }
 
             return hr;
@@ -195,7 +199,7 @@ static HRESULT touch1_handle_irp_locked(struct irp *irp)
         hr = touch_req_dispatch(&req);
 
         if (FAILED(hr)) {
-            dprintf("Wacca touch: Processing error: %x\n", (int) hr);
+            dprintf("Wacca Touch: Processing error: %x\n", (int) hr);
         }
 
         return hr;
@@ -211,20 +215,20 @@ static HRESULT touch_req_dispatch(const struct touch_req *req)
         return touch_handle_next_read(req);
     case CMD_GET_UNIT_BOARD_VER:
         return touch_handle_get_unit_board_ver(req);
-    case CMD_MYSTERY1:
-        return touch_handle_mystery1(req);
-    case CMD_MYSTERY2:
-        return touch_handle_mystery2(req);
+    case CMD_GET_UNIT_BOARD_ALIVE:
+        return touch_handle_get_unit_board_alive(req);
+    case CMD_SET_ONOFF_THRESHOLD:
+        return touch_handle_set_onoff_threshold(req);
     case CMD_START_AUTO_SCAN:
         return touch_handle_start_auto_scan(req);
     case CMD_BEGIN_WRITE:
-        dprintf("Wacca touch: Begin write for side %d\n", req->side);
+        dprintf("Wacca Touch: Begin write for side %d\n", req->side);
         return S_OK;
     case CMD_NEXT_WRITE:
-        dprintf("Wacca touch: continue write for side %d\n", req->side);
+        dprintf("Wacca Touch: Continue write for side %d\n", req->side);
         return S_OK;
     default:
-        dprintf("Wacca touch: Unhandled command %02x\n", req->cmd);
+        dprintf("Wacca Touch: Unhandled command %02x\n", req->cmd);
         return S_OK;
     }
 }
@@ -236,7 +240,7 @@ static HRESULT touch_handle_get_sync_board_ver(const struct touch_req *req)
     memset(&resp, 0, sizeof(resp));
     dprintf("Wacca Touch%d: Get sync board version\n", req->side);
 
-    resp.cmd = 0xa0;
+    resp.cmd = CMD_GET_SYNC_BOARD_VER;
     memcpy(resp.version, SYNC_BOARD_VER, sizeof(SYNC_BOARD_VER));
     resp.checksum = 0;
     resp.checksum = calc_checksum(&resp, sizeof(resp));
@@ -259,7 +263,6 @@ static HRESULT touch_handle_next_read(const struct touch_req *req)
     memset(&resp, 0, sizeof(resp));
     dprintf("Wacca Touch%d: Read section %2hx\n", req->side, req->data[2]);
 
-
     switch (req->data[2]) {
         // These can be found in the config file
         case 0x30:
@@ -272,7 +275,7 @@ static HRESULT touch_handle_next_read(const struct touch_req *req)
            rev = "  101  115   98   86   76   67   68   48  117    0   82  154    0    6   35    4";
             break;
         default:
-            dprintf("Wacca touch: BAD READ REQUEST %2hx\n", req->data[2]);
+            dprintf("Wacca Touch: BAD READ REQUEST %2hx\n", req->data[2]);
             return 1;
     }
 
@@ -294,15 +297,16 @@ static HRESULT touch_handle_get_unit_board_ver(const struct touch_req *req)
     struct touch_resp_get_unit_board_ver resp;
     HRESULT hr;
     memset(&resp, 0, sizeof(resp));
-    dprintf("Wacca Touch%d: get unit board version\n", req->side);
+    dprintf("Wacca Touch%d: Get unit board version\n", req->side);
 
     memset(resp.version, 0, sizeof(resp.version));
     memcpy(resp.version, SYNC_BOARD_VER, sizeof(SYNC_BOARD_VER));
 
-    for (int i = 0; i < 6; i++ )
+    for (int i = 0; i < 6; i++) {
         memcpy(&resp.version[7 + (6 * i)], UNIT_BOARD_VER, sizeof(UNIT_BOARD_VER));
+    }
 
-    resp.cmd = 0xa8;
+    resp.cmd = CMD_GET_UNIT_BOARD_VER;
     resp.checksum = 0;
 
     if (req->side == 0) {
@@ -335,14 +339,14 @@ static HRESULT touch_handle_get_unit_board_ver(const struct touch_req *req)
     return hr;
 }
 
-static HRESULT touch_handle_mystery1(const struct touch_req *req)
+static HRESULT touch_handle_get_unit_board_alive(const struct touch_req *req)
 {
-    struct touch_resp_mystery1 resp;
+    struct touch_resp_get_unit_board_alive resp;
     HRESULT hr;
     memset(&resp, 0, sizeof(resp));
-    dprintf("Wacca Touch%d: Command A2\n", req->side);
+    dprintf("Wacca Touch%d: Get unit board alive\n", req->side);
 
-    resp.cmd = 0xa2;
+    resp.cmd = CMD_GET_UNIT_BOARD_ALIVE;
     resp.data = 0x3f;
     resp.checksum = 0;
     resp.checksum = calc_checksum(&resp, sizeof(resp));
@@ -356,14 +360,14 @@ static HRESULT touch_handle_mystery1(const struct touch_req *req)
     return hr;
 }
 
-static HRESULT touch_handle_mystery2(const struct touch_req *req)
+static HRESULT touch_handle_set_onoff_threshold(const struct touch_req *req)
 {
-    struct touch_resp_mystery2 resp;
+    struct touch_resp_set_onoff_threshold resp;
     HRESULT hr;
     memset(&resp, 0, sizeof(resp));
-    dprintf("Wacca Touch%d: Command 94\n", req->side);
+    dprintf("Wacca Touch%d: Set on/off threshold\n", req->side);
 
-    resp.cmd = 0x94;
+    resp.cmd = CMD_SET_ONOFF_THRESHOLD;
     resp.data = 0;
     resp.checksum = 0;
     resp.checksum = calc_checksum(&resp, sizeof(resp));
@@ -386,15 +390,17 @@ static HRESULT touch_handle_start_auto_scan(const struct touch_req *req)
     // but the game doesn't seem to mind that it's the same
     uint8_t data2[9] = { 0x0d, 0x03, 0x02, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00 };
 
-    dprintf("Wacca Touch%d: Start Auto", req->side);
+    dprintf("Wacca Touch%d: Start Auto\n", req->side);
 
     #if defined(LOG_MERCURY_SLIDER)
-    for (int i = 0; i < req->data_length; i++)
+    for (int i = 0; i < req->data_length; i++) {
         dprintf("0x%02x ", req->data[i]);
-    #endif
-    dprintf("\n");
+    }
 
-    resp.cmd = 0x9c;
+    dprintf("\n");
+    #endif
+
+    resp.cmd = CMD_START_AUTO_SCAN;
     resp.data = 0;
     resp.checksum = 0x49;
 
@@ -416,6 +422,7 @@ static HRESULT touch_handle_start_auto_scan(const struct touch_req *req)
     }
 
     mercury_dll.touch_start(touch_res_auto_scan);
+
     return hr;
 }
 
@@ -423,10 +430,13 @@ static void touch_res_auto_scan(const bool *state)
 {
     struct touch_input_frame frame0;
     struct touch_input_frame frame1;
+
     memset(&frame0, 0, sizeof(frame0));
     memset(&frame1, 0, sizeof(frame1));
-    uint8_t dataR[24] = { 0 };
-    uint8_t dataL[24] = { 0 };
+
+    uint8_t dataR[TOUCH_DATA_SIZE] = { 0 };
+    uint8_t dataL[TOUCH_DATA_SIZE] = { 0 };
+
     // this changes every input on a real board but
     // the game doesn't seem to care about it...
     uint8_t data2[9] = { 0x0d, 0x03, 0x02, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00 };
@@ -434,22 +444,37 @@ static void touch_res_auto_scan(const bool *state)
 
     frame0.cmd = 0x81;
     frame0.count = input_frame_count_0++;
-    input_frame_count_0 %= 0x7f;
+    if (input_frame_count_0 > 127) {
+        input_frame_count_0 = 0;
+    }
+
 
     frame1.cmd = 0x81;
     frame1.count = input_frame_count_1++;
-    input_frame_count_1 %= 0x7f;
+    if (input_frame_count_1 > 127) {
+        input_frame_count_1 = 0;
+    }
 
-    for (int i = 0; i < 24; i++) {
-        for (int j = 0; j < 5; j++) {
-            if (state[counter]) {
-                dataR[i] |= (1 << j);
+    fgdet_poll();
+    if (fgdet_in_foreground()) {
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (state[counter]) {
+                    dataR[i] |= (1 << j);
+                }
+                if (state[counter+120]) {
+                    dataL[i] |= (1 << j);
+                }
+                counter++;
             }
-            if (state[counter+120]) {
-                dataL[i] |= (1 << j);
-            }
-            counter++;
         }
+
+        memcpy(prev_dataL, dataL, sizeof(dataL));
+        memcpy(prev_dataR, dataR, sizeof(dataR));
+    } else {
+        // if we're unfocused, freeze the current input
+        memcpy(dataL, prev_dataL, sizeof(prev_dataL));
+        memcpy(dataR, prev_dataR, sizeof(prev_dataR));
     }
 
     memcpy(frame0.data1, dataR, sizeof(dataR));
@@ -465,14 +490,14 @@ static void touch_res_auto_scan(const bool *state)
     frame1.checksum = calc_checksum(&frame1, sizeof(frame1));
 
     if (touch0_auto) {
-        //dprintf("Wacca touch: Touch0 auto frame #%2hx sent\n", frame0.count);
+        // dprintf("Wacca Touch: Touch0 auto frame #%2hx sent\n", frame0.count);
         EnterCriticalSection(&touch0_lock);
         iobuf_write(&touch0_uart.readable, &frame0, sizeof(frame0));
         LeaveCriticalSection(&touch0_lock);
     }
 
     if (touch1_auto) {
-        //dprintf("Wacca touch: Touch1 auto frame #%2hx sent\n", frame0.count);
+        // dprintf("Wacca Touch: Touch1 auto frame #%2hx sent\n", frame0.count);
         EnterCriticalSection(&touch1_lock);
         iobuf_write(&touch1_uart.readable, &frame1, sizeof(frame1));
         LeaveCriticalSection(&touch1_lock);
@@ -510,9 +535,10 @@ static uint8_t calc_checksum(const void *ptr, size_t nbytes)
     src = ptr;
 
     for (size_t i = 0; i < nbytes; i++) {
-        //dprintf("Wacca touch: Calculating %2hx\n", src[i]);
+        // dprintf("Wacca Touch: Calculating %2hx\n", src[i]);
         checksum = checksum^(src[i]);
     }
-    //dprintf("Wacca touch: Checksum is %2hx\n", checksum&0x7f);
+
+    // dprintf("Wacca Touch: Checksum is %2hx\n", checksum&0x7f);
     return checksum&0x7f;
 }

@@ -27,6 +27,8 @@ static uint8_t aime_io_aime_id[10];
 static uint8_t aime_io_felica_id[8];
 static bool aime_io_aime_id_present;
 static bool aime_io_felica_id_present;
+static bool aime_io_radio_on = true;
+static bool aime_io_update_mode;
 
 static void aime_io_config_read(
         struct aime_io_config *cfg,
@@ -240,6 +242,10 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no)
 
     /* Don't do anything more if the scan key is not held */
 
+    if (!aime_io_radio_on) {
+        return S_OK;
+    }
+
     sense = GetAsyncKeyState(aime_io_cfg.vk_scan) & 0x8000;
 
     if (!sense) {
@@ -341,6 +347,166 @@ HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm)
     }
 
     *IDm = val;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_get_mifare_uid(
+        uint8_t unit_no,
+        uint8_t *uid,
+        size_t uid_size)
+{
+    (void) uid;
+    (void) uid_size;
+
+    if (unit_no != 0 || !aime_io_aime_id_present) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_select(
+        uint8_t unit_no,
+        const uint8_t *uid,
+        size_t uid_size)
+{
+    (void) uid;
+    (void) uid_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_set_key(
+        uint8_t unit_no,
+        uint8_t key_type,
+        const uint8_t *key,
+        size_t key_size)
+{
+    (void) key_type;
+    (void) key;
+    (void) key_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_authenticate(
+        uint8_t unit_no,
+        uint8_t key_type,
+        const uint8_t *payload,
+        size_t payload_size)
+{
+    (void) key_type;
+    (void) payload;
+    (void) payload_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_mifare_read_block(
+        uint8_t unit_no,
+        const uint8_t *uid,
+        size_t uid_size,
+        uint8_t block_no,
+        uint8_t *block,
+        size_t block_size)
+{
+    (void) uid;
+    (void) uid_size;
+    (void) block_no;
+    (void) block;
+    (void) block_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_felica_transact(
+        uint8_t unit_no,
+        const uint8_t *req,
+        size_t req_size,
+        uint8_t *res,
+        size_t res_size,
+        size_t *res_size_written)
+{
+    (void) req;
+    (void) req_size;
+    (void) res;
+    (void) res_size;
+    (void) res_size_written;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    return S_FALSE;
+}
+
+HRESULT aime_io_nfc_radio_on(uint8_t unit_no)
+{
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    aime_io_radio_on = true;
+    aime_io_update_mode = false;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_radio_off(uint8_t unit_no)
+{
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    aime_io_radio_on = false;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_to_update_mode(uint8_t unit_no)
+{
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    aime_io_update_mode = true;
+
+    return S_OK;
+}
+
+HRESULT aime_io_nfc_send_hex_data(
+        uint8_t unit_no,
+        const uint8_t *payload,
+        size_t payload_size,
+        uint8_t *status_out)
+{
+    (void) payload;
+    (void) payload_size;
+
+    if (unit_no != 0) {
+        return S_FALSE;
+    }
+
+    if (status_out != NULL) {
+        *status_out = (payload_size == 0x2b) ? 0x20 : 0x00;
+    }
 
     return S_OK;
 }

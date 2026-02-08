@@ -105,6 +105,18 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
             L"rumbleDuration",
             1000,
             filename);
+
+    cfg->ffb_base_damper_fraction = GetPrivateProfileIntW(
+            L"dinput",
+            L"baseDamperFraction",
+            20,
+            filename);
+	
+    cfg->ffb_deadband = GetPrivateProfileIntW(
+            L"dinput",
+            L"deadband",
+            2,
+            filename);
 }
 
 void idac_xi_config_load(struct idac_xi_config *cfg, const wchar_t *filename)

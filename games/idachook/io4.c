@@ -43,7 +43,7 @@ HRESULT idac_io4_hook_init(const struct io4_config* cfg) {
 
     assert(idac_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &idac_io4_ops, NULL, L"GameProject", false);
+    hr = io4_hook_init(cfg, &idac_io4_ops, NULL, L"GameProject", true);
 
     if (FAILED(hr)) {
         return hr;

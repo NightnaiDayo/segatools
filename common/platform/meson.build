@@ -4,7 +4,6 @@ platform_lib = static_library(
     implicit_include_directories : false,
     dependencies : [
         capnhook.get_variable('hook_dep'),
-        capnhook.get_variable('hooklib_dep'),
         shlwapi_lib,
         bcrypt_lib,
     ],

@@ -30,7 +30,8 @@ struct idac_di_config {
     uint8_t ffb_constant_force_strength;
     uint8_t ffb_rumble_strength;
     uint8_t ffb_damper_strength;
-
+    uint8_t ffb_deadband;
+    uint8_t ffb_base_damper_fraction;
     uint32_t ffb_rumble_duration;
 };
 

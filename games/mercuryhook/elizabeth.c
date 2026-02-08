@@ -1,4 +1,3 @@
-#include <initguid.h>
 #include <windows.h>
 
 #include <assert.h>
@@ -20,15 +19,24 @@
 /* Hooks targeted DLLs dynamically loaded by elizabeth. */
 
 static void dll_hook_insert_hooks(HMODULE target);
-static FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name);
+
+/* Hook functions */
+
+static FARPROC WINAPI hook_GetProcAddress(HMODULE hModule, const char *name);
+
+static int hook_USBIntLED_Init();
+
+static int hook_USBIntLED_set(int data1, struct led_data data2);
+
+/* Link pointers */
+
 static FARPROC (WINAPI *next_GetProcAddress)(HMODULE hModule, const char *name);
-static int my_USBIntLED_Init();
-static int my_USBIntLED_set(int data1, struct led_data data2);
+
 
 static const struct hook_symbol win32_hooks[] = {
     {
         .name = "GetProcAddress",
-        .patch = my_GetProcAddress,
+        .patch = hook_GetProcAddress,
         .link = (void **) &next_GetProcAddress
     }
 };
@@ -38,8 +46,10 @@ HRESULT elizabeth_hook_init(struct elizabeth_config *cfg)
     if (!cfg->enable) {
         return S_OK;
     }
+
     dll_hook_insert_hooks(NULL);
-    dprintf("elizabeth: Init\n");
+    dprintf("Elizabeth: Init\n");
+
     return S_OK;
 }
 
@@ -52,7 +62,7 @@ static void dll_hook_insert_hooks(HMODULE target)
             _countof(win32_hooks));
 }
 
-FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name)
+FARPROC WINAPI hook_GetProcAddress(HMODULE hModule, const char *name)
 {
     uintptr_t ordinal = (uintptr_t) name;
 
@@ -61,11 +71,11 @@ FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name)
     if (ordinal > 0xFFFF) {
         /* Import by name */
         if (strcmp(name, "USBIntLED_Init") == 0) {
-            result = (FARPROC) my_USBIntLED_Init;
+            result = (FARPROC) hook_USBIntLED_Init;
         }
 
         if (strcmp(name, "USBIntLED_set") == 0) {
-            result = (FARPROC) my_USBIntLED_set;
+            result = (FARPROC) hook_USBIntLED_set;
         }
     }
 
@@ -73,13 +83,13 @@ FARPROC WINAPI my_GetProcAddress(HMODULE hModule, const char *name)
 }
 
 /* Intercept the call to initialize the LED board. */
-static int my_USBIntLED_Init()
+static int hook_USBIntLED_Init()
 {
-    dprintf("elizabeth: my_USBIntLED_Init hit!\n");
+    dprintf("Elizabeth: hook_USBIntLED_Init hit!\n");
     return 1;
 }
 
-static int my_USBIntLED_set(int data1, struct led_data data2)
+static int hook_USBIntLED_set(int data1, struct led_data data2)
 {
     assert(mercury_dll.set_leds != NULL);
     mercury_dll.set_leds(data2);

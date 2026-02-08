@@ -71,6 +71,36 @@ static int WSAAPI hook_getaddrinfo(
         const ADDRINFOA *pHints,
         ADDRINFOA **ppResult);
 
+static int WSAAPI hook_GetAddrInfoW(
+        const wchar_t *pNodeName,
+        const wchar_t *pServiceName,
+        const ADDRINFOW *pHints,
+        PADDRINFOW *ppResult);
+
+static int WSAAPI hook_GetAddrInfoExA(
+        const char *pName,
+        const char *pServiceName,
+        DWORD dwNameSpace,
+        LPGUID lpNspId,
+        const ADDRINFOEXW *hints,
+        PADDRINFOEXA *ppResult,
+        struct timeval *timeout,
+        LPOVERLAPPED lpOverlapped,
+        LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+        LPHANDLE lpHandle);
+
+static int WSAAPI hook_GetAddrInfoExW(
+        const wchar_t *pName,
+        const wchar_t *pServiceName,
+        DWORD dwNameSpace,
+        LPGUID lpNspId,
+        const ADDRINFOEXW *hints,
+        PADDRINFOEXW *ppResult,
+        struct timeval *timeout,
+        LPOVERLAPPED lpOverlapped,
+        LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+        LPHANDLE lpHandle);
+
 static HINTERNET WINAPI hook_WinHttpConnect(
         HINTERNET hSession,
         const wchar_t *pwszServerName,
@@ -123,6 +153,36 @@ static int (WSAAPI *next_getaddrinfo)(
         const ADDRINFOA *pHints,
         ADDRINFOA **ppResult);
 
+static int (WSAAPI *next_GetAddrInfoW)(
+        const wchar_t *pNodeName,
+        const wchar_t *pServiceName,
+        const ADDRINFOW *pHints,
+        PADDRINFOW *ppResult);
+
+static int (WSAAPI *next_GetAddrInfoExA)(
+        const char *pName,
+        const char *pServiceName,
+        DWORD dwNameSpace,
+        LPGUID lpNspId,
+        const ADDRINFOEXW *hints,
+        PADDRINFOEXA *ppResult,
+        struct timeval *timeout,
+        LPOVERLAPPED lpOverlapped,
+        LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+        LPHANDLE lpHandle);
+
+static int (WSAAPI *next_GetAddrInfoExW)(
+        const wchar_t *pName,
+        const wchar_t *pServiceName,
+        DWORD dwNameSpace,
+        LPGUID lpNspId,
+        const ADDRINFOEXW *hints,
+        PADDRINFOEXW *ppResult,
+        struct timeval *timeout,
+        LPOVERLAPPED lpOverlapped,
+        LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+        LPHANDLE lpHandle);
+
 static HINTERNET (WINAPI *next_WinHttpConnect)(
         HINTERNET hSession,
         const wchar_t *pwszServerName,
@@ -169,6 +229,21 @@ static const struct hook_symbol dns_hook_syms_ws2[] = {
         .patch      = hook_getaddrinfo,
         .link       = (void **) &next_getaddrinfo,
     },
+    {
+        .name       = "GetAddrInfoW",
+        .patch      = hook_GetAddrInfoW,
+        .link       = (void **) &next_GetAddrInfoW,
+    },
+    {
+        .name       = "GetAddrInfoExA",
+        .patch      = hook_GetAddrInfoExA,
+        .link       = (void **) &next_GetAddrInfoExA,
+    },
+    {
+        .name       = "GetAddrInfoExW",
+        .patch      = hook_GetAddrInfoExW,
+        .link       = (void **) &next_GetAddrInfoExW,
+    }
 };
 
 static const struct hook_symbol dns_hook_syms_winhttp[] = {
@@ -609,6 +684,185 @@ end:
     free(wstr);
     free(str);
 
+    return result;
+}
+
+static int WSAAPI hook_GetAddrInfoW(
+        const wchar_t *pNodeName,
+        const wchar_t *pServiceName,
+        const ADDRINFOW *pHints,
+        ADDRINFOW **ppResult)
+{
+    const struct dns_hook_entry *pos;
+    int result;
+    size_t i;
+
+    if (pNodeName == NULL) {
+        result = WSA_INVALID_PARAMETER;
+
+        goto end;
+    }
+
+    EnterCriticalSection(&dns_hook_lock);
+
+    for (i = 0 ; i < dns_hook_nentries ; i++) {
+        pos = &dns_hook_entries[i];
+
+        if (match_domain(pNodeName, pos->from)) {
+            if(pos->to == NULL) {
+                LeaveCriticalSection(&dns_hook_lock);
+                result = EAI_NONAME;
+
+                goto end;
+            }
+
+            // dprintf("GetAddrInfoW: %ls -> %ls\n", pNodeName, pos->to);
+
+            pNodeName = pos->to;
+
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&dns_hook_lock);
+
+    result = next_GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
+
+end:
+    return result;
+}
+
+static int WSAAPI hook_GetAddrInfoExA(
+        const char *pName,
+        const char *pServiceName,
+        DWORD dwNameSpace,
+        LPGUID lpNspId,
+        const ADDRINFOEXW *hints,
+        PADDRINFOEXA *ppResult,
+        struct timeval *timeout,
+        LPOVERLAPPED lpOverlapped,
+        LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+        LPHANDLE lpHandle)
+{
+    const struct dns_hook_entry *pos;
+    char *str;
+    size_t str_c;
+    wchar_t *wstr;
+    size_t wstr_c;
+    int result;
+    size_t i;
+
+    str = NULL;
+    wstr = NULL;
+
+    if (pName == NULL) {
+        result = WSA_INVALID_PARAMETER;
+
+        goto end;
+    }
+
+    mbstowcs_s(&wstr_c, NULL, 0, pName, 0);
+    wstr = malloc(wstr_c * sizeof(wchar_t));
+
+    if (wstr == NULL) {
+        result = WSA_NOT_ENOUGH_MEMORY;
+
+        goto end;
+    }
+
+    mbstowcs_s(NULL, wstr, wstr_c, pName, wstr_c - 1);
+
+    EnterCriticalSection(&dns_hook_lock);
+
+    for (i = 0; i < dns_hook_nentries; i++) {
+        pos = &dns_hook_entries[i];
+
+        if (match_domain(wstr, pos->from)) {
+            if (pos->to == NULL) {
+                LeaveCriticalSection(&dns_hook_lock);
+                result = WSAHOST_NOT_FOUND;
+                goto end;
+            }
+
+            // dprintf("GetAddrInfoExA: %ls -> %ls\n", pName, pos->to);
+
+            wcstombs_s(&str_c, NULL, 0, pos->to, 0);
+            str = malloc(str_c * sizeof(char));
+
+            if (str == NULL) {
+                LeaveCriticalSection(&dns_hook_lock);
+                result = WSA_NOT_ENOUGH_MEMORY;
+
+                goto end;
+            }
+
+            wcstombs_s(NULL, str, str_c, pos->to, str_c - 1);
+            pName = str;
+
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&dns_hook_lock);
+
+    result = next_GetAddrInfoExA(pName, pServiceName, dwNameSpace, lpNspId,
+                                 hints, ppResult, timeout, lpOverlapped,
+                                 lpCompletionRoutine, lpHandle);
+
+end:
+    free(wstr);
+    free(str);
+    
+    return result;
+}
+
+static int WSAAPI hook_GetAddrInfoExW(
+        const wchar_t *pName,
+        const wchar_t *pServiceName,
+        DWORD dwNameSpace,
+        LPGUID lpNspId,
+        const ADDRINFOEXW *hints,
+        PADDRINFOEXW *ppResult,
+        struct timeval *timeout,
+        LPOVERLAPPED lpOverlapped,
+        LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+        LPHANDLE lpHandle)
+{
+    const struct dns_hook_entry *pos;
+    int result;
+    size_t i;
+
+    if (pName == NULL) {
+        result = WSA_INVALID_PARAMETER;
+        goto end;
+    }
+
+    EnterCriticalSection(&dns_hook_lock);
+
+    for (i = 0; i < dns_hook_nentries; i++) {
+        pos = &dns_hook_entries[i];
+
+        if (match_domain(pName, pos->from)) {
+            if (pos->to == NULL) {
+                LeaveCriticalSection(&dns_hook_lock);
+                result = WSAHOST_NOT_FOUND;
+                goto end;
+            }
+
+            // dprintf("GetAddrInfoExW: %ls -> %ls\n", pName, pos->to);
+
+            pName = pos->to;
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&dns_hook_lock);
+
+    result = next_GetAddrInfoExW(pName, pServiceName, dwNameSpace, lpNspId,
+                                 hints, ppResult, timeout, lpOverlapped,
+                                 lpCompletionRoutine, lpHandle);
+
+end:
     return result;
 }
 

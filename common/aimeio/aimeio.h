@@ -77,6 +77,140 @@ HRESULT aime_io_nfc_get_aime_id(
 HRESULT aime_io_nfc_get_felica_id(uint8_t unit_no, uint64_t *IDm);
 
 /*
+    MIFARE key selector values used by the set key/authenticate functions.
+
+    Minimum API version: 0x0101
+*/
+enum {
+    AIME_IO_MIFARE_KEY_AIME = 0,
+    AIME_IO_MIFARE_KEY_BANA = 1,
+};
+
+/*
+    Attempt to read the 4-byte MIFARE UID of the currently present card.
+
+    Parameters:
+
+    - unit_no: Always 0 as of the current API version
+    - uid: Pointer to a four-byte buffer that will receive the UID
+    - uid_size: Size of the buffer at *uid. Always 4.
+
+    Returns:
+
+    - S_OK if a MIFARE card is present and the UID was read successfully
+    - S_FALSE if no MIFARE card is present (*uid will be ignored)
+    - Any HRESULT error if an error occured.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_get_mifare_uid(
+        uint8_t unit_no,
+        uint8_t *uid,
+        size_t uid_size);
+
+/*
+    Select a MIFARE card by UID (optional for real readers).
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_mifare_select(
+        uint8_t unit_no,
+        const uint8_t *uid,
+        size_t uid_size);
+
+/*
+    Supply a MIFARE authentication key to the reader.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_mifare_set_key(
+        uint8_t unit_no,
+        uint8_t key_type,
+        const uint8_t *key,
+        size_t key_size);
+
+/*
+    Perform a MIFARE authentication sequence.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_mifare_authenticate(
+        uint8_t unit_no,
+        uint8_t key_type,
+        const uint8_t *payload,
+        size_t payload_size);
+
+/*
+    Read a 16-byte MIFARE block from the card.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_mifare_read_block(
+        uint8_t unit_no,
+        const uint8_t *uid,
+        size_t uid_size,
+        uint8_t block_no,
+        uint8_t *block,
+        size_t block_size);
+
+/*
+    Forward a raw FeliCa request to a real reader.
+
+    Parameters:
+
+    - req: FeliCa request buffer, including the length byte
+    - res: FeliCa response buffer, including the length byte
+    - res_size_written: Output size of the response (bytes written to *res)
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_felica_transact(
+        uint8_t unit_no,
+        const uint8_t *req,
+        size_t req_size,
+        uint8_t *res,
+        size_t res_size,
+        size_t *res_size_written);
+
+/*
+    Enable the reader's RF field.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_radio_on(uint8_t unit_no);
+
+/*
+    Disable the reader's RF field.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_radio_off(uint8_t unit_no);
+
+/*
+    Put the reader into firmware update mode.
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_to_update_mode(uint8_t unit_no);
+
+/*
+    Forward a raw hex-data command to the reader.
+
+    Parameters:
+
+    - payload: Command payload bytes
+    - payload_size: Size of the payload
+    - status_out: Optional pointer to receive the SG status byte
+
+    Minimum API version: 0x0101
+*/
+HRESULT aime_io_nfc_send_hex_data(
+        uint8_t unit_no,
+        const uint8_t *payload,
+        size_t payload_size,
+        uint8_t *status_out);
+
+/*
     Change the color and brightness of the card reader's RGB lighting
 
     - unit_no: 0 on the primary Aime reader (most games), may be 1 on Sangokushi Taisen for the queue reader
