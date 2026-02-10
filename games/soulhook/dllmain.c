@@ -40,6 +40,7 @@
 #include "soulhook/io4.h"
 #include "soulhook/soul-dll.h"
 #include "soulhook/soul-gfx.h"
+#include "soulhook/network.h"
 
 #include "platform/platform.h"
 
@@ -68,6 +69,7 @@ static DWORD CALLBACK soul_pre_startup(void)
     touch_screen_hook_init(&soul_hook_cfg.touch, soul_hook_mod);
     serial_hook_init();
     soulgfx_hook_init();
+    network_hook_init(&soul_hook_cfg.platform);
 
     /* Hook external DLL APIs */
 

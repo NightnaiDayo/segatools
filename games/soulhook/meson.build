@@ -24,6 +24,8 @@ shared_library(
         'dllmain.c',
         'io4.c',
         'io4.h',
+        'network.c',
+        'network.h',
         'soul-dll.c',
         'soul-dll.h',
         'soul-gfx.c',
