@@ -67,6 +67,20 @@ HRESULT swdc_di_dev_init(const struct swdc_di_config* cfg,
     return S_OK;
 }
 
+    /* Read springBoost (integer only, default 10 meaning 1.0x) */
+    idac_di_spring_boost_raw = GetPrivateProfileIntW(
+        L"dinput",
+        L"springBoost",
+        10,
+        L"segatools.ini");
+
+    if (idac_di_spring_boost_raw <= 0) {
+        idac_di_spring_boost_raw = 10;
+    }
+
+    return S_OK;
+}
+
 HRESULT swdc_di_dev_start(IDirectInputDevice8W* dev, HWND wnd) {
     HRESULT hr;
 
@@ -242,8 +256,12 @@ void swdc_di_ffb_damper(uint8_t force) {
 
     /* SPRING (centering) */
     memset(&cond, 0, sizeof(cond));
-    cond.lPositiveCoefficient = (LONG)(((uint32_t)force * ffb_strength) / swdc_di_ffb_scale);
-    cond.lNegativeCoefficient = cond.lPositiveCoefficient;
+    LONG base_coeff = (LONG)(((uint32_t)force * ffb_strength) / idac_di_ffb_scale);
+
+    LONG boosted_coeff = (LONG)((float)base_coeff * spring_boost_scale);
+
+    cond.lPositiveCoefficient = boosted_coeff;
+    cond.lNegativeCoefficient = boosted_coeff;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
     
