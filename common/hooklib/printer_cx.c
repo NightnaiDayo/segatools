@@ -344,8 +344,8 @@ static struct printer_cx_data printer_data;
 #define HEIGHT 664
 #define WIDTH 1036
 #define IMAGE_BUFFER_SIZE WIDTH * HEIGHT
-static uint8_t back_buffer[4][IMAGE_BUFFER_SIZE];
-static uint8_t front_buffer[4][IMAGE_BUFFER_SIZE];
+static uint8_t* back_buffer = NULL;
+static uint8_t* front_buffer = NULL;
 static uint64_t current_card_id;
 
 DWORD load_printer_data() {
@@ -472,9 +472,15 @@ static int WINAPI hook_CXCMD_ImageOut(int slotId, int id, uint8_t* plane, int le
     // bufferIndex: 0 = back, 1 = front
 
     if (bufferIndex == 0) {
-        memcpy(back_buffer[color], plane, length);
+        if (back_buffer == NULL) {
+            back_buffer = (uint8_t*) malloc(4 * IMAGE_BUFFER_SIZE);
+        }
+        memcpy(back_buffer + color * IMAGE_BUFFER_SIZE, plane, length);
     } else {
-        memcpy(front_buffer[color], plane, length);
+        if (front_buffer == NULL) {
+            front_buffer = (uint8_t*) malloc(4 * IMAGE_BUFFER_SIZE);
+        }
+        memcpy(front_buffer + color * IMAGE_BUFFER_SIZE, plane, length);
     }
 
     return CX_OK;
@@ -504,12 +510,12 @@ static int WINAPI hook_CXCMD_Print(int slotId, int id, int color, int bufferInde
 
     // convert image from seperate CMY arrays to one RGB array
     int size = IMAGE_BUFFER_SIZE * 3;
-    uint8_t* raw_image = (uint8_t*)malloc(size);
+    uint8_t* raw_image = (uint8_t*) malloc(size);
     for (int i = 0; i < IMAGE_BUFFER_SIZE; i++) {
         // 0 is "white" and we don't really care about that
-        raw_image[i * 3] = 0xFF - (bufferIndex == 0 ? back_buffer : front_buffer)[1][i];
-        raw_image[i * 3 + 1] = 0xFF - (bufferIndex == 0 ? back_buffer : front_buffer)[2][i];
-        raw_image[i * 3 + 2] = 0xFF - (bufferIndex == 0 ? back_buffer : front_buffer)[3][i];
+        raw_image[i * 3] = 0xFF - *((bufferIndex == 0 ? back_buffer : front_buffer) + IMAGE_BUFFER_SIZE + i);
+        raw_image[i * 3 + 1] = 0xFF - *((bufferIndex == 0 ? back_buffer : front_buffer) + 2 * IMAGE_BUFFER_SIZE + i);
+        raw_image[i * 3 + 2] = 0xFF - *((bufferIndex == 0 ? back_buffer : front_buffer) + 3 * IMAGE_BUFFER_SIZE + i);
     }
 
     dprintf("CX7000: Saving %s image to %ls\n", bufferIndex == 0 ? "back" : "front", dumpPath);
@@ -517,6 +523,13 @@ static int WINAPI hook_CXCMD_Print(int slotId, int id, int color, int bufferInde
     int ret = WriteDataToBitmapFile(dumpPath, 24, WIDTH, HEIGHT, raw_image, size, metadata, 5, false);
 
     free(raw_image);
+    if (bufferIndex == 0) {
+        free(back_buffer);
+        back_buffer = NULL;
+    } else {
+        free(front_buffer);
+        front_buffer = NULL;
+    }
 
     if (ret < 0) {
         dprintf("CX7000: WriteDataToBitmapFile returned %d\n", ret);
@@ -842,7 +855,7 @@ static int WINAPI hook_CXCMD_WriteBuffer(int iSlot, int iID, int iMode, int iBuf
 
         return CX_OK;
     }
-    
+
     dprintf("CX7000: Unknown WriteBuffer\n");
     return CX_ERROR_USB_COM_3201;
 }
