@@ -32,6 +32,9 @@ static uint8_t idac_di_rumble_duration;
 static uint8_t idac_di_base_damper;
 static uint8_t idac_di_deadband;
 
+/* New spring boost factor (integer from ini, scaled later) */
+static int idac_di_spring_boost_raw = 10;
+
 HRESULT idac_di_dev_init(const struct idac_di_config* cfg,
                          IDirectInputDevice8W* dev, HWND wnd) {
     assert(cfg != NULL);
@@ -63,6 +66,17 @@ HRESULT idac_di_dev_init(const struct idac_di_config* cfg,
     idac_di_deadband = cfg->ffb_deadband > 200
                         ? 200
                         : cfg->ffb_deadband;
+
+    /* Read springBoost (integer only, default 10 meaning 1.0x) */
+    idac_di_spring_boost_raw = GetPrivateProfileIntW(
+        L"dinput",
+        L"springBoost",
+        10,
+        L"segatools.ini");
+
+    if (idac_di_spring_boost_raw <= 0) {
+        idac_di_spring_boost_raw = 10;
+    }
 
     return S_OK;
 }
@@ -240,13 +254,20 @@ void idac_di_ffb_damper(uint8_t force) {
     DIEFFECT fx;
     DICONDITION cond;
 
+    /* Convert raw boost into scale (10 = 1.0x, 15 = 1.5x, 100 = 10x) */
+    float spring_boost_scale = (float)idac_di_spring_boost_raw / 10.0f;
+
     /* SPRING (centering) */
     memset(&cond, 0, sizeof(cond));
-    cond.lPositiveCoefficient = (LONG)(((uint32_t)force * ffb_strength) / idac_di_ffb_scale);
-    cond.lNegativeCoefficient = cond.lPositiveCoefficient;
+    LONG base_coeff = (LONG)(((uint32_t)force * ffb_strength) / idac_di_ffb_scale);
+
+    LONG boosted_coeff = (LONG)((float)base_coeff * spring_boost_scale);
+
+    cond.lPositiveCoefficient = boosted_coeff;
+    cond.lNegativeCoefficient = boosted_coeff;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
-    
+
     /* If user enters 25, result is 0.025 * DI_FFNOMINALMAX */
     cond.lDeadBand = (DI_FFNOMINALMAX * (LONG)idac_di_deadband) / 1000;
 
