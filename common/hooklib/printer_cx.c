@@ -102,10 +102,6 @@ static bool WINAPI hook_Lut24_Exchange(const wchar_t* pFile, uint8_t* y, uint8_t
 
 static bool WINAPI hook_Wdata_create(uint8_t* pbyRdata, uint8_t* pbyGdata, uint8_t* pbyBdata, int iWidth,
                                         int iHeight, bool bPortrait, int iAlgorithim, uint8_t* pbyWdata);
-
-static int __cdecl hook_init_accesscodekey(BSTR fileName);
-
-static int __cdecl hook_accesscodekeyoverwriteheader(void* context, BSTR header, int headerLen, BSTR accessheaderkey, int headerkeylen);
 #pragma endregion
 
 #pragma region hooktables
@@ -327,16 +323,6 @@ static const struct hook_symbol hook_wdata_syms[] = {
         .ordinal = 1,
     },
 };
-
-static const struct hook_symbol hook_ac_syms[] = {
-    {
-        .name = "init_accesscodekey",
-        .patch = hook_init_accesscodekey,
-    },{
-        .name = "accesscodekeyoverwriteheader",
-        .patch = hook_accesscodekeyoverwriteheader,
-    },
-};
 #pragma endregion
 
 static void write_int(uint8_t* data, int index, int value) {
@@ -428,13 +414,11 @@ void printer_cx_hook_insert_hooks(HMODULE target) {
     hook_table_apply(target, "PCP21CT64.dll", hook_pcp_syms, _countof(hook_pcp_syms));
     hook_table_apply(target, "LUT24EXG64.dll", hook_lut_syms, _countof(hook_lut_syms));
     hook_table_apply(target, "WCREATE64.dll", hook_wdata_syms, _countof(hook_wdata_syms));
-    hook_table_apply(target, "accesscode_dll.dll", hook_ac_syms, _countof(hook_ac_syms));
 
     /* Unity workaround */
     proc_addr_table_push(target, "PCP21CT64.dll", hook_pcp_syms, _countof(hook_pcp_syms));
     proc_addr_table_push(target, "LUT24EXG64.dll", hook_lut_syms, _countof(hook_lut_syms));
     proc_addr_table_push(target, "WCREATE64.dll", hook_wdata_syms, _countof(hook_wdata_syms));
-    proc_addr_table_push(target, "accesscode_dll.dll", hook_ac_syms, _countof(hook_ac_syms));
 }
 
 static int WINAPI hook_CXCMD_Retransfer() {
@@ -906,15 +890,4 @@ static bool WINAPI hook_Wdata_create(uint8_t* pbyRdata, uint8_t* pbyGdata, uint8
     // stub?
 
     return true;
-}
-
-// TODO: these two only exist while we have no decrypted dump of accesscode_dll
-static int __cdecl hook_init_accesscodekey(BSTR fileName) {
-    dprintf("AccesscodeKey: Init\n");
-    return 0;
-}
-
-static int __cdecl hook_accesscodekeyoverwriteheader(void* context, BSTR header, int headerLen, BSTR accessheaderkey, int headerkeylen) {
-    dprintf("AccesscodeKey: Overwrite Header\n");
-    return 0;
 }
