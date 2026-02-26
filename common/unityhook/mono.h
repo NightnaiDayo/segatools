@@ -47,6 +47,7 @@ void* (*mono_get_exception_class)();
 void* (*mono_object_get_virtual_method)(void* obj_raw, void* method);
 
 void* (*mono_jit_parse_options)(int argc, const char** argv);
+UINT32 (*mono_debug_enabled)();
 
 typedef enum {
     MONO_DEBUG_FORMAT_NONE,
@@ -95,6 +96,7 @@ void load_mono_functions(HMODULE mono_lib) {
     GET_MONO_PROC(mono_jit_parse_options);
     GET_MONO_PROC(mono_debug_init);
     GET_MONO_PROC(mono_debug_domain_create);
+    GET_MONO_PROC(mono_debug_enabled);
 
 #undef GET_MONO_PROC
 }

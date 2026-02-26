@@ -18,20 +18,37 @@
 #include "mono.h"
 #include "util.h"
 
-static void * my_mono_jit_init_version(const char *root_domain_name, const char *runtime_version);
-void doorstop_invoke(void *domain);
+#define MONO_DEBUG_ARG_START "--debugger-agent=transport=dt_socket,server=y,address="
+#define MONO_DEBUG_NO_SUSPEND ",suspend=n"
+#define MONO_DEBUG_NO_SUSPEND_NET35 ",suspend=n,defer=y"
+
+static void* my_mono_jit_init_version(const char* root_domain_name,
+                                      const char* runtime_version);
+static void my_mono_jit_parse_options(int argc, char** argv);
+static void* my_mono_debug_init(MonoDebugFormat format);
+
+void doorstop_invoke(void* domain);
 
 static char module_name[MAX_PATH];
 static bool doorstop_hook_initted;
+static bool mono_debug_init_called;
+static bool mono_is_net35;
 static struct unity_config unity_config;
 static struct hook_symbol unity_mono_syms[] = {
-{
+    {
         .name = "mono_jit_init_version",
         .patch = my_mono_jit_init_version,
-    }
-};
+    },
+    {
+        .name = "mono_debug_init",
+        .patch = my_mono_debug_init,
+    },
+    {
+        .name = "mono_jit_parse_options",
+        .patch = my_mono_jit_parse_options,
+    }};
 
-void doorstop_mono_hook_init(const struct unity_config *cfg, HINSTANCE module) {
+void doorstop_mono_hook_init(const struct unity_config* cfg, HINSTANCE module) {
     if (doorstop_hook_initted || cfg->target_assembly[0] == 0) {
         return;
     }
@@ -40,19 +57,101 @@ void doorstop_mono_hook_init(const struct unity_config *cfg, HINSTANCE module) {
 
     memcpy(&unity_config, cfg, sizeof(*cfg));
     load_mono_functions(module);
-    proc_addr_table_push(NULL, module_name, unity_mono_syms, _countof(unity_mono_syms));
+    proc_addr_table_push(NULL, module_name, unity_mono_syms,
+                         _countof(unity_mono_syms));
 
     doorstop_hook_initted = true;
 }
 
 static void * my_mono_jit_init_version(const char *root_domain_name, const char *runtime_version) {
-    dprintf("Unity: Starting Mono domain \"%s\"\n", root_domain_name);
+    dprintf("Unity: Starting Mono domain \"%s\", runtime version %s\n", root_domain_name, runtime_version);
+    if (strlen(runtime_version) > 2 && (runtime_version[1] == L'2' || runtime_version[1] == L'1')) {
+        mono_is_net35 = TRUE;
+    }
 
     SetEnvironmentVariableW(L"DOORSTOP_DLL_SEARCH_DIRS", widen(mono_assembly_getrootdir()));
+    my_mono_jit_parse_options(0, NULL);
 
+    bool debugger_already_enabled = mono_debug_init_called;
+    if (mono_debug_enabled) {
+        debugger_already_enabled |= mono_debug_enabled();
+    }
+
+    if (!debugger_already_enabled) {
+        dprintf("Unity: Detected mono debugger is not initialized; initialized it\n");
+        mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+    }
     void* domain = mono_jit_init_version(root_domain_name, runtime_version);
 
     doorstop_invoke(domain);
+    return domain;
+}
+
+static void my_mono_jit_parse_options(int argc, char** argv) {
+    char* debug_options = getenv(TEXT("DNSPY_UNITY_DBG2"));
+    if (debug_options) {
+        unity_config.debug_enable = TRUE;
+    }
+
+    if (unity_config.debug_enable) {
+        dprintf("Unity: Configuring mono debug server\n");
+
+        int size = argc + 1;
+        char** new_argv = calloc(size, sizeof(char*));
+        memcpy(new_argv, argv, argc * sizeof(char*));
+
+        //check if debug options are already set by env variable, if not, build it from config
+        if (!debug_options) {
+            size_t debug_args_len = strlen(MONO_DEBUG_ARG_START) +
+                                    wcslen(unity_config.debug_address);
+            if (!unity_config.debug_suspend) {
+                if (mono_is_net35) {
+                    debug_args_len += strlen(MONO_DEBUG_NO_SUSPEND_NET35);
+                } else {
+                    debug_args_len += strlen(MONO_DEBUG_NO_SUSPEND);
+                }
+            }
+
+            debug_options = calloc(debug_args_len + 1, sizeof(wchar_t));
+            strcat(debug_options, MONO_DEBUG_ARG_START);
+
+            char* temp_address = narrow(unity_config.debug_address);
+            strcat(debug_options, temp_address);
+            free(temp_address);
+
+            if (!unity_config.debug_suspend) {
+                if (mono_is_net35) {
+                    strcat(debug_options, MONO_DEBUG_NO_SUSPEND_NET35);
+                } else {
+                    strcat(debug_options, MONO_DEBUG_NO_SUSPEND);
+                }
+            }
+            dprintf("Unity: Debug options from config: %s\n", debug_options);
+        } else
+            dprintf("Unity: Debug options from env DNSPY_UNITY_DBG2: %s\n",
+                    debug_options);
+
+        new_argv[argc] = debug_options;
+        /*
+        dprintf("Unity: mono_jit_parse_options argc: %d\n", size);
+        dprintf("Unity: mono_jit_parse_options argv:\n");
+        for (int i = 0; i < size; i++) {
+            dprintf("  %d: %s\n", i, new_argv[i]);
+        }
+        dprintf("\n");
+        */
+        mono_jit_parse_options(size, new_argv);
+        free(debug_options);
+        free(new_argv);
+    } else {
+        mono_jit_parse_options(argc, argv);
+    }
+}
+
+static void* my_mono_debug_init(MonoDebugFormat format) {
+    dprintf("Unity: Start mono debug init with format %d\n",format);
+    mono_debug_init_called = true;
+    void* domain = mono_debug_init(format);
     return domain;
 }
 
