@@ -49,7 +49,7 @@ static struct hook_symbol unity_mono_syms[] = {
     }};
 
 void doorstop_mono_hook_init(const struct unity_config* cfg, HINSTANCE module) {
-    if (doorstop_hook_initted || cfg->target_assembly[0] == 0) {
+    if (doorstop_hook_initted) {
         return;
     }
 
@@ -189,6 +189,11 @@ void doorstop_invoke(void* domain) {
 #undef CONFIG_EXT
     }
 
+    if(unity_config.target_assembly[0] == 0) {
+        dprintf("Unity: No target assembly file specified, skipping doorstop invocation.\n");
+        return;
+    }
+
     SetEnvironmentVariableW(L"DOORSTOP_INVOKE_DLL_PATH", unity_config.target_assembly);
 
     char *assembly_dir = mono_assembly_getrootdir();
@@ -207,7 +212,7 @@ void doorstop_invoke(void* domain) {
     void* assembly = mono_domain_assembly_open(domain, dll_path);
 
     if (!assembly) {
-        dprintf("Unity: Failed to load assembly\n");
+        dprintf("Unity: Failed to load target assembly\n");
         free(dll_path);
         return;
     }
@@ -215,7 +220,7 @@ void doorstop_invoke(void* domain) {
     void *image = mono_assembly_get_image(assembly);
 
     if (!image) {
-        dprintf("Unity: Assembly image doesn't exist\n");
+        dprintf("Unity: Target assembly image doesn't exist\n");
         free(dll_path);
         return;
     }
@@ -234,7 +239,7 @@ void doorstop_invoke(void* domain) {
     }
 
     if (!method) {
-        dprintf("Unity: Assembly does not have a valid entrypoint.\n");
+        dprintf("Unity: Target assembly does not have a valid entrypoint.\n");
         free(dll_path);
         return;
     }
