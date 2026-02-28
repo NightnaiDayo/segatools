@@ -1,0 +1,57 @@
+Y3WS websocket protocol for card I/O for the Taisen series by Haruka:
+
+Default listening port: 3594 (san-go-ku-shi)
+
+All packets are JSON and, unless otherwise specified contain these fields:
+
+* Requests:
+{"version": 1, "command": "..."}
+
+* Responses:
+{"version": 1, "success": <bool>, "error": <null/string>}
+
+Commands:
+
+- ping
+
+Does nothing except answering with a success response.
+
+
+- get_game_id
+
+Extra response fields:
+ - game_id: <string>
+
+Returns the current game ID that is being run (SDDD, SDGY).
+
+
+- get_cards
+
+Extra response fields:
+ - cards: <array of objects>
+   - card_id: <long>
+   - path: <string>
+
+Returns all cards that the player has in possession.
+
+
+- get_card_image
+
+Extra request fields:
+ - path: <string>
+Extra response fields:
+ - data: <base64 encoded string>
+
+Returns the card image for the given path (format TBA).
+
+
+- set_field
+
+Extra request fields:
+ - array of objects
+   - card_id: <long>
+   - x: <float>
+   - y: <float>
+   - rotation: <float>
+
+Sets the given cards onto the given positions on the field. Always replaces the entire board.

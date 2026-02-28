@@ -11,7 +11,7 @@
 
 #include "hooklib/dll.h"
 #include "hooklib/path.h"
-#include "hooklib/printer.h"
+#include "hooklib/printer_chc.h"
 #include "hooklib/reg.h"
 #include "hooklib/touch.h"
 #include "hooklib/serial.h"

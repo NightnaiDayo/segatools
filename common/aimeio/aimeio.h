@@ -27,7 +27,7 @@ HRESULT aime_io_init(void);
 /*
     Poll for IC cards in the vicinity.
 
-    - unit_no: Always 0 as of the current API version
+    - unit_no: 0 on the primary Aime reader (most games), may be 1 on Sangokushi Taisen for the queue reader
 
     Minimum API version: 0x0100
  */
@@ -36,7 +36,7 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no);
 /*
     Attempt to read out a classic Aime card ID
 
-    - unit_no: Always 0 as of the current API version
+    - unit_no: 0 on the primary Aime reader (most games), may be 1 on Sangokushi Taisen for the queue reader
     - luid: Pointer to a ten-byte buffer that will receive the ID
     - luid_size: Size of the buffer at *luid. Always 10.
 
@@ -63,7 +63,7 @@ HRESULT aime_io_nfc_get_aime_id(
 
     Parameters:
 
-    - unit_no: Always 0 as of the current API version
+    - unit_no: 0 on the primary Aime reader (most games), may be 1 on Sangokushi Taisen for the queue reader
     - IDm: Output parameter that will receive the card ID
 
     Returns:
@@ -213,7 +213,7 @@ HRESULT aime_io_nfc_send_hex_data(
 /*
     Change the color and brightness of the card reader's RGB lighting
 
-    - unit_no: Always 0 as of the current API version
+    - unit_no: 0 on the primary Aime reader (most games), may be 1 on Sangokushi Taisen for the queue reader
     - r, g, b: Primary color intensity, from 0 to 255 inclusive.
 
     Minimum API version: 0x0100

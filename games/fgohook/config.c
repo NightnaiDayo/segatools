@@ -120,7 +120,7 @@ void fgo_hook_config_load(
     io4_config_load(&cfg->io4, filename);
     vfd_config_load(&cfg->vfd, filename);
     touch_screen_config_load(&cfg->touch, filename);
-    printer_config_load(&cfg->printer, filename);
+    printer_chc_config_load(&cfg->printer, filename);
     fgo_deck_config_load(&cfg->deck, filename);
     ftdi_config_load(&cfg->ftdi, filename);
     led15093_config_load(&cfg->led15093, filename);

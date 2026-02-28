@@ -7,7 +7,7 @@
 
 #include "hooklib/dvd.h"
 #include "hooklib/touch.h"
-#include "hooklib/printer.h"
+#include "hooklib/printer_chc.h"
 
 #include "gfxhook/config.h"
 
@@ -24,7 +24,7 @@ struct fgo_hook_config {
     struct io4_config io4;
     struct vfd_config vfd;
     struct touch_screen_config touch;
-    struct printer_config printer;
+    struct printer_chc_config printer;
     struct deck_config deck;
     struct ftdi_config ftdi;
     struct led15093_config led15093;

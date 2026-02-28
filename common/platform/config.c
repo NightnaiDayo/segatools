@@ -12,6 +12,9 @@
 #include "platform/amvideo.h"
 #include "platform/clock.h"
 #include "platform/config.h"
+
+#include <shlwapi.h>
+
 #include "platform/dns.h"
 #include "platform/epay.h"
 #include "platform/hwmon.h"
@@ -23,6 +26,7 @@
 #include "platform/platform.h"
 #include "platform/vfs.h"
 #include "platform/system.h"
+#include "util/dprintf.h"
 #include "platform/openssl.h"
 #include "util/dprintf.h"
 
@@ -31,6 +35,14 @@ void platform_config_load(struct platform_config *cfg, const wchar_t *filename)
 {
     assert(cfg != NULL);
     assert(filename != NULL);
+
+    if (!PathFileExistsW(filename)) {
+        wchar_t temp[MAX_PATH];
+        dprintf("ERROR: Configuration does not exist\n");
+        dprintf("            Configured: \"%ls\"\n", filename);
+        GetFullPathNameW(filename, _countof(temp), temp, NULL);
+        dprintf("            Expanded:   \"%ls\"\n", temp);
+    }
 
     amvideo_config_load(&cfg->amvideo, filename);
     clock_config_load(&cfg->clock, filename);
@@ -206,6 +218,7 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
     wchar_t game_id[5];
     wchar_t platform_id[5];
     wchar_t subnet[16];
+    wchar_t bcast[16];
     unsigned int ip[4];
     size_t i;
 
@@ -217,6 +230,7 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
     memset(game_id, 0, sizeof(game_id));
     memset(platform_id, 0, sizeof(platform_id));
     memset(subnet, 0, sizeof(subnet));
+    memset(bcast, 0, sizeof(bcast));
 
     cfg->enable = GetPrivateProfileIntW(L"keychip", L"enable", 1, filename);
 
@@ -260,6 +274,14 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
             _countof(subnet),
             filename);
 
+    GetPrivateProfileStringW(
+            L"netenv",
+            L"broadcast",
+            L"255.255.255.255",
+            bcast,
+            _countof(bcast),
+            filename);
+
     for (i = 0 ; i < 16 ; i++) {
         cfg->keychip_id[i] = (char) keychip_id[i];
     }
@@ -274,6 +296,9 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
 
     swscanf(subnet, L"%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
     cfg->subnet = (ip[0] << 24) | (ip[1] << 16) | (ip[2] << 8) | 0;
+
+    swscanf(bcast, L"%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
+    cfg->bcast = (ip[0] << 24) | (ip[1] << 16) | (ip[2] << 8) | (ip[3]);
 
     GetPrivateProfileStringW(
             L"keychip",
