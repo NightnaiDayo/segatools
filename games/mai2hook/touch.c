@@ -56,6 +56,7 @@ struct touch_pending_reads {
 
 struct touch_auto_scan_state {
     uint8_t frame[9];
+    size_t pos;
     bool valid;
 };
 
@@ -466,7 +467,11 @@ static void touch_release_pending_read(struct uart *uart)
 
 static void touch_clear_auto_scan(struct uart *uart)
 {
-    touch_get_auto_scan(uart)->valid = false;
+    struct touch_auto_scan_state *auto_scan;
+
+    auto_scan = touch_get_auto_scan(uart);
+    auto_scan->pos = 0;
+    auto_scan->valid = false;
 }
 
 static bool touch_read_available(struct uart *uart)
@@ -477,11 +482,13 @@ static bool touch_read_available(struct uart *uart)
 static size_t touch_current_depth(struct uart *uart)
 {
     size_t depth;
+    struct touch_auto_scan_state *auto_scan;
 
     depth = uart->readable.pos;
+    auto_scan = touch_get_auto_scan(uart);
 
-    if (touch_get_auto_scan(uart)->valid) {
-        depth += sizeof(touch_get_auto_scan(uart)->frame);
+    if (auto_scan->valid) {
+        depth += sizeof(auto_scan->frame) - auto_scan->pos;
     }
 
     return depth;
@@ -490,6 +497,9 @@ static size_t touch_current_depth(struct uart *uart)
 static void touch_shift_read(struct uart *uart, struct iobuf *read)
 {
     struct touch_auto_scan_state *auto_scan;
+    size_t read_avail;
+    size_t frame_avail;
+    size_t chunksz;
 
     if (uart->readable.pos > 0) {
         iobuf_shift(read, &uart->readable);
@@ -502,8 +512,20 @@ static void touch_shift_read(struct uart *uart, struct iobuf *read)
         return;
     }
 
-    iobuf_write(read, auto_scan->frame, sizeof(auto_scan->frame));
-    auto_scan->valid = false;
+    read_avail = read->nbytes - read->pos;
+    frame_avail = sizeof(auto_scan->frame) - auto_scan->pos;
+    chunksz = read_avail < frame_avail ? read_avail : frame_avail;
+
+    memcpy(&read->bytes[read->pos],
+            &auto_scan->frame[auto_scan->pos],
+            chunksz);
+    read->pos += chunksz;
+    auto_scan->pos += chunksz;
+
+    if (auto_scan->pos == sizeof(auto_scan->frame)) {
+        auto_scan->pos = 0;
+        auto_scan->valid = false;
+    }
 }
 
 static HRESULT touch_enqueue(
@@ -574,17 +596,18 @@ static void touch_auto_scan(const uint8_t player, const uint8_t state[7])
         return;
     }
 
-    if (!*touch_get_status_flag(touch_uart)) {
-        return;
-    }
-
     frame[0] = res_start;
     memcpy(&frame[1], state, 7);
     frame[8] = res_end;
 
     EnterCriticalSection(touch_lock);
+    if (!*touch_get_status_flag(touch_uart)) {
+        LeaveCriticalSection(touch_lock);
+        return;
+    }
     auto_scan = touch_get_auto_scan(touch_uart);
     memcpy(auto_scan->frame, frame, sizeof(frame));
+    auto_scan->pos = 0;
     auto_scan->valid = true;
     while (touch_read_available(touch_uart) &&
            touch_get_pending_reads(touch_uart)->count > 0) {
