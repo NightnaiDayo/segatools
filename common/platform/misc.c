@@ -118,11 +118,13 @@ HRESULT misc_hook_init(const struct misc_config *cfg, const char *platform_id)
         return hr;
     }
 
-    hr = reg_hook_push_key(
-            HKEY_LOCAL_MACHINE,
-            L"SYSTEM\\SEGA\\SystemProperty\\Master",
-            misc_master_keys,
-            _countof(misc_master_keys));
+    if (!cfg->allowMasterKeyWrite) {
+        hr = reg_hook_push_key(
+                HKEY_LOCAL_MACHINE,
+                L"SYSTEM\\SEGA\\SystemProperty\\Master",
+                misc_master_keys,
+                _countof(misc_master_keys));
+    }
 
     if (FAILED(hr)) {
         return hr;
@@ -130,7 +132,9 @@ HRESULT misc_hook_init(const struct misc_config *cfg, const char *platform_id)
 
     /* Apply function hooks */
 
-    hook_table_apply(NULL, "user32.dll", misc_syms, _countof(misc_syms));
+    if (!cfg->allowReboot) {
+        hook_table_apply(NULL, "user32.dll", misc_syms, _countof(misc_syms));
+    }
 
     return S_OK;
 }

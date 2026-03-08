@@ -18,6 +18,7 @@
 static HRESULT amvideo_reg_read_name(void *bytes, uint32_t *nbytes);
 static HRESULT amvideo_reg_read_port_X(void *bytes, uint32_t *nbytes);
 static HRESULT amvideo_reg_read_resolution_1(void *bytes, uint32_t *nbytes);
+static HRESULT amvideo_reg_read_resolution_2(void *bytes, uint32_t *nbytes);
 static HRESULT amvideo_reg_read_setting(void *bytes, uint32_t *nbytes);
 static HRESULT amvideo_reg_read_use_segatiming(void *bytes, uint32_t *nbytes);
 
@@ -80,6 +81,10 @@ static const struct reg_hook_val amvideo_reg_mode_vals[] = {
     }, {
         .name       = L"resolution_1",
         .read       = amvideo_reg_read_resolution_1,
+        .type       = REG_SZ,
+    }, {
+        .name       = L"resolution_2",
+        .read       = amvideo_reg_read_resolution_2,
         .type       = REG_SZ,
     }, {
         .name       = L"use_segatiming",
@@ -167,6 +172,11 @@ static HRESULT amvideo_reg_read_port_X(void *bytes, uint32_t *nbytes)
 }
 
 static HRESULT amvideo_reg_read_resolution_1(void *bytes, uint32_t *nbytes)
+{
+    return reg_hook_read_wstr(bytes, nbytes, L"1920x1080");
+}
+
+static HRESULT amvideo_reg_read_resolution_2(void *bytes, uint32_t *nbytes)
 {
     return reg_hook_read_wstr(bytes, nbytes, L"1920x1080");
 }

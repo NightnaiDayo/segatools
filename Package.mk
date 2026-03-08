@@ -179,6 +179,7 @@ $(BUILD_DIR_ZIP)/mai2.zip:
 	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
 		$(BUILD_DIR_GAMES_64)/mai2hook/mai2hook.dll \
 		$(DIST_DIR)/mai2/segatools.ini \
+		$(DIST_DIR)/mai2/config_hook.json \
 		$(DIST_DIR)/mai2/launch.bat \
     	$(BUILD_DIR_ZIP)/mai2
 	$(V)cp pki/billing.pub \
@@ -256,6 +257,57 @@ $(BUILD_DIR_ZIP)/apm3.zip:
 	$(V)strip $(BUILD_DIR_ZIP)/apm3/*.{exe,dll}
 	$(V)cd $(BUILD_DIR_ZIP)/apm3 ; zip -r ../apm3.zip *
 
+$(BUILD_DIR_ZIP)/ekt.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/ekt
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/ekt/DEVICE
+	$(V)cp $(DIST_DIR)/ekt/segatools_terminal.ini \
+		$(DIST_DIR)/ekt/segatools_satellite.ini \
+		$(DIST_DIR)/ekt/launch_terminal.bat \
+		$(DIST_DIR)/ekt/launch_satellite.bat \
+		$(DIST_DIR)/ekt/card_player.html \
+		$(DIST_DIR)/ekt/config_hook.json \
+    	$(BUILD_DIR_ZIP)/ekt
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/ekt/DEVICE
+	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_ZIP)/ekt/inject_x86.exe
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_ZIP)/ekt/inject_x64.exe
+	$(V)cp $(BUILD_DIR_GAMES_32)/ekthook/ekthook.dll \
+		$(BUILD_DIR_ZIP)/ekt/ekthook_x86.dll
+	$(V)cp $(BUILD_DIR_GAMES_64)/ekthook/ekthook.dll \
+		$(BUILD_DIR_ZIP)/ekt/ekthook_x64.dll
+	$(V)strip $(BUILD_DIR_ZIP)/ekt/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/ekt ; zip -r ../ekt.zip *
+
+$(BUILD_DIR_ZIP)/sekito.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/sekito
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/sekito/DEVICE
+	$(V)cp $(DIST_DIR)/sekito/segatools_terminal.ini \
+		$(DIST_DIR)/sekito/segatools_satellite.ini \
+		$(DIST_DIR)/sekito/launch_terminal.bat \
+		$(DIST_DIR)/sekito/launch_satellite.bat \
+		$(DIST_DIR)/sekito/card_player.html \
+		$(DIST_DIR)/sekito/config_hook_satellite.json \
+		$(DIST_DIR)/sekito/config_hook_terminal.json \
+    	$(BUILD_DIR_ZIP)/sekito
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/sekito/DEVICE
+	$(V)cp $(BUILD_DIR_32)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_ZIP)/sekito/inject_x86.exe
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_ZIP)/sekito/inject_x64.exe
+	$(V)cp $(BUILD_DIR_GAMES_32)/sekitohook/sekitohook.dll \
+		$(BUILD_DIR_ZIP)/sekito/sekitohook_x86.dll
+	$(V)cp $(BUILD_DIR_GAMES_64)/sekitohook/sekitohook.dll \
+		$(BUILD_DIR_ZIP)/sekito/sekitohook_x64.dll
+	$(V)strip $(BUILD_DIR_ZIP)/sekito/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/sekito ; zip -r ../sekito.zip *
+
 $(BUILD_DIR_ZIP)/doc.zip: \
 		$(DOC_DIR)/config \
 		$(DOC_DIR)/chunihook.md \
@@ -282,6 +334,8 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/fgo.zip \
 		$(BUILD_DIR_ZIP)/kemono.zip \
 		$(BUILD_DIR_ZIP)/apm3.zip \
+		$(BUILD_DIR_ZIP)/ekt.zip \
+		$(BUILD_DIR_ZIP)/sekito.zip \
 		CHANGELOG.md \
 		README.md \
 

@@ -9,6 +9,7 @@
 #include "board/ffb.h"
 
 void aime_config_load(struct aime_config *cfg, const wchar_t *filename);
+void aime_config_load_bykey(struct aime_config *cfg, const wchar_t *filename, const wchar_t *config_key);
 void io4_config_load(struct io4_config *cfg, const wchar_t *filename);
 void vfd_config_load(struct vfd_config *cfg, const wchar_t *filename);
 void ffb_config_load(struct ffb_config *cfg, const wchar_t *filename);

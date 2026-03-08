@@ -7,7 +7,7 @@
 #include "hook/iohook.h"
 #include "hook/process.h"
 #include "hook/table.h"
-#include "hooklib/printer.h"
+#include "hooklib/printer_chc.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 #include "kemonohook/config.h"
@@ -66,7 +66,7 @@ static DWORD CALLBACK kemono_pre_startup(void) {
         goto fail;
     }
 
-    printer_hook_init(&kemono_hook_cfg.printer, 0, kemono_hook_mod);
+    printer_chc_hook_init(&kemono_hook_cfg.printer, 0, kemono_hook_mod);
     printer_set_dimensions(720, 1028);  // printer doesn't call setimageformat
 
     /* Initialize emulation hooks */

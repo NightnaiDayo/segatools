@@ -16,6 +16,8 @@
 #include "hook/table.h"
 
 #include "platform/netenv.h"
+
+#include "hook/procaddr.h"
 #include "platform/nusec.h"
 
 #include "util/dprintf.h"
@@ -72,6 +74,14 @@ static uint32_t WINAPI hook_IcmpSendEcho2(
         uint32_t ReplySize,
         uint32_t Timeout);
 
+static int WINAPI hook_sendto(
+        SOCKET s,
+        const char* buf,
+        int len,
+        int flags,
+        const struct sockaddr *to,
+        int tolen);
+
 /* Link pointers */
 
 static uint32_t (WINAPI *next_GetAdaptersAddresses)(
@@ -108,6 +118,15 @@ static uint32_t (WINAPI *next_IcmpSendEcho2)(
         uint32_t ReplySize,
         uint32_t Timeout);
 
+static int (WINAPI *next_sendto)(
+        SOCKET s,
+        const char *buf,
+        int len,
+        int flags,
+        const struct sockaddr *to,
+        int tolen);
+
+
 static const struct hook_symbol netenv_hook_syms[] = {
     {
         .name   = "GetAdaptersAddresses",
@@ -132,7 +151,17 @@ static const struct hook_symbol netenv_hook_syms[] = {
     }
 };
 
+static struct hook_symbol netenv_hook_syms_ws2[] = {
+    {
+        .name       = "sendto",
+        .patch      = hook_sendto,
+        .ordinal    = 20,
+        .link       = (void **) &next_sendto
+    },
+};
+
 static uint32_t netenv_ip_prefix;
+static uint32_t netenv_ip_bcast;
 static uint32_t netenv_ip_iface;
 static uint32_t netenv_ip_router;
 static uint8_t netenv_mac_addr[6];
@@ -155,17 +184,34 @@ HRESULT netenv_hook_init(
     }
 
     netenv_ip_prefix = kc_cfg->subnet;
+    netenv_ip_bcast = kc_cfg->bcast;
     netenv_ip_iface = kc_cfg->subnet | cfg->addr_suffix;
     netenv_ip_router = kc_cfg->subnet | cfg->router_suffix;
     memcpy(netenv_mac_addr, cfg->mac_addr, sizeof(netenv_mac_addr));
 
+    netenv_hook_apply_hooks(NULL);
+
+    return S_OK;
+}
+
+void netenv_hook_apply_hooks(HMODULE mod) {
     hook_table_apply(
-            NULL,
+            mod,
             "iphlpapi.dll",
             netenv_hook_syms,
             _countof(netenv_hook_syms));
 
-    return S_OK;
+    hook_table_apply(
+            mod,
+            "ws2_32.dll",
+            netenv_hook_syms_ws2,
+            _countof(netenv_hook_syms_ws2));
+
+    proc_addr_table_push(
+        mod,
+        "ws2_32.dll",
+        netenv_hook_syms_ws2,
+        _countof(netenv_hook_syms_ws2));
 }
 
 static uint32_t WINAPI hook_GetAdaptersAddresses(
@@ -505,4 +551,40 @@ static uint32_t WINAPI hook_IcmpSendEcho2(
     SetLastError(ERROR_SUCCESS);
 
     return 1;
+}
+
+static int WINAPI hook_sendto(
+        SOCKET s,
+        const char* buf,
+        int len,
+        int flags,
+        const struct sockaddr* to,
+        int tolen) {
+    if (to->sa_family != AF_INET) {
+        // we only care about IP packets
+        return next_sendto(s, buf, len, flags, to, tolen);
+    }
+
+    const struct sockaddr_in* original_to = (struct sockaddr_in*)to;
+
+    uint32_t bc_addr = _byteswap_ulong(netenv_ip_prefix | 0xFF);
+
+    if (original_to->sin_addr.S_un.S_addr == bc_addr) {
+
+        uint32_t src_addr = _byteswap_ulong(original_to->sin_addr.S_un.S_addr);
+        uint32_t dest_addr = _byteswap_ulong(netenv_ip_bcast);
+
+        dprintf("Netenv: sendTo broadcast %u.%u.%u.%u -> %u.%u.%u.%u\n",
+                (src_addr >> 24) & 0xff, (src_addr >> 16) & 0xff, (src_addr >> 8) & 0xff, src_addr & 0xff,
+                (dest_addr >> 24) & 0xff, (dest_addr >> 16) & 0xff, (dest_addr >> 8) & 0xff, dest_addr & 0xff);
+
+        struct sockaddr_in modified_to = {0};
+        memcpy(&modified_to, original_to, tolen);
+
+        modified_to.sin_addr.S_un.S_addr = dest_addr;
+
+        return next_sendto(s, buf, len, flags, (struct sockaddr*)&modified_to, sizeof(modified_to));
+    }
+
+    return next_sendto(s, buf, len, flags, to, tolen);
 }

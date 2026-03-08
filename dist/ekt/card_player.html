@@ -1,0 +1,224 @@
+<!-- very basic thing, I can't do UX/CSS/design, don't blame me, I'm a network engineer lmao -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Taisen Card Field</title>
+</head>
+<style>
+    html, body {
+        width: 99%;
+        height: 99%;
+    }
+    .playfield {
+        width: 79%;
+        height: 100%;
+        float: left;
+        border: 1px solid black;
+    }
+    .card_menu {
+        width: 20%;
+        height: 100%;
+        border: 1px solid black;
+        overflow-x: hidden;
+        overflow-y: scroll;
+    }
+
+    .card {
+        width: 200px;
+        transform: rotate(-90deg);
+    }
+
+    #playfield .card {
+        position: absolute;
+    }
+
+    #status {
+        margin-bottom: 50px;
+    }
+</style>
+<script>
+    var VERSION = 1;
+
+    var socket;
+    var state = 0;
+    var game_id;
+    var cards = [];
+    var current_card_fetch = 0;
+
+    function send(obj){
+        if (!socket){ return; }
+        var data = JSON.stringify(obj);
+        console.log("Sending: " + data);
+        socket.send(data);
+    }
+
+    function connect(){
+        socket = new WebSocket("ws://127.0.0.1:3594/y3io");
+
+        socket.onopen = function(e) {
+            document.getElementById("status").innerText = "Connected. Loading information...";
+            state = 0;
+            send({
+                version: VERSION,
+                command: "get_game_id"
+            });
+        };
+
+        socket.onmessage = function(event) {
+        console.log("Received: " + event.data);
+            handle_response(JSON.parse(event.data));
+        };
+
+        socket.onclose = function(event) {
+            state = -1;
+            document.getElementById("status").innerHTML = "Disconnected. <a href='javascript:window.location.reload();'>Reconnect</a>";
+        };
+
+        socket.onerror = function(error) {
+            console.log(error);
+        };
+    }
+
+    function handle_response(obj){
+        if (!obj.success){
+            alert("Error receiving data while in state " + state + ": " + obj.error);
+            socket.close();
+            return;
+        }
+        if (state == 0){
+            game_id = obj.game_id;
+            document.getElementById("status").innerText = "Connected to "+game_id+". Loading cards...";
+            state = 1;
+            send({
+                version: VERSION,
+                command: "get_cards"
+            });
+        } else if (state == 1){
+            cards = obj.cards;
+            document.getElementById("status").innerText = "Connected to "+game_id+". Loading card images...";
+            document.getElementById("cards").innerHTML = "";
+            document.getElementById("playfield").innerHTML = "";
+            current_card_fetch = 0;
+            state = 2;
+            if (cards.length > 0){
+                fetch_next_card();
+            } else {
+                document.getElementById("status").innerText = "Connected to "+game_id+". No cards available.";
+            }
+        } else if (state == 2){
+            cards[current_card_fetch].image = obj.data;
+            document.getElementById("cards").innerHTML += "<img class='card' src='data:image/bmp;base64, "+obj.data+"' onclick='spawn_card("+current_card_fetch+");' />";
+
+            if (++current_card_fetch >= cards.length){
+                document.getElementById("status").innerText = "Connected to "+game_id+".";
+                state = 3;
+            } else {
+                fetch_next_card();
+            }
+        }
+    }
+
+    function fetch_next_card(){
+        var p = cards[current_card_fetch].path;
+        if (!p.includes("_front")){
+            current_card_fetch++;
+            fetch_next_card();
+            return;
+        }
+        send({
+            version: VERSION,
+            command: "get_card_image",
+            path: p
+        });
+    }
+
+    function spawn_card(i){
+        if (state != 3){
+            return;
+        }
+
+        document.getElementById("playfield").innerHTML += "<img class='card' src='data:image/bmp;base64, "+cards[i].image+"' onmousedown='startMoving(event, this, "+i+");' />";
+    }
+
+    function update_pos(i, x, y){
+        if (state != 3){
+            return;
+        }
+
+        var panelHeight = 1272;
+        var panelWidth = 1260;
+
+        cards[i].x = panelHeight - ((y / window.screen.height) * panelHeight);
+        cards[i].y = panelWidth - ((x / window.screen.width) * panelWidth);
+        cards[i].rotation = 0;
+
+
+        var list = [];
+        for (var j = 0; j < cards.length; j++){
+            var c = cards[j];
+            if (c.x && c.y){
+                list.push({
+                    card_id: c.card_id,
+                    x: c.x,
+                    y: c.y,
+                    rotation: c.rotation
+                });
+            }
+        }
+
+        send({
+            version: VERSION,
+            command: "set_field",
+            cards: list
+        });
+    }
+</script>
+<script>
+    var mousePosition;
+    var offset = [-75,-75];
+    var div;
+    var current_card = -1;
+    var isDown = false;
+
+    function startMoving(e, el, card){
+        div = el;
+        isDown = true;
+        current_card = card;
+        offset = [
+            div.offsetLeft - e.clientX,
+            div.offsetTop - e.clientY
+        ];
+    }
+
+    document.addEventListener('mouseup', function() {
+        isDown = false;
+        current_card = -1;
+    }, true);
+
+    document.addEventListener('mousemove', function(event) {
+        event.preventDefault();
+        if (isDown) {
+            mousePosition = {
+
+                x : event.clientX,
+                y : event.clientY
+
+            };
+            div.style.left = (mousePosition.x + offset[0]) + 'px';
+            div.style.top  = (mousePosition.y + offset[1]) + 'px';
+            update_pos(current_card, event.clientX, event.clientY);
+        }
+    }, true);
+</script>
+<body onload="connect();">
+    <div id="playfield" class="playfield">
+
+    </div>
+    <div class="card_menu">
+        <div id="status">Please wait...</div>
+        <div id="cards">
+
+        </div>
+    </div>
+</body>
+</html>

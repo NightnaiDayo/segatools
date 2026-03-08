@@ -40,7 +40,7 @@ void cm_hook_config_load(
     io4_config_load(&cfg->io4, filename);
     vfd_config_load(&cfg->vfd, filename);
     touch_screen_config_load(&cfg->touch, filename);
-    printer_config_load(&cfg->printer, filename);
+    printer_chc_config_load(&cfg->printer, filename);
     cm_dll_config_load(&cfg->dll, filename);
     unity_config_load(&cfg->unity, filename);
 }
