@@ -18,6 +18,7 @@ static HRESULT touch_handle_irp_locked(
         struct irp *irp,
         struct uart *uart);
 static HRESULT touch_handle_read(struct irp *irp, struct uart *uart);
+static HRESULT touch_handle_ioctl(struct irp *irp, struct uart *uart);
 static void touch_complete_pending_read(struct uart *uart);
 static void touch_release_pending_read(struct uart *uart);
 static void touch_clear_auto_scan(struct uart *uart);
@@ -235,6 +236,10 @@ static HRESULT touch_handle_irp_locked(
         return touch_handle_read(irp, uart);
     }
 
+    if (irp->op == IRP_OP_IOCTL) {
+        return touch_handle_ioctl(irp, uart);
+    }
+
     hr = uart_handle_irp(uart, irp);
 
     if (FAILED(hr) || irp->op != IRP_OP_WRITE)
@@ -392,6 +397,18 @@ static HRESULT touch_handle_read(struct irp *irp, struct uart *uart)
     touch_shift_read(uart, &irp->read);
 
     return S_OK;
+}
+
+static HRESULT touch_handle_ioctl(struct irp *irp, struct uart *uart)
+{
+    if (irp->ioctl == IOCTL_SERIAL_GET_COMMSTATUS) {
+        uart->status.AmountInInQueue = (ULONG) touch_current_depth(uart);
+        uart->status.AmountInOutQueue = uart->written.pos;
+
+        return iobuf_write(&irp->read, &uart->status, sizeof(uart->status));
+    }
+
+    return uart_handle_irp(uart, irp);
 }
 
 static void touch_complete_pending_read(struct uart *uart)
