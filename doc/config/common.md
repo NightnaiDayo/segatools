@@ -745,3 +745,19 @@ Example for redirecting COM 5 to COM 10:
 redirection0from=\\.\COM5
 redirection0to=\\.\COM10
 ```
+
+## `[misc]`
+
+Configure miscellaneous hooks and features. 
+
+### `allowMasterKeyWrite`
+
+Default: `0`
+
+Allows the game to write to specific registry keys relevant for the boot process. Only intended for owners of real hardware.
+
+### `allowReboot`
+
+Default: `0`
+
+Allows the game to reboot the computer. Only intended for owners of real hardware.

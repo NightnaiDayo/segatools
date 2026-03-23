@@ -168,6 +168,8 @@ void misc_config_load(struct misc_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"misc", L"enable", 1, filename);
+    cfg->allowMasterKeyWrite = GetPrivateProfileIntW(L"misc", L"allowMasterKeyWrite", 0, filename);
+    cfg->allowReboot = GetPrivateProfileIntW(L"misc", L"allowReboot", 0, filename);
 }
 
 void netenv_config_load(struct netenv_config *cfg, const wchar_t *filename)
