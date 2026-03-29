@@ -500,14 +500,14 @@ Default: `1`
 
 Override the keychip's region code. Most games seem to pay attention to the
 DS EEPROM region code and not the keychip region code, and this seems to be
-a bit mask that controls which Nu PCB region codes this keychip is authorized
-for. So it probably only affects the system software and not the game software.
-Bit values are:
+a bit mask that controls which Nu/ALLS PCB region codes this keychip is authorized
+for. It can affect the system software and the game software.
+Values are:
 
-- 1: JPN: Japan
-- 2: USA (unused)
-- 3: EXP: Export (for Asian markets)
-- 4: CHS: China (Simplified Chinese?)
+- `1`: JPN: Japan
+- `2`: USA (unused)
+- `4`: EXP: Export (for Asian markets)
+- `8`: CHS: China (Simplified Chinese?)
 
 ### `billingCa`
 
@@ -672,6 +672,19 @@ Configure the location of the "Option" data mount point. This mount point is
 optional (hence the name, probably) and contains directories which contain
 minor over-the-air content updates.
 
+### `redirection#from`, `redirection#to`
+
+Default: Empty string
+
+Advanced feature intended for owners of real hardware. This allows arbitrary file reads to be redirected to other paths. Since serial ports are also "file" reads, this can be used to redirect hardcoded COM ports to other ports. Up to 64 redirections can be used by incrementing the number in the key: `redirection1from`, `redirection2from`, ...
+
+Example for redirecting COM 5 to COM 10:
+
+```
+redirection0from=\\.\COM5
+redirection0to=\\.\COM10
+```
+
 ## `[epay]`
 
 Configure Thinca Payment (E-Money) emulation and hooks.
@@ -732,19 +745,6 @@ Enabling full virtualization will virtualize ALL writes to the C:\ drive. Using 
 unless you know what you're doing!
 
 The Windows directory is always excluded from virtualization.
-
-### `redirection#from`, `redirection#to`
-
-Default: Empty string
-
-Advanced feature intended for owners of real hardware. This allows arbitrary file reads to be redirected to other paths. Since serial ports are also "file" reads, this can be used to redirect hardcoded COM ports to other ports. Up to 64 redirections can be used by incrementing the number in the key: `redirection1from`, `redirection2from`, ...
-
-Example for redirecting COM 5 to COM 10:
-
-```
-redirection0from=\\.\COM5
-redirection0to=\\.\COM10
-```
 
 ## `[misc]`
 
