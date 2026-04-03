@@ -35,6 +35,7 @@
 #include "idzhook/jvs.h"
 #include "idzhook/ffb.h"
 #include "idzhook/zinput.h"
+#include "idzhook/crt.h"
 
 #include "platform/platform.h"
 
@@ -86,6 +87,7 @@ static DWORD CALLBACK idz_pre_startup(void)
     gfx_dxgi_hook_init(&idz_hook_cfg.gfx, idz_hook_mod);
     zinput_hook_init(&idz_hook_cfg.zinput);
     dvd_hook_init(&idz_hook_cfg.dvd, idz_hook_mod);
+    crt_hook_init();
 
     /* Initialize emulation hooks */
 
