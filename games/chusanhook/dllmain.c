@@ -104,7 +104,7 @@ static DWORD CALLBACK chusan_pre_startup(void) {
     hr = platform_hook_init(
         &chusan_hook_cfg.platform,
         "SDHD",
-        "ACA2",
+        "ACA1",
         chusan_hook_mod);
 
     if (FAILED(hr)) {

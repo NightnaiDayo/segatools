@@ -10,20 +10,20 @@
 
 #include "util/dprintf.h"
 
-static HRESULT fgo_io4_poll(void *ctx, struct io4_state *state);
+static HRESULT fgo_io4_poll(void* ctx, struct io4_state* state);
+
 static uint16_t coins;
 
 static const struct io4_ops fgo_io4_ops = {
     .poll = fgo_io4_poll,
 };
 
-HRESULT fgo_io4_hook_init(const struct io4_config *cfg)
-{
+HRESULT fgo_io4_hook_init(const struct io4_config* cfg) {
     HRESULT hr;
 
     assert(fgo_dll.init != NULL);
 
-    hr = io4_hook_init(cfg, &fgo_io4_ops, NULL);
+    hr = io4_hook_init(cfg, &fgo_io4_ops, NULL, L"Fate/Grand Order Arcade r", true);
 
     if (FAILED(hr)) {
         return hr;
@@ -32,8 +32,7 @@ HRESULT fgo_io4_hook_init(const struct io4_config *cfg)
     return fgo_dll.init();
 }
 
-static HRESULT fgo_io4_poll(void *ctx, struct io4_state *state)
-{
+static HRESULT fgo_io4_poll(void* ctx, struct io4_state* state) {
     uint8_t opbtn;
     uint8_t gamebtn;
     int16_t stick_x;

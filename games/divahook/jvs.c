@@ -20,10 +20,12 @@ static void diva_jvs_read_coin_counter(
         void *ctx,
         uint8_t slot_no,
         uint16_t *out);
+static void diva_jvs_write_gpio(void *ctx, uint32_t state);
 
 static const struct io3_ops diva_jvs_io3_ops = {
     .read_switches      = diva_jvs_read_switches,
     .read_coin_counter  = diva_jvs_read_coin_counter,
+    .write_gpio         = diva_jvs_write_gpio
 };
 
 static struct io3 diva_jvs_io3;
@@ -106,4 +108,27 @@ static void diva_jvs_read_coin_counter(
     }
 
     diva_dll.jvs_read_coin_counter(out);
+}
+
+static void diva_jvs_write_gpio(void *ctx, uint32_t state) 
+{
+    assert(diva_dll.led_set_leds != NULL);
+    
+    // Since Sega uses an odd ordering for the first part of the bitfield,
+    // let's normalize the data and just send over bytes for the receiver
+    // to interpret as ON/OFF values.
+    uint8_t rgb_out[10] = {
+        state & DIVA_IO_LED_LEFT_PARTITION_RED    ? 0xFF : 0x00,
+        state & DIVA_IO_LED_LEFT_PARTITION_GREEN  ? 0xFF : 0x00,
+        state & DIVA_IO_LED_LEFT_PARTITION_BLUE   ? 0xFF : 0x00,
+        state & DIVA_IO_LED_RIGHT_PARTITION_RED   ? 0xFF : 0x00,
+        state & DIVA_IO_LED_RIGHT_PARTITION_GREEN ? 0xFF : 0x00,
+        state & DIVA_IO_LED_RIGHT_PARTITION_BLUE  ? 0xFF : 0x00,
+        state & DIVA_IO_LED_BTN_TRIANGLE          ? 0xFF : 0x00,
+        state & DIVA_IO_LED_BTN_CROSS             ? 0xFF : 0x00,
+        state & DIVA_IO_LED_BTN_SQUARE            ? 0xFF : 0x00,
+        state & DIVA_IO_LED_BTN_CIRCLE            ? 0xFF : 0x00
+    };
+
+    diva_dll.led_set_leds(0, rgb_out);
 }

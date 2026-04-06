@@ -90,6 +90,12 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
         return hr;
     }
 
+    hr = dns_hook_push(L"sega-initiald.net", cfg->startup);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     // crossbeats REV.
     hr = dns_hook_push(L"https://rev-ent.ac.capcom.jp:443", cfg->title);
 

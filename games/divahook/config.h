@@ -15,6 +15,7 @@
 
 #include "divahook/diva-dll.h"
 #include "divahook/slider.h"
+#include "divahook/elo.h"
 
 struct diva_hook_config {
     struct platform_config platform;
@@ -22,9 +23,9 @@ struct diva_hook_config {
     struct aime_config aime;
     struct dvd_config dvd;
     struct gfx_config gfx;
-    struct touch_screen_config touch;
     struct diva_dll_config dll;
     struct slider_config slider;
+    struct elo_config touch;
 };
 
 void diva_dll_config_load(

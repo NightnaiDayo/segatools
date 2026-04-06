@@ -409,6 +409,12 @@ Default `1`
 
 Enable JVS port emulation. Disable to use the JVS port on a real AMEX.
 
+### `foreground`
+
+Default `0`
+
+Only enables input when the game's main window is focused. This does not work for all games.
+
 ## `[io4]`
 
 Configure emulation of the IO4 board. Same settings also apply to `[io3]`.
@@ -418,6 +424,13 @@ Configure emulation of the IO4 board. Same settings also apply to `[io3]`.
 Default `1`
 
 Enable IO4 port emulation. Disable to use the IO4 port on a real ALLS.
+
+
+### `foreground`
+
+Default `0`
+
+Only enables input when the game's main window is focused. This does not work for all games, notably APMv3, due to the game switching involved.
 
 ### `test`
 Default `0x31`
@@ -487,14 +500,14 @@ Default: `1`
 
 Override the keychip's region code. Most games seem to pay attention to the
 DS EEPROM region code and not the keychip region code, and this seems to be
-a bit mask that controls which Nu PCB region codes this keychip is authorized
-for. So it probably only affects the system software and not the game software.
-Bit values are:
+a bit mask that controls which Nu/ALLS PCB region codes this keychip is authorized
+for. It can affect the system software and the game software.
+Values are:
 
-- 1: JPN: Japan
-- 2: USA (unused)
-- 3: EXP: Export (for Asian markets)
-- 4: CHS: China (Simplified Chinese?)
+- `1`: JPN: Japan
+- `2`: USA (unused)
+- `4`: EXP: Export (for Asian markets)
+- `8`: CHS: China (Simplified Chinese?)
 
 ### `billingCa`
 
@@ -576,6 +589,12 @@ Default: `01:02:03:04:05:06`
 The MAC address of the virtualized Ethernet adapter. The exact value shouldn't
 ever matter.
 
+### `broadcast`
+
+Default: `255.255.255.255`
+
+The UDP broadcast address that should be used if packets are being sent to the virtual keychip's subnet. This is used for cab-to-cab communication (Local Play, Satellite to Terminal, etc.). Depending on your network adapters (VPNs etc), sometimes you must explicitely specify your real LANs subnet.
+
 ## `[pcbid]`
 
 Configure Windows host name virtualization. The ALLS-series platform no longer
@@ -620,6 +639,10 @@ Path to the storage file for SRAM emulation.
 
 Configure Windows path redirection hooks.
 
+All of these paths can have a path-part prepended to them by setting the environment variable
+`SEGATOOLS_VFS_RELATIVE_PATH`. This will only apply if the path set in the configuration is relative. Absolute parts are
+not touched.
+
 ### `enable`
 
 Default: `1`
@@ -648,6 +671,19 @@ Default: Empty string
 Configure the location of the "Option" data mount point. This mount point is
 optional (hence the name, probably) and contains directories which contain
 minor over-the-air content updates.
+
+### `redirection#from`, `redirection#to`
+
+Default: Empty string
+
+Advanced feature intended for owners of real hardware. This allows arbitrary file reads to be redirected to other paths. Since serial ports are also "file" reads, this can be used to redirect hardcoded COM ports to other ports. Up to 64 redirections can be used by incrementing the number in the key: `redirection1from`, `redirection2from`, ...
+
+Example for redirecting COM 5 to COM 10:
+
+```
+redirection0from=\\.\COM5
+redirection0to=\\.\COM10
+```
 
 ## `[epay]`
 
@@ -681,3 +717,47 @@ Default: `0`
 
 Enables the override to always hook the OpenSSL env variable. By default the
 hook is only applied to Intel CPUs with the SHA extension present.
+
+## `[ewf]`
+
+Configure Enhanced Write Filter / Unified Write Filter emulation.
+
+### `enable`
+
+Default: `0`
+
+Enables the EWF/UWF hook. This will cause anything the game writes to the following paths to become virtualized to
+reduce disk I/O:
+
+* C:\Users\AppUser\temp\alib.conf
+* C:\Users\AppUser\temp\cacert.pem
+* C:\Users\AppUser\temp\first_ar.conf
+* C:\Users\AppUser\temp\last_pras.log
+* C:\Users\AppUser\temp\last_shime.log
+* C:\Users\AppUser\temp\play_history.csv
+* and their equivalent Windows XP variants
+
+### `full`
+
+Default: `0`
+
+Enabling full virtualization will virtualize ALL writes to the C:\ drive. Using this setting is highly discouraged
+unless you know what you're doing!
+
+The Windows directory is always excluded from virtualization.
+
+## `[misc]`
+
+Configure miscellaneous hooks and features. 
+
+### `allowMasterKeyWrite`
+
+Default: `0`
+
+Allows the game to write to specific registry keys relevant for the boot process. Only intended for owners of real hardware.
+
+### `allowReboot`
+
+Default: `0`
+
+Allows the game to reboot the computer. Only intended for owners of real hardware.

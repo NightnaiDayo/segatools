@@ -18,3 +18,4 @@ HRESULT netenv_hook_init(
         const struct netenv_config *cfg,
         const struct nusec_config *kc_cfg);
 
+void netenv_hook_apply_hooks(HMODULE mod);

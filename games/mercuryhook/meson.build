@@ -25,8 +25,8 @@ shared_library(
         'io4.h',
         'mercury-dll.c',
         'mercury-dll.h',
-        'elisabeth.h',
-        'elisabeth.c',
+        'elizabeth.h',
+        'elizabeth.c',
         'touch.h',
         'touch.c'
     ],

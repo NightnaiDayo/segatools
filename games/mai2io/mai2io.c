@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <process.h>
+#include <string.h>
 
 #include "mai2hook/touch.h"
 #include "mai2io/config.h"
@@ -19,7 +20,7 @@ static bool mai2_io_touch_1p_stop_flag;
 static HANDLE mai2_io_touch_2p_thread;
 static bool mai2_io_touch_2p_stop_flag;
 
-uint16_t mai2_io_get_api_version(void) { return 0x0101; }
+uint16_t mai2_io_get_api_version(void) { return 0x0102; }
 
 HRESULT mai2_io_init(void) {
     mai2_io_config_load(&mai2_io_cfg, get_config_path());
@@ -160,34 +161,30 @@ void mai2_io_touch_set_sens(uint8_t *bytes) {
 }
 
 void mai2_io_touch_update(bool player1, bool player2) {
-    if (mai2_io_cfg.debug_input_1p) {
-        if (player1 && mai2_io_touch_1p_thread == NULL) {
-            mai2_io_touch_1p_thread = (HANDLE)_beginthreadex(
-                NULL, 0, mai2_io_touch_1p_thread_proc, _callback, 0, NULL);
-        } else if (!player1 && mai2_io_touch_1p_thread != NULL) {
-            mai2_io_touch_1p_stop_flag = true;
+    if (player1 && mai2_io_touch_1p_thread == NULL) {
+        mai2_io_touch_1p_thread = (HANDLE)_beginthreadex(
+            NULL, 0, mai2_io_touch_1p_thread_proc, _callback, 0, NULL);
+    } else if (!player1 && mai2_io_touch_1p_thread != NULL) {
+        mai2_io_touch_1p_stop_flag = true;
 
-            WaitForSingleObject(mai2_io_touch_1p_thread, INFINITE);
-            CloseHandle(mai2_io_touch_1p_thread);
-            mai2_io_touch_1p_thread = NULL;
+        WaitForSingleObject(mai2_io_touch_1p_thread, INFINITE);
+        CloseHandle(mai2_io_touch_1p_thread);
+        mai2_io_touch_1p_thread = NULL;
 
-            mai2_io_touch_1p_stop_flag = false;
-        }
+        mai2_io_touch_1p_stop_flag = false;
     }
 
-    if (mai2_io_cfg.debug_input_2p) {
-        if (player2 && mai2_io_touch_2p_thread == NULL) {
-            mai2_io_touch_2p_thread = (HANDLE)_beginthreadex(
-                NULL, 0, mai2_io_touch_2p_thread_proc, _callback, 0, NULL);
-        } else if (!player2 && mai2_io_touch_2p_thread != NULL) {
-            mai2_io_touch_2p_stop_flag = true;
+    if (player2 && mai2_io_touch_2p_thread == NULL) {
+        mai2_io_touch_2p_thread = (HANDLE)_beginthreadex(
+            NULL, 0, mai2_io_touch_2p_thread_proc, _callback, 0, NULL);
+    } else if (!player2 && mai2_io_touch_2p_thread != NULL) {
+        mai2_io_touch_2p_stop_flag = true;
 
-            WaitForSingleObject(mai2_io_touch_2p_thread, INFINITE);
-            CloseHandle(mai2_io_touch_2p_thread);
-            mai2_io_touch_2p_thread = NULL;
+        WaitForSingleObject(mai2_io_touch_2p_thread, INFINITE);
+        CloseHandle(mai2_io_touch_2p_thread);
+        mai2_io_touch_2p_thread = NULL;
 
-            mai2_io_touch_2p_stop_flag = false;
-        }
+        mai2_io_touch_2p_stop_flag = false;
     }
 }
 
@@ -197,14 +194,18 @@ static unsigned int __stdcall mai2_io_touch_1p_thread_proc(void *ctx) {
     while (!mai2_io_touch_1p_stop_flag) {
         uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
-        for (int i = 0; i < 34; i++) {
-            if (GetAsyncKeyState(mai2_io_cfg.vk_1p_touch[i])) {
-                int byteIndex = i / 5;
-                int bitIndex = i % 5;
-                state[byteIndex] |= (1 << bitIndex);
+        if (mai2_io_cfg.debug_input_1p) {
+            for (int i = 0; i < 34; i++) {
+                if (GetAsyncKeyState(mai2_io_cfg.vk_1p_touch[i])) {
+                    int byteIndex = i / 5;
+                    int bitIndex = i % 5;
+                    state[byteIndex] |= (1 << bitIndex);
+                }
             }
         }
+
         callback(1, state);
+
         Sleep(1);
     }
     return 0;
@@ -216,14 +217,18 @@ static unsigned int __stdcall mai2_io_touch_2p_thread_proc(void *ctx) {
     while (!mai2_io_touch_2p_stop_flag) {
         uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
-        for (int i = 0; i < 34; i++) {
-            if (GetAsyncKeyState(mai2_io_cfg.vk_2p_touch[i])) {
-                int byteIndex = i / 5;
-                int bitIndex = i % 5;
-                state[byteIndex] |= (1 << bitIndex);
+        if (mai2_io_cfg.debug_input_2p) {
+            for (int i = 0; i < 34; i++) {
+                if (GetAsyncKeyState(mai2_io_cfg.vk_2p_touch[i])) {
+                    int byteIndex = i / 5;
+                    int bitIndex = i % 5;
+                    state[byteIndex] |= (1 << bitIndex);
+                }
             }
         }
+
         callback(2, state);
+
         Sleep(1);
     }
     return 0;
@@ -262,6 +267,25 @@ void mai2_io_led_gs_update(uint8_t board, const uint8_t *rgb) {
         dprintf("Mai2 LED %dP: LED %d: %02X %02X %02X Speed: %02X\n", player, i,
                 rgb[i * 4], rgb[i * 4 + 1], rgb[i * 4 + 2], rgb[i * 4 + 3]);
     }
+#endif
+    return;
+}
+
+void mai2_io_led_billboard_set(uint8_t board, const uint8_t *rgb) {
+#if 0
+    uint8_t player = board + 1;
+    dprintf("Mai2 LED %dP: Billboard set R:%02X G:%02X B:%02X\n", player, rgb[0], rgb[1], rgb[2]);
+#endif
+    return;
+}
+
+void mai2_io_led_cam_set(uint8_t state) {
+#if 0
+    dprintf("Mai2 LED cam: CodeReader1P=%s CodeReader2P=%s Ring=%s Rec=%s\n",
+            (state & MAI2_IO_LED_CAM_CODE_READER_1P) ? "ON" : "OFF",
+            (state & MAI2_IO_LED_CAM_CODE_READER_2P) ? "ON" : "OFF",
+            (state & MAI2_IO_LED_CAM_RING) ? "ON" : "OFF",
+            (state & MAI2_IO_LED_CAM_REC) ? "ON" : "OFF");
 #endif
     return;
 }

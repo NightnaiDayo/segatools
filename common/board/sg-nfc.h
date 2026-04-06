@@ -14,6 +14,40 @@ struct sg_nfc_ops {
     HRESULT (*poll)(void *ctx);
     HRESULT (*get_aime_id)(void *ctx, uint8_t *luid, size_t nbytes);
     HRESULT (*get_felica_id)(void *ctx, uint64_t *IDm);
+    HRESULT (*get_mifare_uid)(void *ctx, uint8_t *uid, size_t nbytes);
+    HRESULT (*mifare_select)(void *ctx, const uint8_t *uid, size_t nbytes);
+    HRESULT (*mifare_set_key)(
+            void *ctx,
+            uint8_t key_type,
+            const uint8_t *key,
+            size_t nbytes);
+    HRESULT (*mifare_authenticate)(
+            void *ctx,
+            uint8_t key_type,
+            const uint8_t *payload,
+            size_t nbytes);
+    HRESULT (*mifare_read_block)(
+            void *ctx,
+            const uint8_t *uid,
+            size_t uid_size,
+            uint8_t block_no,
+            uint8_t *block,
+            size_t block_size);
+    HRESULT (*felica_transact)(
+            void *ctx,
+            const uint8_t *req,
+            size_t req_size,
+            uint8_t *res,
+            size_t res_size,
+            size_t *res_size_written);
+    HRESULT (*radio_on)(void *ctx);
+    HRESULT (*radio_off)(void *ctx);
+    HRESULT (*to_update_mode)(void *ctx);
+    HRESULT (*send_hex_data)(
+            void *ctx,
+            const uint8_t *payload,
+            size_t payload_size,
+            uint8_t *status_out);
 
     // TODO Banapass, AmuseIC
 };

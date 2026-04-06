@@ -40,6 +40,15 @@ void slider_config_load(struct slider_config *cfg, const wchar_t *filename)
     cfg->enable = GetPrivateProfileIntW(L"slider", L"enable", 1, filename);
 }
 
+void elo_config_load(struct elo_config *cfg, const wchar_t *filename)
+{
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    cfg->enable = GetPrivateProfileIntW(L"touch", L"enable", 1, filename);
+    cfg->port_no = GetPrivateProfileIntW(L"touch", L"port_no", 0, filename);
+}
+
 void diva_hook_config_load(
         struct diva_hook_config *cfg,
         const wchar_t *filename)
@@ -54,4 +63,5 @@ void diva_hook_config_load(
     gfx_config_load(&cfg->gfx, filename);
     diva_dll_config_load(&cfg->dll, filename);
     slider_config_load(&cfg->slider, filename);
+    elo_config_load(&cfg->touch, filename);
 }

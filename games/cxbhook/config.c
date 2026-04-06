@@ -42,6 +42,7 @@ void revio_config_load(struct revio_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"revio", L"enable", 1, filename);
+    cfg->foreground = GetPrivateProfileIntW(L"revio", L"foreground", 0, filename);
 }
 
 void led_config_load(struct led_config *cfg, const wchar_t *filename)

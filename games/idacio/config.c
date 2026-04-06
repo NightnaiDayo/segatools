@@ -58,10 +58,10 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
 
     cfg->start = GetPrivateProfileIntW(L"dinput", L"start", 0, filename);
     cfg->view_chg = GetPrivateProfileIntW(L"dinput", L"viewChg", 0, filename);
-    cfg->left = GetPrivateProfileIntW(L"dinput", L"left", 0, filename);
-    cfg->right = GetPrivateProfileIntW(L"dinput", L"right", 0, filename);
     cfg->up = GetPrivateProfileIntW(L"dinput", L"up", 0, filename);
     cfg->down = GetPrivateProfileIntW(L"dinput", L"down", 0, filename);
+    cfg->left = GetPrivateProfileIntW(L"dinput", L"left", 0, filename);
+    cfg->right = GetPrivateProfileIntW(L"dinput", L"right", 0, filename);
     cfg->shift_dn = GetPrivateProfileIntW(L"dinput", L"shiftDn", 0, filename);
     cfg->shift_up = GetPrivateProfileIntW(L"dinput", L"shiftUp", 0, filename);
 
@@ -104,6 +104,18 @@ void idac_di_config_load(struct idac_di_config *cfg, const wchar_t *filename)
             L"dinput",
             L"rumbleDuration",
             1000,
+            filename);
+
+    cfg->ffb_base_damper_fraction = GetPrivateProfileIntW(
+            L"dinput",
+            L"baseDamperFraction",
+            20,
+            filename);
+	
+    cfg->ffb_deadband = GetPrivateProfileIntW(
+            L"dinput",
+            L"deadband",
+            2,
             filename);
 }
 

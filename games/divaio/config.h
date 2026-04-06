@@ -9,6 +9,7 @@ struct diva_io_config {
     uint8_t vk_test;
     uint8_t vk_service;
     uint8_t vk_coin;
+    wchar_t touch_mode[16];
 };
 
 void diva_io_config_load(

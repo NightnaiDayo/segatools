@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "mercuryhook/elisabeth.h"
+#include "mercuryhook/elizabeth.h"
 
 enum {
     MERCURY_IO_OPBTN_TEST = 0x01,

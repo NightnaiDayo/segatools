@@ -7,7 +7,7 @@
 
 #include "hooklib/dvd.h"
 #include "hooklib/touch.h"
-#include "hooklib/printer.h"
+#include "hooklib/printer_chc.h"
 
 #include "gfxhook/config.h"
 

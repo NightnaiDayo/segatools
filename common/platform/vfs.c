@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "hooklib/path.h"
@@ -14,9 +15,10 @@
 
 #include "platform/vfs.h"
 
+#include "ewf.h"
 #include "util/dprintf.h"
 
-static void vfs_fixup_path(wchar_t *path, size_t max_count);
+static void vfs_fixup_path(wchar_t *path, size_t max_count, bool use_relative_envvar);
 static HRESULT vfs_mkdir_rec(const wchar_t *path);
 static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count);
 static HRESULT vfs_path_hook_nthome(
@@ -32,6 +34,10 @@ static HRESULT vfs_path_hook_option(
         wchar_t *dest,
         size_t *count);
 static HRESULT vfs_path_hook_apm(
+        const wchar_t *src,
+        wchar_t *dest,
+        size_t *count);
+static HRESULT vfs_custom_path_hook(
         const wchar_t *src,
         wchar_t *dest,
         size_t *count);
@@ -84,6 +90,15 @@ static const struct reg_hook_val vfs_reg_vals[] = {
 };
 
 static struct vfs_config vfs_config;
+
+const wchar_t* get_vfs_relative_envvar() {
+    static wchar_t path[MAX_PATH];
+    if (!GetEnvironmentVariableW(L"SEGATOOLS_VFS_RELATIVE_PATH", path, MAX_PATH)) {
+        return NULL;
+    }
+
+    return path;
+}
 
 HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
 {
@@ -145,12 +160,12 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
 
     memcpy(&vfs_config, config, sizeof(*config));
 
-    vfs_fixup_path(vfs_nthome_real, _countof(vfs_nthome_real));
-    vfs_fixup_path(vfs_config.amfs, _countof(vfs_config.amfs));
-    vfs_fixup_path(vfs_config.appdata, _countof(vfs_config.appdata));
+    vfs_fixup_path(vfs_nthome_real, _countof(vfs_nthome_real), false);
+    vfs_fixup_path(vfs_config.amfs, _countof(vfs_config.amfs), true);
+    vfs_fixup_path(vfs_config.appdata, _countof(vfs_config.appdata), true);
 
     if (vfs_config.option[0] != L'\0') {
-        vfs_fixup_path(vfs_config.option, _countof(vfs_config.option));
+        vfs_fixup_path(vfs_config.option, _countof(vfs_config.option), true);
     }
 
     hr = vfs_mkdir_rec(vfs_config.amfs);
@@ -216,6 +231,12 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
         }
     }
 
+    hr = path_hook_push(vfs_custom_path_hook);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     hr = reg_hook_push_key(
             HKEY_LOCAL_MACHINE,
             L"SYSTEM\\SEGA\\SystemProperty\\mount",
@@ -236,7 +257,7 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
     return S_OK;
 }
 
-static void vfs_fixup_path(wchar_t *path, size_t max_count)
+static void vfs_fixup_path(wchar_t *path, size_t max_count, bool use_adjustment_envvar)
 {
     size_t count;
     wchar_t abspath[MAX_PATH];
@@ -246,7 +267,14 @@ static void vfs_fixup_path(wchar_t *path, size_t max_count)
     assert(max_count <= MAX_PATH);
 
     if (PathIsRelativeW(path)) {
-        count = GetFullPathNameW(path, _countof(abspath), abspath, NULL);
+        const wchar_t* append = get_vfs_relative_envvar();
+        if (append != NULL && wcslen(append) > 0 && use_adjustment_envvar) {
+            wchar_t temp[MAX_PATH];
+            swprintf_s(temp, MAX_PATH, L"%ls\\%ls", append, path);
+            count = GetFullPathNameW(temp, _countof(abspath), abspath, NULL);
+        } else {
+            count = GetFullPathNameW(path, _countof(abspath), abspath, NULL);
+        }
 
         /* GetFullPathName's length return value is tricky, because it includes
            the NUL terminator on failure, but doesn't on success.
@@ -599,4 +627,50 @@ static wchar_t* hook_AppImage_getOptionMountRootPath()
     wcscpy_s(path, MAX_PATH, vfs_config.option);
 
     return path;
+}
+
+static HRESULT vfs_custom_path_hook(
+        const wchar_t *src,
+        wchar_t *dest,
+        size_t *count){
+
+    assert(src != NULL);
+    assert(count != NULL);
+
+    /* Case-insensitive check to see if src starts with one of our custom paths */
+
+    for (int i = 0; i < MAX_REDIRECTIONS; i++){
+
+        wchar_t* from = vfs_config.redirections_from[i];
+        wchar_t* to = vfs_config.redirections_to[i];
+
+        if (from[0] == '\0' || to[0] == '\0'){
+            return S_FALSE;
+        }
+
+        if (path_compare_w(src, from, vfs_config.redirections_from_len[i]) != 0) {
+            continue;
+        }
+
+        size_t required = wcslen(to) + 1;
+
+#if defined(LOG_CUSTOM_VFS)
+        dprintf("Vfs: Redirection matched: %ls -> %ls\n", from, to);
+#endif
+
+        if (dest != NULL) {
+
+            if (required > *count) {
+                return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            }
+
+            wcscpy_s(dest, *count, to);
+        }
+
+        *count = required;
+
+        break;
+    }
+
+    return S_OK;
 }

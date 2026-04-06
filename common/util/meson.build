@@ -17,6 +17,8 @@ util_lib = static_library(
         'dprintf.h',
         'dump.c',
         'dump.h',
+        'fg-detect.c',
+        'fg-detect.h',
         'get_function_ordinal.c',
         'get_function_ordinal.h',
         'lib.c',

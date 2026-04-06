@@ -18,6 +18,8 @@ platform_lib = static_library(
         'dns.h',
         'epay.c',
         'epay.h',
+        'ewf.c',
+        'ewf.h',
         'hwmon.c',
         'hwmon.h',
         'hwreset.c',

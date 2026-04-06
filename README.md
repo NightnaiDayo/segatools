@@ -1,11 +1,13 @@
 # Segatools
 
-Version: `2025-11-04`
+Version: `2026-04-06`
 
 Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platforms.
 
 ## List of supported games
 
+* ALL.Net P-ras MULTI Version 3
+  * starting from ALL.Net P-ras MULTI Version 3 1.01
 * Card Maker
   * starting from Card Maker
 * CHUNITHM
@@ -13,27 +15,29 @@ Loaders and hardware emulators for SEGA games that run on the Nu and ALLS platfo
   * starting from CHUNITHM NEW!!
 * crossbeats REV.
   * up to crossbeats REV. SUNRISE
+* Eiketsu Taisen (英傑大戦)
+  * starting from Sanzensekai no Hadou (三千世界の波動)
 * Fate/Grand Order
   * Fate/Grand Order Arcade
 * Hatsune Miku: Project DIVA Arcade
   * up to Future Tone
 * Initial D
   * [Initial D Arcade Stage Zero](doc/idzhook.md)
-  * Initial D THE ARCADE
+  * Initial D THE ARCADE (up to Season 3)
+* Kemono Friends
+  * Kemono Friends 3: Planet Tours
 * maimai DX
   * starting from maimai DX
 * Mario & Sonic
   * Mario & Sonic at the Tokyo 2020 Olympics Arcade
 * O.N.G.E.K.I.
   * starting from O.N.G.E.K.I.
+* Sangokushi Taisen (三国志大戦)
+  * starting from 1.01
 * SEGA World Drivers Championship
   * SEGA World Drivers Championship 2019
 * WACCA
   * starting from WACCA
-* Kemono Friends
-  * Kemono Friends 3: Planet Tours
-* ALL.Net P-ras MULTI Version 3
-  * starting from ALL.Net P-ras MULTI Version 3 1.01
 
 ## End-users
 

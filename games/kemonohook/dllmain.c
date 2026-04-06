@@ -7,7 +7,7 @@
 #include "hook/iohook.h"
 #include "hook/process.h"
 #include "hook/table.h"
-#include "hooklib/printer.h"
+#include "hooklib/printer_chc.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 #include "kemonohook/config.h"
@@ -18,6 +18,7 @@
 #include "unityhook/hook.h"
 #include "util/dprintf.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE kemono_hook_mod;
 static process_entry_t kemono_startup;
@@ -65,7 +66,7 @@ static DWORD CALLBACK kemono_pre_startup(void) {
         goto fail;
     }
 
-    printer_hook_init(&kemono_hook_cfg.printer, 0, kemono_hook_mod);
+    printer_chc_hook_init(&kemono_hook_cfg.printer, 0, kemono_hook_mod);
     printer_set_dimensions(720, 1028);  // printer doesn't call setimageformat
 
     /* Initialize emulation hooks */
@@ -101,6 +102,10 @@ static DWORD CALLBACK kemono_pre_startup(void) {
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (kemono_hook_cfg.amex.jvs.enable && kemono_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"Parade", false);
     }
 
     kemono_extra_hooks_init();

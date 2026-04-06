@@ -31,6 +31,15 @@ void diva_io_config_load(
     cfg->vk_service = GetPrivateProfileIntW(L"io3", L"service", VK_F2, filename);
     cfg->vk_coin = GetPrivateProfileIntW(L"io3", L"coin", VK_F3, filename);
 
+    /* Load touch input type. Mouse input by default. */
+    GetPrivateProfileStringW(
+            L"touch",
+            L"mode",
+            L"mouse",
+            cfg->touch_mode,
+            _countof(cfg->touch_mode),
+            filename);
+
     for (i = 0 ; i < _countof(cfg->vk_buttons) ; i++) {
         swprintf_s(key, _countof(key), L"key%i", i + 1);
         cfg->vk_buttons[i] = GetPrivateProfileIntW(

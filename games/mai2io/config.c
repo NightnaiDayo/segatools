@@ -14,7 +14,7 @@ Maimai DX Default key binding
 2P: (Numpad) 8, 9, 6, 3, 2, 1, 4, 7, *
 */
 static const int mai2_io_1p_default[] = {'W', 'E', 'D', 'C', 'X', 'Z', 'A', 'Q', '3'};
-static const int mai2_io_2p_default[] = {0x68, 0x69, 0x66, 0x63, 0x62, 0x61, 0x64, 0x67, 0x54};
+static const int mai2_io_2p_default[] = {0x68, 0x69, 0x66, 0x63, 0x62, 0x61, 0x64, 0x67, 0x6A};
 
 static const int mai2_io_1p_touch_default[] = {
     'T', 'Y', 'H', 'N', 'B', 'V', 'F', 'R',

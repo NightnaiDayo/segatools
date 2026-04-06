@@ -43,6 +43,8 @@ static BOOL WINAPI hook_GetTouchInputInfo(
 
 static HCURSOR WINAPI hook_SetCursor(HCURSOR cursor);
 
+static int WINAPI hook_ShowCursor(BOOL bShow);
+
 /* Link pointers */
 
 static ATOM (WINAPI *next_RegisterClassExA)(
@@ -66,6 +68,9 @@ static BOOL (WINAPI *next_GetTouchInputInfo)(
 );
 
 static HCURSOR(WINAPI *next_SetCursor)(HCURSOR cursor);
+
+static int (WINAPI *next_ShowCursor)(BOOL bShow);
+
 
 static bool touch_hook_initted;
 static bool touch_held;
@@ -100,6 +105,11 @@ static const struct hook_symbol touch_hooks[] = {
         .patch  = hook_SetCursor,
         .link   = (void **) &next_SetCursor
     },
+    {
+        .name   = "ShowCursor",
+        .patch  = hook_ShowCursor,
+        .link   = (void **) &next_ShowCursor
+    },
 };
 
 void touch_screen_hook_init(const struct touch_screen_config *cfg, HINSTANCE self)
@@ -132,8 +142,15 @@ void touch_hook_insert_hooks(HMODULE target)
             _countof(touch_hooks));
 }
 
+static int WINAPI hook_ShowCursor(BOOL bShow) {
+    if (touch_config.cursor)
+        return next_ShowCursor(1);
+    
+    return next_ShowCursor(bShow);
+}
+
 static HCURSOR WINAPI hook_SetCursor(HCURSOR cursor) {
-    if (cursor == 0 && touch_config.cursor)
+    if (touch_config.cursor)
         return next_SetCursor(defaultCursor);
 
     return next_SetCursor(cursor);

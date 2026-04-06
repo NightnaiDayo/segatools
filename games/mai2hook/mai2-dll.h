@@ -17,6 +17,8 @@ struct mai2_dll {
     void (*led_set_fet_output)(uint8_t board, const uint8_t *rgb);
     void (*led_dc_update)(uint8_t board, const uint8_t *rgb);
     void (*led_gs_update)(uint8_t board, const uint8_t *rgb);
+    void (*led_set_leds)(uint8_t board, const uint8_t *rgb);
+    void (*led_cam_set)(uint8_t state);
 };
 
 struct mai2_dll_config {

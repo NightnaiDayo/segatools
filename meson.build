@@ -27,6 +27,11 @@ if cc.get_id() != 'msvc'
         language: 'c',
     )
 
+    add_global_arguments(
+        '-Wno-unknown-pragmas',
+        language: 'c',
+    )
+
     add_project_link_arguments(
         '-Wl,--enable-stdcall-fixup',
         '-Wl,--exclude-all-symbols',
@@ -85,6 +90,12 @@ endif
 if get_option('log_all') or get_option('log_vfs')
     add_project_arguments('-DLOG_VFS', language: 'c')
 endif
+if get_option('log_all') or get_option('log_ewf')
+    add_project_arguments('-DLOG_EWF', language : 'c')
+endif
+if get_option('log_all') or get_option('log_custom_vfs')
+    add_project_arguments('-DLOG_CUSTOM_VFS', language: 'c')
+endif
 
 shlwapi_lib = cc.find_library('shlwapi')
 dinput8_lib = cc.find_library('dinput8')
@@ -97,6 +108,7 @@ bcrypt_lib = cc.find_library('bcrypt')
 
 inc = include_directories('common', 'games')
 capnhook = subproject('capnhook')
+cwinwebsocket = subproject('cwinwebsocket')
 
 subdir('common/amex')
 subdir('common/iccard')
@@ -106,6 +118,7 @@ subdir('common/jvs')
 subdir('common/platform')
 subdir('common/util')
 subdir('common/aimeio')
+subdir('common/y3io')
 
 subdir('common/gfxhook')
 subdir('common/unityhook')
@@ -125,6 +138,8 @@ subdir('games/tokyoio')
 subdir('games/fgoio')
 subdir('games/kemonoio')
 subdir('games/apm3io')
+subdir('games/sekitoio')
+subdir('games/ektio')
 
 subdir('games/chunihook')
 subdir('games/divahook')
@@ -142,3 +157,5 @@ subdir('games/tokyohook')
 subdir('games/fgohook')
 subdir('games/kemonohook')
 subdir('games/apm3hook')
+subdir('games/ekthook')
+subdir('games/sekitohook')

@@ -35,12 +35,14 @@
 #include "idzhook/jvs.h"
 #include "idzhook/ffb.h"
 #include "idzhook/zinput.h"
+#include "idzhook/crt.h"
 
 #include "platform/platform.h"
 
 #include "util/dprintf.h"
 #include "util/lib.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE idz_hook_mod;
 static process_entry_t idz_startup;
@@ -85,6 +87,7 @@ static DWORD CALLBACK idz_pre_startup(void)
     gfx_dxgi_hook_init(&idz_hook_cfg.gfx, idz_hook_mod);
     zinput_hook_init(&idz_hook_cfg.zinput);
     dvd_hook_init(&idz_hook_cfg.dvd, idz_hook_mod);
+    crt_hook_init();
 
     /* Initialize emulation hooks */
 
@@ -134,6 +137,10 @@ static DWORD CALLBACK idz_pre_startup(void)
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (idz_hook_cfg.amex.jvs.enable && idz_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"Direct3D Window", false);
     }
 
     /* Initialize debug helpers */

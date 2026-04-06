@@ -16,7 +16,6 @@
 /* Helpers */
 
 static void path_hook_init(void);
-static BOOL path_transform_a(char **out, const char *src);
 
 /* API hooks */
 
@@ -110,11 +109,43 @@ static BOOL WINAPI hook_MoveFileW(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName);
 
+static BOOL WINAPI hook_CopyFileA(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists);
+
+static BOOL WINAPI hook_CopyFileW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists);
+
 static BOOL WINAPI hook_MoveFileExA(
         const char *lpExistingFileName,
         const char *lpNewFileName,
         uint32_t dwFlags);
 
+static BOOL WINAPI hook_MoveFileExW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        uint32_t dwFlags);
+
+static BOOL WINAPI hook_CopyFileExA(
+        LPCSTR             lpExistingFileName,
+        LPCSTR             lpNewFileName,
+        LPPROGRESS_ROUTINE lpProgressRoutine,
+        LPVOID             lpData,
+        LPBOOL             pbCancel,
+        DWORD              dwCopyFlags
+);
+
+static BOOL WINAPI hook_CopyFileExW(
+        LPCWSTR            lpExistingFileName,
+        LPCWSTR            lpNewFileName,
+        LPPROGRESS_ROUTINE lpProgressRoutine,
+        LPVOID             lpData,
+        LPBOOL             pbCancel,
+        DWORD              dwCopyFlags
+);
 
 static BOOL WINAPI hook_ReplaceFileA(
         const char *lpReplacedFileName,
@@ -159,6 +190,14 @@ static DWORD WINAPI hook_GetPrivateProfileSectionW(
         LPWSTR  lpReturnedString,
         DWORD   nSize,
         LPCWSTR lpFileName
+);
+
+static UINT WINAPI hook_GetDriveTypeA(
+        LPCSTR lpRootPathName
+);
+
+static UINT WINAPI hook_GetDriveTypeW(
+        LPCWSTR lpRootPathName
 );
 
 /* Link pointers */
@@ -253,10 +292,55 @@ static BOOL (WINAPI *next_MoveFileW)(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName);
 
+static BOOL (WINAPI *next_CopyFileA)(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists);
+
+static BOOL (WINAPI *next_CopyFileW)(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists);
+
 static BOOL (WINAPI *next_MoveFileExA)(
         const char *lpExistingFileName,
         const char *lpNewFileName,
         uint32_t dwFlags);
+
+static BOOL (WINAPI *next_MoveFileExW)(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        uint32_t dwFlags);
+
+static BOOL (WINAPI *next_CopyFileA)(
+        const LPCSTR lpExistingFileName,
+        const LPCSTR lpNewFileName,
+        BOOL   bFailIfExists
+);
+
+static BOOL (WINAPI *next_CopyFileW)(
+        const LPCWSTR  lpExistingFileName,
+        const LPCWSTR  lpNewFileName,
+        BOOL   bFailIfExists
+);
+
+static BOOL (WINAPI *next_CopyFileExA)(
+        LPCSTR             lpExistingFileName,
+        LPCSTR             lpNewFileName,
+        LPPROGRESS_ROUTINE lpProgressRoutine,
+        LPVOID             lpData,
+        LPBOOL             pbCancel,
+        DWORD              dwCopyFlags
+);
+
+static BOOL (WINAPI *next_CopyFileExW)(
+        LPCWSTR            lpExistingFileName,
+        LPCWSTR            lpNewFileName,
+        LPPROGRESS_ROUTINE lpProgressRoutine,
+        LPVOID             lpData,
+        LPBOOL             pbCancel,
+        DWORD              dwCopyFlags
+);
 
 static BOOL (WINAPI *next_ReplaceFileA)(
         const char *lpReplacedFileName,
@@ -301,6 +385,14 @@ static DWORD (WINAPI *next_GetPrivateProfileSectionW)(
         LPWSTR  lpReturnedString,
         DWORD   nSize,
         LPCWSTR lpFileName
+);
+
+static UINT (WINAPI *next_GetDriveTypeW)(
+        LPCWSTR lpRootPathName
+);
+
+static UINT (WINAPI *next_GetDriveTypeA)(
+        LPCSTR lpRootPathName
 );
 
 /* Hook table */
@@ -391,6 +483,26 @@ static const struct hook_symbol path_hook_syms[] = {
         .patch  = hook_MoveFileExA,
         .link   = (void **) &next_MoveFileExA,
     }, {
+        .name   = "MoveFileExW",
+        .patch  = hook_MoveFileExW,
+        .link   = (void **) &next_MoveFileExW,
+    }, {
+        .name   = "CopyFileA",
+        .patch  = hook_CopyFileA,
+        .link   = (void **) &next_CopyFileA,
+    }, {
+        .name   = "CopyFileW",
+        .patch  = hook_CopyFileW,
+        .link   = (void **) &next_CopyFileW,
+    }, {
+        .name   = "CopyFileExA",
+        .patch  = hook_CopyFileExA,
+        .link   = (void **) &next_CopyFileExA,
+    }, {
+        .name   = "CopyFileExW",
+        .patch  = hook_CopyFileW,
+        .link   = (void **) &next_CopyFileExW,
+    }, {
         .name   = "ReplaceFileA",
         .patch  = hook_ReplaceFileA,
         .link   = (void **) &next_ReplaceFileA,
@@ -418,6 +530,14 @@ static const struct hook_symbol path_hook_syms[] = {
         .name   = "GetPrivateProfileSectionW",
         .patch  = hook_GetPrivateProfileSectionW,
         .link   = (void **) &next_GetPrivateProfileSectionW,
+    }, {
+        .name   = "GetDriveTypeA",
+        .patch  = hook_GetDriveTypeA,
+        .link = (void **) &next_GetDriveTypeA,
+    }, {
+        .name   = "GetDriveTypeW",
+        .patch  = hook_GetDriveTypeW,
+        .link = (void **) &next_GetDriveTypeW,
     }
 };
 
@@ -482,7 +602,7 @@ void path_hook_insert_hooks(HMODULE target)
             _countof(path_hook_syms));
 }
 
-static BOOL path_transform_a(char **out, const char *src)
+BOOL path_transform_a(char **out, const char *src)
 {
     wchar_t *src_w;
     size_t src_c;
@@ -1135,6 +1255,75 @@ static BOOL WINAPI hook_MoveFileW(
     return ok;
 }
 
+
+static BOOL WINAPI hook_CopyFileA(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists)
+{
+    char *oldTrans;
+    char *newTrans;
+    BOOL ok;
+
+    ok = path_transform_a(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_a(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileA(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        bFailIfExists);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+static BOOL WINAPI hook_CopyFileW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists)
+{
+    wchar_t *oldTrans;
+    wchar_t *newTrans;
+    BOOL ok;
+
+    ok = path_transform_w(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_w(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileW(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        bFailIfExists);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
 static BOOL WINAPI hook_MoveFileExA(
         const char *lpExistingFileName,
         const char *lpNewFileName,
@@ -1162,6 +1351,122 @@ static BOOL WINAPI hook_MoveFileExA(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName,
         dwFlags);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+static BOOL WINAPI hook_MoveFileExW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        uint32_t dwFlags)
+{
+    wchar_t *oldTrans;
+    wchar_t *newTrans;
+    BOOL ok;
+
+    ok = path_transform_w(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_w(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_MoveFileExW(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        dwFlags);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+static BOOL WINAPI hook_CopyFileExA(
+        LPCSTR             lpExistingFileName,
+        LPCSTR             lpNewFileName,
+        LPPROGRESS_ROUTINE lpProgressRoutine,
+        LPVOID             lpData,
+        LPBOOL             pbCancel,
+        DWORD              dwCopyFlags
+)
+{
+    char *oldTrans;
+    char *newTrans;
+    BOOL ok;
+
+    ok = path_transform_a(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_a(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileExA(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        lpProgressRoutine,
+        lpData,
+        pbCancel,
+        dwCopyFlags);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+static BOOL WINAPI hook_CopyFileExW(
+        LPCWSTR            lpExistingFileName,
+        LPCWSTR            lpNewFileName,
+        LPPROGRESS_ROUTINE lpProgressRoutine,
+        LPVOID             lpData,
+        LPBOOL             pbCancel,
+        DWORD              dwCopyFlags
+)
+{
+    wchar_t *oldTrans;
+    wchar_t *newTrans;
+    BOOL ok;
+
+    ok = path_transform_w(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_w(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileExW(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        lpProgressRoutine,
+        lpData,
+        pbCancel,
+        dwCopyFlags);
 
     free(oldTrans);
     free(newTrans);
@@ -1262,6 +1567,8 @@ static BOOL WINAPI hook_DeleteFileA(const char *lpFileName)
 
     ok = next_DeleteFileA(trans ? trans: lpFileName);
 
+    free(trans);
+
     return ok;
 }
 
@@ -1278,6 +1585,8 @@ static BOOL WINAPI hook_DeleteFileW(const wchar_t *lpFileName)
 
     ok = next_DeleteFileW(trans ? trans: lpFileName);
 
+    free(trans);
+
     return ok;
 }
 
@@ -1290,6 +1599,7 @@ static DWORD WINAPI hook_GetPrivateProfileStringA(
         LPCSTR lpFileName
 ) {
     char *trans;
+    DWORD result;
     BOOL ok;
 
     ok = path_transform_a(&trans, lpFileName);
@@ -1298,7 +1608,17 @@ static DWORD WINAPI hook_GetPrivateProfileStringA(
         return FALSE;
     }
 
-    return next_GetPrivateProfileStringA(lpAppName, lpKeyName, lpDefault, lpReturnedString, nSize, trans ? trans: lpFileName);
+    result = next_GetPrivateProfileStringA(
+        lpAppName,
+        lpKeyName,
+        lpDefault,
+        lpReturnedString,
+        nSize,
+        trans ? trans: lpFileName);
+
+    free(trans);
+
+    return result;
 }
 
 static DWORD WINAPI hook_GetPrivateProfileStringW(
@@ -1310,6 +1630,7 @@ static DWORD WINAPI hook_GetPrivateProfileStringW(
         LPCWSTR lpFileName
 ) {
     wchar_t *trans;
+    DWORD result;
     BOOL ok;
 
     ok = path_transform_w(&trans, lpFileName);
@@ -1318,7 +1639,16 @@ static DWORD WINAPI hook_GetPrivateProfileStringW(
         return FALSE;
     }
 
-    return next_GetPrivateProfileStringW(lpAppName, lpKeyName, lpDefault, lpReturnedString, nSize, trans ? trans: lpFileName);
+    result = next_GetPrivateProfileStringW(
+        lpAppName,
+        lpKeyName,
+        lpDefault,
+        lpReturnedString,
+        nSize, trans ? trans: lpFileName);
+    
+        free(trans);
+
+    return result;
 }
 
 static DWORD WINAPI hook_GetPrivateProfileSectionW(
@@ -1328,6 +1658,7 @@ static DWORD WINAPI hook_GetPrivateProfileSectionW(
         LPCWSTR lpFileName
 ) {
     wchar_t *trans;
+    DWORD result;
     BOOL ok;
 
     ok = path_transform_w(&trans, lpFileName);
@@ -1336,5 +1667,229 @@ static DWORD WINAPI hook_GetPrivateProfileSectionW(
         return FALSE;
     }
 
-    return next_GetPrivateProfileSectionW(lpAppName, lpReturnedString, nSize, trans ? trans: lpFileName);
+    result = next_GetPrivateProfileSectionW(
+        lpAppName,
+        lpReturnedString,
+        nSize,
+        trans ? trans: lpFileName);
+    
+    free(trans);
+    
+    return result;
+}
+
+
+static UINT WINAPI hook_GetDriveTypeA(
+        LPCSTR lpRootPathName
+) {
+    char *trans;
+    UINT result;
+    BOOL ok;
+
+    ok = path_transform_a(&trans, lpRootPathName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    result = next_GetDriveTypeA(trans ? trans : lpRootPathName);
+
+    free(trans);
+
+    return result;
+}
+
+
+static UINT WINAPI hook_GetDriveTypeW(
+        LPCWSTR lpRootPathName
+) {
+    wchar_t *trans;
+    UINT result;
+    BOOL ok;
+
+    ok = path_transform_w(&trans, lpRootPathName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    result = next_GetDriveTypeW(trans ? trans : lpRootPathName);
+
+    free(trans);
+
+    return result;
+}
+
+char** str_split_a(char* a_str, const char a_delim) {
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+BOOL path_transform_args_a(const char* str, char delimiter, char* buf, size_t size) {
+    assert(str != NULL);
+    assert(buf != NULL);
+
+    if (size <= 0) {
+        return FALSE;
+    }
+
+    char* copy = strdup(str);
+    char** tokens = str_split_a(copy, delimiter);
+    char *trans;
+    BOOL ok;
+    BOOL failed = FALSE;
+
+    strcpy(buf, "");
+
+    if (tokens) {
+        int j;
+        for (j = 0; *(tokens + j); j++) {
+            ok = path_transform_a(&trans, *(tokens + j));
+            free(*(tokens + j));
+            if (ok) {
+                strcat_s(buf, size, trans ? trans : *(tokens+j));
+                if (*(tokens + j + 1)) {
+                    strcat_s(buf, size, " ");
+                }
+                free(trans);
+            } else {
+                failed = true;
+            }
+        }
+        free(tokens);
+    }
+
+    free(copy);
+
+    return !failed;
+}
+
+wchar_t** str_split_w(wchar_t* a_str, const wchar_t a_delim) {
+    wchar_t** result    = 0;
+    size_t count     = 0;
+    wchar_t* tmp        = a_str;
+    wchar_t* last_comma = 0;
+    wchar_t delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + wcslen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(wchar_t*) * count);
+
+    wchar_t* pt;
+
+    if (result)
+    {
+        size_t idx  = 0;
+        wchar_t* token = wcstok_s(a_str, delim, &pt);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = wcsdup(token);
+            token = wcstok_s(0, delim, &pt);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+BOOL path_transform_args_w(const wchar_t* str, wchar_t delimiter, wchar_t* buf, size_t size) {
+    assert(str != NULL);
+    assert(buf != NULL);
+
+    if (size <= 0) {
+        return FALSE;
+    }
+
+    wchar_t* copy = wcsdup(str);
+    wchar_t** tokens = str_split_w(copy, delimiter);
+    wchar_t *trans;
+    BOOL ok;
+    BOOL failed = FALSE;
+
+    wcscpy(buf, L"");
+
+    if (tokens) {
+        int j;
+        for (j = 0; *(tokens + j); j++) {
+            ok = path_transform_w(&trans, *(tokens + j));
+            if (ok) {
+                wcscat_s(buf, size, trans ? trans : *(tokens+j));
+                if (*(tokens + j + 1)) {
+                    wcscat_s(buf, size, L" ");
+                }
+                free(trans);
+            } else {
+                failed = true;
+            }
+            free(*(tokens + j));
+        }
+        free(tokens);
+    }
+
+    free(copy);
+
+    return !failed;
 }

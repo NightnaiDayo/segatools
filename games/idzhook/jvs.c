@@ -176,6 +176,7 @@ static void idz_jvs_read_coin_counter(
 
     idz_dll.jvs_read_coin_counter(out);
 }
+
 static void idz_jvs_write_gpio(void *ctx, uint32_t state) 
 {
     assert(idz_dll.led_set_leds != NULL);

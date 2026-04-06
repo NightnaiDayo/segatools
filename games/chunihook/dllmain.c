@@ -37,6 +37,7 @@
 
 #include "util/dprintf.h"
 #include "util/env.h"
+#include "util/fg-detect.h"
 
 static HMODULE chuni_hook_mod;
 static process_entry_t chuni_startup;
@@ -127,6 +128,10 @@ static DWORD CALLBACK chuni_pre_startup(void)
 
     if (FAILED(hr)) {
         goto fail;
+    }
+
+    if (chuni_hook_cfg.amex.jvs.enable && chuni_hook_cfg.amex.jvs.foreground) {
+        fgdet_init(L"teaGfx DirectX Release", false);
     }
 
     /* Initialize debug helpers */

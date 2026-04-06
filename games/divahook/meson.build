@@ -25,6 +25,8 @@ shared_library(
         'diva-dll.c',
         'diva-dll.h',
         'dllmain.c',
+        'elo.c',
+        'elo.h',
         'jvs.c',
         'jvs.h',
         'slider.c',

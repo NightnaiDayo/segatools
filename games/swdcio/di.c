@@ -61,6 +61,10 @@ static uint8_t swdc_di_paddle_left;
 static uint8_t swdc_di_paddle_right;
 static uint8_t swdc_di_view_chg;
 static uint8_t swdc_di_start;
+static uint8_t swdc_di_up;
+static uint8_t swdc_di_down;
+static uint8_t swdc_di_left;
+static uint8_t swdc_di_right;
 static uint8_t swdc_di_wheel_green;
 static uint8_t swdc_di_wheel_red;
 static uint8_t swdc_di_wheel_blue;
@@ -202,6 +206,30 @@ static HRESULT swdc_di_config_apply(const struct swdc_di_config *cfg)
         return E_INVALIDARG;
     }
 
+    if (cfg->up > 32) {
+        dprintf("Wheel: Invalid up button: %i\n", cfg->up);
+
+        return E_INVALIDARG;
+    }
+
+    if (cfg->down > 32) {
+        dprintf("Wheel: Invalid down button: %i\n", cfg->down);
+        
+        return E_INVALIDARG;
+    }
+
+    if (cfg->left > 32) {
+        dprintf("Wheel: Invalid left button: %i\n", cfg->left);
+
+        return E_INVALIDARG;
+    }
+
+    if (cfg->right > 32) {
+        dprintf("Wheel: Invalid right button: %i\n", cfg->right);
+
+        return E_INVALIDARG;
+    }
+
     if (cfg->paddle_left > 32) {
         dprintf("Wheel: Invalid left paddle button: %i\n", cfg->paddle_left);
 
@@ -249,6 +277,10 @@ static HRESULT swdc_di_config_apply(const struct swdc_di_config *cfg)
     }
     dprintf("Wheel: Start button . . . . . : %i\n", cfg->start);
     dprintf("Wheel: View Change button . . : %i\n", cfg->view_chg);
+    dprintf("Wheel: Up button  . . . . . . : %i\n", cfg->up);
+    dprintf("Wheel: Down button  . . . . . : %i\n", cfg->down);
+    dprintf("Wheel: Left button  . . . . . : %i\n", cfg->left);
+    dprintf("Wheel: Right button   . . . . : %i\n", cfg->right);
     dprintf("Wheel: Paddle Left button . . : %i\n", cfg->paddle_left);
     dprintf("Wheel: Paddle Right button  . : %i\n", cfg->paddle_right);
     dprintf("Wheel: Steering Green button  : %i\n", cfg->wheel_green);
@@ -272,6 +304,10 @@ static HRESULT swdc_di_config_apply(const struct swdc_di_config *cfg)
     swdc_di_off_accel = accel_axis->off;
     swdc_di_start = cfg->start;
     swdc_di_view_chg = cfg->view_chg;
+    swdc_di_up = cfg->up;
+    swdc_di_down = cfg->down;
+    swdc_di_left = cfg->left;
+    swdc_di_right = cfg->right;
     swdc_di_paddle_left = cfg->paddle_left;
     swdc_di_paddle_right = cfg->paddle_right;
     swdc_di_wheel_green = cfg->wheel_green;
@@ -397,6 +433,22 @@ static void swdc_di_get_buttons(uint16_t *gamebtn_out)
 
     if (swdc_di_view_chg && state.st.rgbButtons[swdc_di_view_chg - 1]) {
         gamebtn |= SWDC_IO_GAMEBTN_VIEW_CHANGE;
+    }
+
+    if (swdc_di_up && state.st.rgbButtons[swdc_di_up - 1]) {
+        gamebtn |= SWDC_IO_GAMEBTN_UP;
+    }
+
+    if (swdc_di_down && state.st.rgbButtons[swdc_di_down - 1]) {
+        gamebtn |= SWDC_IO_GAMEBTN_DOWN;
+    }
+
+    if (swdc_di_left && state.st.rgbButtons[swdc_di_left - 1]) {
+        gamebtn |= SWDC_IO_GAMEBTN_LEFT;
+    }
+
+    if (swdc_di_right && state.st.rgbButtons[swdc_di_right - 1]) {
+        gamebtn |= SWDC_IO_GAMEBTN_RIGHT;
     }
 
     if (swdc_di_paddle_left && state.st.rgbButtons[swdc_di_paddle_left - 1]) {

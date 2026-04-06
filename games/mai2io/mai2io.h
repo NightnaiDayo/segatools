@@ -28,7 +28,7 @@ enum {
    the major version and the low byte is the minor version (as defined by the
    Semantic Versioning standard).
 
-   The latest API version as of this writing is 0x0100. */
+   The latest API version as of this writing is 0x0102. */
 
 uint16_t mai2_io_get_api_version(void);
 
@@ -120,7 +120,8 @@ void mai2_io_touch_set_sens(uint8_t *bytes);
  *
  * This function determines whether the game is ready to accept touch input based on the states of player 1 and player 2.
  * If the game is ready, it creates or stops the corresponding threads to handle touch data for each player.
- * Whether or not threads are created for each player is controlled by `mai2_io_cfg.debug_input_1p` and `mai2_io_cfg.debug_input_2p` configuration.
+ * The `debug_input_1p` and `debug_input_2p` settings only control whether keyboard input is mapped into touch bits.
+ * When a player is active, the thread continues to send idle all-zero frames even with debug input disabled.
  *
  * @param player1 If `true`, indicates the game is ready to accept touch data from player 1, `false` means the game is not ready.
  * @param player2 If `true`, indicates the game is ready to accept touch data from player 2, `false` means the game is not ready.
@@ -190,3 +191,26 @@ void mai2_io_led_dc_update(uint8_t board, const uint8_t *rgb);
    Minimum API version: 0x0101 */
 
 void mai2_io_led_gs_update(uint8_t board, const uint8_t *rgb);
+
+/* Update the Billboard LEDs. rgb is a pointer to an array.
+
+   maimai DX uses two boards. Board 0 is for the player 1 side (left) and board 1
+   is for the player 2 side (right).
+
+   Minimum API version: 0x0102 */
+
+void mai2_io_led_billboard_set(uint8_t board, const uint8_t *rgb);
+
+enum {
+    MAI2_IO_LED_CAM_CODE_READER_1P = 0x01,
+    MAI2_IO_LED_CAM_CODE_READER_2P = 0x02,
+    MAI2_IO_LED_CAM_RING = 0x04,
+    MAI2_IO_LED_CAM_REC = 0x08,
+};
+
+/* Update the Code Reader and Player Camera lights. State is a bitmask of
+   MAI2_IO_LED_CAM_* values.
+
+   Minimum API version: 0x0102 */
+
+void mai2_io_led_cam_set(uint8_t state);
