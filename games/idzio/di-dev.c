@@ -31,8 +31,8 @@ static uint8_t idz_di_rumble_duration;
 static uint8_t idz_di_base_damper;
 static uint8_t idz_di_deadband;
 
-/* Fixed spring boost multiplier (1.5x) */
-static const float idz_di_spring_boost = 1.5f;
+/* Fixed spring boost multiplier */
+static const float idz_di_spring_boost = 1.0f;
 
 HRESULT idz_di_dev_init(const struct idz_di_config* cfg,
                         IDirectInputDevice8W* dev, HWND wnd) {
