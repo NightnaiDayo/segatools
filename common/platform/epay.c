@@ -163,19 +163,21 @@ HRESULT epay_apply_registry_hooks(){
 }
 
 HRESULT epay_hook_init(const struct epay_config *cfg) {
-    HRESULT hr;
+    HRESULT hr = S_OK;
     assert(cfg != NULL);
 
     if (!cfg->enable) {
         return S_FALSE;
     }
 
-    hr = epay_apply_registry_hooks();
-    if (FAILED(hr)){
-        return hr;
-    }
+    if (cfg->registry) {
+        hr = epay_apply_registry_hooks();
+        if (FAILED(hr)){
+            return hr;
+        }
 
-    dprintf("EPay: Registry initialized\n");
+        dprintf("EPay: Registry initialized\n");
+    }
 
     // HACK:(?) the DLLs are loaded dynamically so we just preload it and apply DNS and VFS hooks to it
     HMODULE thincahttpclient = LoadLibraryA("thincahttpclient.dll");

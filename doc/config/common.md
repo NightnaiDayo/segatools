@@ -701,6 +701,12 @@ Default: `1`
 
 Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.
 
+### `registry`
+
+Default: `1`
+
+Enables hooking of respective Thinca registry keys to emulate the existence of E-Money. This cannot be used with a real E-Money server.
+
 ## `[openssl]`
 
 Configure the OpenSSL SHA extension bug hook.
