@@ -1767,7 +1767,19 @@ char** str_split_a(char* a_str, const char a_delim) {
     return result;
 }
 
-BOOL path_transform_args_a(const char* str, char delimiter, char* buf, size_t size) {
+BOOL path_transform_args_a(const char *str, char delimiter, char *buf, size_t size)
+{
+    const char *p;
+    const char *out;
+    char token[MAX_PATH];
+    char *trans;
+    size_t tlen;
+    BOOL ok;
+    BOOL quoted;
+    BOOL needs_quotes;
+    BOOL failed;
+    BOOL first;
+
     assert(str != NULL);
     assert(buf != NULL);
 
@@ -1775,33 +1787,81 @@ BOOL path_transform_args_a(const char* str, char delimiter, char* buf, size_t si
         return FALSE;
     }
 
-    char* copy = strdup(str);
-    char** tokens = str_split_a(copy, delimiter);
-    char *trans;
-    BOOL ok;
-    BOOL failed = FALSE;
+    buf[0] = '\0';
+    p      = str;
+    failed = FALSE;
+    first  = TRUE;
 
-    strcpy(buf, "");
+    while (*p) {
+        /* Skip leading delimiters */
 
-    if (tokens) {
-        int j;
-        for (j = 0; *(tokens + j); j++) {
-            ok = path_transform_a(&trans, *(tokens + j));
-            free(*(tokens + j));
-            if (ok) {
-                strcat_s(buf, size, trans ? trans : *(tokens+j));
-                if (*(tokens + j + 1)) {
-                    strcat_s(buf, size, " ");
+        while (*p == delimiter) {
+            p++;
+        }
+
+        if (*p == '\0') {
+            break;
+        }
+
+        /* Extract one token, respecting double-quoted strings */
+
+        tlen   = 0;
+        quoted = FALSE;
+
+        if (*p == '"') {
+            quoted = TRUE;
+            p++;
+
+            while (*p && *p != '"') {
+                if (tlen + 1 < MAX_PATH) {
+                    token[tlen++] = *p;
                 }
-                free(trans);
-            } else {
-                failed = true;
+
+                p++;
+            }
+
+            if (*p == '"') {
+                p++;
+            }
+        } else {
+            while (*p && *p != delimiter) {
+                if (tlen + 1 < MAX_PATH) {
+                    token[tlen++] = *p;
+                }
+
+                p++;
             }
         }
-        free(tokens);
-    }
 
-    free(copy);
+        token[tlen] = '\0';
+
+        trans = NULL;
+        ok    = path_transform_a(&trans, token);
+
+        if (ok) {
+            out          = trans ? trans : token;
+            needs_quotes = (strchr(out, ' ') != NULL);
+
+            if (!first) {
+                strcat_s(buf, size, " ");
+            }
+
+            if (quoted || needs_quotes) {
+                strcat_s(buf, size, "\"");
+            }
+
+            strcat_s(buf, size, out);
+
+            if (quoted || needs_quotes) {
+                strcat_s(buf, size, "\"");
+            }
+
+            first = FALSE;
+            free(trans);
+        } else {
+            failed = TRUE;
+        }
+    }
 
     return !failed;
 }
@@ -1855,7 +1915,19 @@ wchar_t** str_split_w(wchar_t* a_str, const wchar_t a_delim) {
     return result;
 }
 
-BOOL path_transform_args_w(const wchar_t* str, wchar_t delimiter, wchar_t* buf, size_t size) {
+BOOL path_transform_args_w(const wchar_t *str, wchar_t delimiter, wchar_t *buf, size_t size)
+{
+    const wchar_t *p;
+    const wchar_t *out;
+    wchar_t token[MAX_PATH];
+    wchar_t *trans;
+    size_t tlen;
+    BOOL ok;
+    BOOL quoted;
+    BOOL needs_quotes;
+    BOOL failed;
+    BOOL first;
+
     assert(str != NULL);
     assert(buf != NULL);
 
@@ -1863,33 +1935,81 @@ BOOL path_transform_args_w(const wchar_t* str, wchar_t delimiter, wchar_t* buf, 
         return FALSE;
     }
 
-    wchar_t* copy = wcsdup(str);
-    wchar_t** tokens = str_split_w(copy, delimiter);
-    wchar_t *trans;
-    BOOL ok;
-    BOOL failed = FALSE;
+    buf[0] = L'\0';
+    p      = str;
+    failed = FALSE;
+    first  = TRUE;
 
-    wcscpy(buf, L"");
+    while (*p) {
+        /* Skip leading delimiters */
 
-    if (tokens) {
-        int j;
-        for (j = 0; *(tokens + j); j++) {
-            ok = path_transform_w(&trans, *(tokens + j));
-            if (ok) {
-                wcscat_s(buf, size, trans ? trans : *(tokens+j));
-                if (*(tokens + j + 1)) {
-                    wcscat_s(buf, size, L" ");
-                }
-                free(trans);
-            } else {
-                failed = true;
-            }
-            free(*(tokens + j));
+        while (*p == delimiter) {
+            p++;
         }
-        free(tokens);
-    }
 
-    free(copy);
+        if (*p == L'\0') {
+            break;
+        }
+
+        /* Extract one token, respecting double-quoted strings */
+
+        tlen   = 0;
+        quoted = FALSE;
+
+        if (*p == L'"') {
+            quoted = TRUE;
+            p++;
+
+            while (*p && *p != L'"') {
+                if (tlen + 1 < MAX_PATH) {
+                    token[tlen++] = *p;
+                }
+
+                p++;
+            }
+
+            if (*p == L'"') {
+                p++;
+            }
+        } else {
+            while (*p && *p != delimiter) {
+                if (tlen + 1 < MAX_PATH) {
+                    token[tlen++] = *p;
+                }
+
+                p++;
+            }
+        }
+
+        token[tlen] = L'\0';
+
+        trans = NULL;
+        ok    = path_transform_w(&trans, token);
+
+        if (ok) {
+            out          = trans ? trans : token;
+            needs_quotes = (wcschr(out, L' ') != NULL);
+
+            if (!first) {
+                wcscat_s(buf, size, L" ");
+            }
+
+            if (quoted || needs_quotes) {
+                wcscat_s(buf, size, L"\"");
+            }
+
+            wcscat_s(buf, size, out);
+
+            if (quoted || needs_quotes) {
+                wcscat_s(buf, size, L"\"");
+            }
+
+            first = FALSE;
+            free(trans);
+        } else {
+            failed = TRUE;
+        }
+    }
 
     return !failed;
 }

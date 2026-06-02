@@ -90,6 +90,7 @@ static const struct reg_hook_val vfs_reg_vals[] = {
 };
 
 static struct vfs_config vfs_config;
+static wchar_t vfs_amfs_drive = L'\0';
 
 const wchar_t* get_vfs_relative_envvar() {
     static wchar_t path[MAX_PATH];
@@ -98,6 +99,69 @@ const wchar_t* get_vfs_relative_envvar() {
     }
 
     return path;
+}
+
+static wchar_t vfs_find_free_drive(void)
+{
+    DWORD used;
+    wchar_t best;
+    int best_min_dist;
+    int c;
+    int o;
+    int d;
+    int min_dist;
+
+    used = GetLogicalDrives();
+
+    /* Reserve Y: - it is used as the APPDATA virtual drive by segatools */
+
+    used |= (1u << (L'Y' - L'A'));
+
+    /* B: was historically the second floppy drive and is almost always free;
+       try it first, then A: (first floppy), before searching C-Z. */
+
+    if (!(used & (1u << (L'B' - L'A')))) {
+        return L'B';
+    }
+
+    if (!(used & (1u << (L'A' - L'A')))) {
+        return L'A';
+    }
+
+    /* Find the free letter whose minimum distance to any used letter is the
+       greatest, i.e. the one most isolated from real drives. */
+
+    best = L'\0';
+    best_min_dist = -1;
+
+    for (c = L'C'; c <= L'Z'; c++) {
+        if (used & (1u << (c - L'A'))) {
+            continue;
+        }
+
+        min_dist = 26;
+
+        for (o = L'A'; o <= L'Z'; o++) {
+            if (used & (1u << (o - L'A'))) {
+                d = c - o;
+
+                if (d < 0) {
+                    d = -d;
+                }
+
+                if (d < min_dist) {
+                    min_dist = d;
+                }
+            }
+        }
+
+        if (min_dist > best_min_dist) {
+            best_min_dist = min_dist;
+            best = (wchar_t) c;
+        }
+    }
+
+    return best;
 }
 
 HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
@@ -159,6 +223,16 @@ HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id)
     }
 
     memcpy(&vfs_config, config, sizeof(*config));
+
+    /* Pick a free drive letter automatically for the AMFS virtual mount */
+    vfs_amfs_drive = vfs_find_free_drive();
+
+    if (vfs_amfs_drive == L'\0') {
+        dprintf("Vfs: FATAL: No free drive letter available for AMFS virtual mount\n");
+        return E_FAIL;
+    }
+
+    dprintf("Vfs: Using drive %lc: as AMFS virtual mount point\n", vfs_amfs_drive);
 
     vfs_fixup_path(vfs_nthome_real, _countof(vfs_nthome_real), false);
     vfs_fixup_path(vfs_config.amfs, _countof(vfs_config.amfs), true);
@@ -364,6 +438,7 @@ static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count)
     size_t required;
     size_t redir_len;
     size_t src_len;
+    wchar_t src_upper;
 
     assert(src != NULL);
     assert(count != NULL);
@@ -372,20 +447,16 @@ static HRESULT vfs_path_hook(const wchar_t *src, wchar_t *dest, size_t *count)
         return S_FALSE;
     }
 
-    switch (src[0]) {
-    case L'e':
-    case L'E':
+    /* Redirect the configured AMFS drive letter and the Y: APPDATA drive,
+       both case-insensitively */
+
+    src_upper = (src[0] >= L'a' && src[0] <= L'z') ? (src[0] - L'a' + L'A') : src[0];
+
+    if (src_upper == vfs_amfs_drive) {
         redir = vfs_config.amfs;
-
-        break;
-
-    case L'y':
-    case L'Y':
+    } else if (src_upper == L'Y') {
         redir = vfs_config.appdata;
-
-        break;
-
-    default:
+    } else {
         return S_FALSE;
     }
 
@@ -603,7 +674,12 @@ static HRESULT vfs_path_hook_apm(
 
 static HRESULT vfs_reg_read_amfs(void *bytes, uint32_t *nbytes)
 {
-    return reg_hook_read_wstr(bytes, nbytes, L"E:\\");
+    wchar_t amfs_root[4];
+    amfs_root[0] = vfs_amfs_drive;
+    amfs_root[1] = L':';
+    amfs_root[2] = L'\\';
+    amfs_root[3] = L'\0';
+    return reg_hook_read_wstr(bytes, nbytes, amfs_root);
 }
 
 static HRESULT vfs_reg_read_appdata(void *bytes, uint32_t *nbytes)
