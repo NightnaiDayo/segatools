@@ -25,3 +25,4 @@ MesonLocalOptions.mk
 
 # Some meson cache thing
 .meson-subproject-wrap-hash.txt
+/.vs
