@@ -419,7 +419,6 @@ void epay_config_load(struct epay_config *cfg, const wchar_t *filename)
 
     cfg->enable = GetPrivateProfileIntW(L"epay", L"enable", 1, filename);
     cfg->hook = GetPrivateProfileIntW(L"epay", L"hook", 1, filename);
-    cfg->registry = GetPrivateProfileIntW(L"epay", L"registry", 1, filename);
 }
 
 void openssl_config_load(struct openssl_config *cfg, const wchar_t *filename)

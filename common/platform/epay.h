@@ -8,7 +8,6 @@
 struct epay_config {
     bool enable;
     bool hook;
-    bool registry;
 };
 
 /* The functions in these structs are how clients like amdaemon interface
