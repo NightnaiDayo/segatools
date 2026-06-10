@@ -63,4 +63,3 @@ struct thinca_main {
 
 #pragma pack(pop)
 HRESULT epay_hook_init(const struct epay_config *cfg);
-HRESULT epay_apply_registry_hooks();

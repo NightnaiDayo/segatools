@@ -49,65 +49,13 @@ static struct thinca_main* (*next_ThincaPaymentGetInstance)(uint64_t ver);
 
 static struct thinca_main* thinca_stub;
 
-static const struct reg_hook_val epay_adapter_keys[] = {
-    {
-        .name   = L"TfpsAimeRwAdapter",
-        .read   = misc_read_thinca_adapter,
-        .type   = REG_SZ,
-    }
-};
-
-static const struct reg_hook_val epay_tcap_keys[] = {
-    {
-        .name   = L"CaLocation",
-        .read   = misc_read_ca_loc,
-        .type   = REG_SZ,
-    },
-    {
-        .name   = L"ThincaTcapClientPath",
-        .read   = misc_read_ca_client_loc,
-        .type   = REG_SZ,
-    },
-    {
-        .name   = L"ClientNetworkTimeout",
-        .read   = misc_read_network_timeout,
-        .type   = REG_DWORD,
-    }
-};
-
-static const struct reg_hook_val epay_tcap_url0_keys[] = {
-    {
-        .name   = L"Pattern",
-        .read   = misc_read_pattern0,
-        .type   = REG_SZ,
-    },
-    {
-        .name   = L"ClientNetworkTimeout",
-        .read   = misc_read_network_timeout0,
-        .type   = REG_DWORD,
-    }
-};
-
-static const struct reg_hook_val epay_tcap_url1_keys[] = {
-    {
-        .name   = L"Pattern",
-        .read   = misc_read_pattern1,
-        .type   = REG_SZ,
-    },
-    {
-        .name   = L"ClientNetworkTimeout",
-        .read   = misc_read_network_timeout1,
-        .type   = REG_DWORD,
-    }
-};
-
 static const struct hook_symbol epay_syms[] = {
     {
         .name  = "ThincaPaymentGetVersion",
         .patch = my_ThincaPaymentGetVersion,
         .link  = (void **) &next_ThincaPaymentGetVersion,
         .ordinal = 1,
-    }, 
+    },
     {
         .name  = "__imp_ThincaPaymentGetInstance",
         .patch = my_ThincaPaymentGetInstance,
@@ -122,60 +70,13 @@ static const struct hook_symbol epay_syms[] = {
     }
 };
 
-HRESULT epay_apply_registry_hooks(){
-    HRESULT hr = reg_hook_push_key(
-            HKEY_LOCAL_MACHINE,
-            L"SOFTWARE\\TFPaymentService\\ThincaRwAdapter",
-            epay_adapter_keys,
-            _countof(epay_adapter_keys));
-
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    hr = reg_hook_push_key(
-            HKEY_LOCAL_MACHINE,
-            L"SOFTWARE\\TFPaymentService\\ThincaTcapClient",
-            epay_tcap_keys,
-            _countof(epay_tcap_keys));
-
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    hr = reg_hook_push_key(
-            HKEY_LOCAL_MACHINE,
-            L"SOFTWARE\\TFPaymentService\\ThincaTcapClient\\URL0",
-            epay_tcap_url0_keys,
-            _countof(epay_tcap_url0_keys));
-
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    hr = reg_hook_push_key(
-            HKEY_LOCAL_MACHINE,
-            L"SOFTWARE\\TFPaymentService\\ThincaTcapClient\\URL1",
-            epay_tcap_url1_keys,
-            _countof(epay_tcap_url1_keys));
-
-    return hr;
-}
-
 HRESULT epay_hook_init(const struct epay_config *cfg) {
-    HRESULT hr;
+    HRESULT hr = S_OK;
     assert(cfg != NULL);
 
     if (!cfg->enable) {
         return S_FALSE;
     }
-
-    hr = epay_apply_registry_hooks();
-    if (FAILED(hr)){
-        return hr;
-    }
-
-    dprintf("EPay: Registry initialized\n");
 
     // HACK:(?) the DLLs are loaded dynamically so we just preload it and apply DNS and VFS hooks to it
     HMODULE thincahttpclient = LoadLibraryA("thincahttpclient.dll");
@@ -193,6 +94,7 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     }
 
     if (cfg->hook) {
+
         hook_table_apply(
                 NULL,
                 "ThincaPayment.dll",
