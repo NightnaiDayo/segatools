@@ -19,6 +19,7 @@
 
 #include "platform/config.h"
 #include "platform/platform.h"
+#include "util/io-path.h"
 
 void cxb_dll_config_load(
         struct cxb_dll_config *cfg,
@@ -27,12 +28,13 @@ void cxb_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"cxbio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"cxbio",
+            L"path",
+            L"SEGATOOLS_CXBIO_PATH",
+            L"cxbio.dll",
             filename);
 }
 

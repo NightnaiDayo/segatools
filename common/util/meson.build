@@ -21,6 +21,8 @@ util_lib = static_library(
         'fg-detect.h',
         'get_function_ordinal.c',
         'get_function_ordinal.h',
+        'io-path.c',
+        'io-path.h',
         'lib.c',
         'lib.h',
         'slurp.c',

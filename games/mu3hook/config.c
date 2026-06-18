@@ -12,6 +12,7 @@
 #include "mu3hook/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 void mu3_dll_config_load(
         struct mu3_dll_config *cfg,
@@ -20,12 +21,13 @@ void mu3_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"mu3io",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"mu3io",
+            L"path",
+            L"SEGATOOLS_MU3IO_PATH",
+            L"mu3io.dll",
             filename);
 }
 

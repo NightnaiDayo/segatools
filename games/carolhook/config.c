@@ -13,6 +13,7 @@
 
 #include "platform/config.h"
 #include "platform/platform.h"
+#include "util/io-path.h"
 
 void carol_dll_config_load(
         struct carol_dll_config *cfg,
@@ -21,12 +22,13 @@ void carol_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"carolio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"carolio",
+            L"path",
+            L"SEGATOOLS_CAROLIO_PATH",
+            L"carolio.dll",
             filename);
 }
 

@@ -10,6 +10,7 @@
 #include "cmhook/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 void cm_dll_config_load(
         struct cm_dll_config *cfg,
@@ -18,12 +19,13 @@ void cm_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"cmio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"cmio",
+            L"path",
+            L"SEGATOOLS_CMIO_PATH",
+            L"cmio.dll",
             filename);
 }
 

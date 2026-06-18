@@ -19,6 +19,7 @@
 
 #include "platform/config.h"
 #include "platform/platform.h"
+#include "util/io-path.h"
 
 void chuni_dll_config_load(
         struct chuni_dll_config *cfg,
@@ -27,12 +28,13 @@ void chuni_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"chuniio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"chuniio",
+            L"path",
+            L"SEGATOOLS_CHUNIIO_PATH",
+            L"chuniio.dll",
             filename);
 }
 

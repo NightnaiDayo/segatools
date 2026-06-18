@@ -10,6 +10,7 @@
 #include "fgohook/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 void fgo_dll_config_load(
         struct fgo_dll_config *cfg,
@@ -18,12 +19,13 @@ void fgo_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"fgoio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"fgoio",
+            L"path",
+            L"SEGATOOLS_FGOIO_PATH",
+            L"fgoio.dll",
             filename);
 }
 

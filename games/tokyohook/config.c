@@ -12,6 +12,7 @@
 #include "platform/config.h"
 
 #include "tokyohook/config.h"
+#include "util/io-path.h"
 
 void tokyo_dll_config_load(
     struct tokyo_dll_config *cfg,
@@ -19,12 +20,13 @@ void tokyo_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-        L"tokyoio",
-        L"path",
-        L"",
+    io_path_config_load(
         cfg->path,
         _countof(cfg->path),
+        L"tokyoio",
+        L"path",
+        L"SEGATOOLS_TOKYOIO_PATH",
+        L"tokyoio.dll",
         filename);
 }
 
