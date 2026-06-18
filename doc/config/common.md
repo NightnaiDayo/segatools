@@ -42,7 +42,7 @@ Supported IO environment variables:
 | `[aimeio]` | `SEGATOOLS_AIMEIO_PATH` | `aimeio.dll` |
 | `[apm3io]` | `SEGATOOLS_APM3IO_PATH` | `apm3io.dll` |
 | `[carolio]` | `SEGATOOLS_CAROLIO_PATH` | `carolio.dll` |
-| `[chuniio]` | `SEGATOOLS_CHUNIIO_PATH` | `chuniio.dll` |
+| `[chuniio]` | `SEGATOOLS_CHUNIIO_PATH` | `chuniio.dll` \* |
 | `[cmio]` | `SEGATOOLS_CMIO_PATH` | `cmio.dll` |
 | `[cxbio]` | `SEGATOOLS_CXBIO_PATH` | `cxbio.dll` |
 | `[divaio]` | `SEGATOOLS_DIVAIO_PATH` | `divaio.dll` |
@@ -59,7 +59,14 @@ Supported IO environment variables:
 | `[tokyoio]` | `SEGATOOLS_TOKYOIO_PATH` | `tokyoio.dll` |
 | `[y3io]` | `SEGATOOLS_Y3IO_PATH` | `y3io.dll` |
 
-For Chunithm SUN and later hooks that use separate 32-bit and 64-bit IO DLLs,
+\* The `%SEGATOOLS_IO_ROOT%\chuniio.dll` fallback applies to the
+single-32-bit-DLL Chunithm hook (`chunihook`) only. Chunithm NEW and later
+(`chusanhook`) resolve the single-DLL `[chuniio] path=` / `SEGATOOLS_CHUNIIO_PATH`
+from the INI value or environment variable only, with no `SEGATOOLS_IO_ROOT`
+default; those builds use the `path32`/`path64` mechanism below for their
+`SEGATOOLS_IO_ROOT` defaults.
+
+For Chunithm NEW and later hooks that use separate 32-bit and 64-bit IO DLLs,
 `[chuniio] path32=` maps to `SEGATOOLS_CHUNIIO_PATH32` and
 `[chuniio] path64=` maps to `SEGATOOLS_CHUNIIO_PATH64`. When only
 `SEGATOOLS_IO_ROOT` is set, these hooks look for `chuniio_x86.dll` and

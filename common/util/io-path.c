@@ -41,13 +41,21 @@ bool io_path_config_load(
 
     out[0] = L'\0';
 
-    GetPrivateProfileStringW(
+    count = GetPrivateProfileStringW(
             section,
             key,
             L"",
             path,
             _countof(path),
             filename);
+
+    if (count >= _countof(path) - 1 && path[0] != L'\0') {
+        dprintf("IO path: INI value [%S] %S may be truncated "
+                "(exceeds %d characters)\n",
+                section,
+                key,
+                (int) _countof(path) - 1);
+    }
 
     if (path[0] != L'\0') {
         return io_path_expand(out, out_count, path, key);
@@ -170,6 +178,21 @@ static bool io_path_from_root(
     }
 
     wcscat_s(out, out_count, root_filename);
+
+    /* The SEGATOOLS_IO_ROOT fallback is broadcast to every hook at once, so a
+       single global setting is shared by games that may not each ship an IO
+       DLL in that directory. Unlike an explicit INI/env path (direct user
+       intent, allowed to fail loudly at load time), a synthesized root path
+       that does not exist should quietly fall back to the built-in IO
+       implementation instead of aborting hook startup. */
+    if (GetFileAttributesW(out) == INVALID_FILE_ATTRIBUTES) {
+        dprintf("IO path: SEGATOOLS_IO_ROOT DLL not found, "
+                "using built-in IO: %S\n",
+                out);
+        out[0] = L'\0';
+
+        return false;
+    }
 
     return true;
 }
