@@ -14,6 +14,7 @@
 
 #include <hooklib/path.h>
 
+#include "hook/iohook.h"
 #include "hooklib/serial.h"
 #include "util/dprintf.h"
 
@@ -97,11 +98,13 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     if (aime_adapter != NULL){
         path_hook_insert_hooks(aime_adapter);
         serial_hook_apply_hooks(aime_adapter);
+        iohook_apply_hooks(aime_adapter);
     }
     HMODULE aime_adapter_debug = LoadLibraryA("aime_rw_adapterMDD.dll");
     if (aime_adapter_debug != NULL){
         path_hook_insert_hooks(aime_adapter_debug);
         serial_hook_apply_hooks(aime_adapter_debug);
+        iohook_apply_hooks(aime_adapter_debug);
     }
 
     if (cfg->hook) {
