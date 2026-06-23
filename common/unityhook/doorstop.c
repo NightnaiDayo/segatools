@@ -24,7 +24,7 @@
 
 static void* my_mono_jit_init_version(const char* root_domain_name,
                                       const char* runtime_version);
-static void my_mono_jit_parse_options(int argc, char** argv);
+static void my_mono_jit_parse_options(int argc, const char** argv);
 static void* my_mono_debug_init(MonoDebugFormat format);
 
 void doorstop_invoke(void* domain);
@@ -87,7 +87,7 @@ static void * my_mono_jit_init_version(const char *root_domain_name, const char 
     return domain;
 }
 
-static void my_mono_jit_parse_options(int argc, char** argv) {
+static void my_mono_jit_parse_options(int argc, const char** argv) {
     char* debug_options = getenv(TEXT("DNSPY_UNITY_DBG2"));
     if (debug_options) {
         unity_config.debug_enable = TRUE;
@@ -97,7 +97,7 @@ static void my_mono_jit_parse_options(int argc, char** argv) {
         dprintf("Unity: Configuring mono debug server\n");
 
         int size = argc + 1;
-        char** new_argv = calloc(size, sizeof(char*));
+        const char** new_argv = calloc(size, sizeof(char*));
         memcpy(new_argv, argv, argc * sizeof(char*));
 
         //check if debug options are already set by env variable, if not, build it from config
