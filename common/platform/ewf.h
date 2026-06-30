@@ -32,7 +32,7 @@ struct ewf_real_handle {
     HANDLE real_handle;
     // The virtual file the real handle points to.
     struct ewf_virtual_file* virtual_file;
-    // The current read offset.
+    // The current read/write offset for this handle to a virtual file.
     size_t offset;
 };
 

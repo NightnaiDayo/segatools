@@ -275,7 +275,11 @@ static HRESULT ewf_handle_close(const struct irp* irp, const struct ewf_real_han
 
 static HRESULT ewf_handle_read(struct irp* irp, struct ewf_real_handle* handle);
 
-static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_handle* file);
+static HRESULT ewf_handle_write(struct irp* irp, struct ewf_real_handle* handle);
+
+static HRESULT ewf_handle_ftype(struct irp* irp, const struct ewf_real_handle* handle);
+
+static HRESULT ewf_handle_seek(struct irp* irp, struct ewf_real_handle* handle);
 
 void ewf_hook_insert_hooks(HMODULE target) {
     hook_table_apply(
@@ -348,7 +352,11 @@ static HRESULT ewf_handle_irp(struct irp* irp) {
         case IRP_OP_WRITE: return ewf_handle_write(irp, h);
         case IRP_OP_READ: return ewf_handle_read(irp, h);
         case IRP_OP_CLOSE: return ewf_handle_close(irp, h);
-        default: return HRESULT_FROM_WIN32(ERROR_INVALID_FUNCTION);
+        case IRP_OP_FTYPE: return ewf_handle_ftype(irp, h);
+        case IRP_OP_SEEK: return ewf_handle_seek(irp, h);
+        default:
+            dprintf("EWF: Unsupported operation: %d\n", irp->op);
+            return HRESULT_FROM_WIN32(ERROR_INVALID_FUNCTION);
     }
 }
 
@@ -400,6 +408,7 @@ static HRESULT ewf_handle_open(struct irp* irp) {
             return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
         }
     } else {
+        dprintf("EWF: Unsupported file creation mode: %d\n", irp->open_creation);
         return E_INVALIDARG;
     }
 
@@ -453,43 +462,107 @@ static HRESULT ewf_handle_read(struct irp* irp, struct ewf_real_handle* handle) 
     return S_OK;
 }
 
-static HRESULT ewf_handle_write(const struct irp* irp, const struct ewf_real_handle* file) {
-    assert(irp != NULL);
-    assert(file != NULL);
+static HRESULT ewf_grow_virtual_file_buffer(struct ewf_virtual_file* f, size_t size) {
+    if (size < f->alloc_length) {
+        return E_INVALIDARG;
+    }
+    void* ptr = realloc(f->data, f->alloc_length + size);
+    if (ptr == NULL) {
+        return E_OUTOFMEMORY;
+    }
+    f->data = ptr;
+    f->alloc_length = f->alloc_length + size;
 
-    struct ewf_virtual_file* f = file->virtual_file;
+    return S_OK;
+}
+
+static HRESULT ewf_handle_write(struct irp* irp, struct ewf_real_handle* handle) {
+    assert(irp != NULL);
+    assert(handle != NULL);
+
+    struct ewf_virtual_file* vf = handle->virtual_file;
     const size_t n = irp->write.nbytes;
     const void* data = irp->write.bytes;
+    const uint64_t pos = handle->offset;
 
-    if (f->length == 0) {
+    if (vf->length == 0) {
         const size_t initial_buf = max(n, EWF_DEFAULT_FILE_BUFFER_SIZE);
-        f->data = malloc(initial_buf);
-        if (f->data == NULL) {
+        vf->data = malloc(initial_buf);
+        if (vf->data == NULL) {
             return E_OUTOFMEMORY;
         }
-        f->alloc_length = initial_buf;
-    } else if (f->length + n > f->alloc_length) {
-        void* ptr = realloc(f->data, f->alloc_length + n);
-        if (ptr == NULL) {
-            return E_OUTOFMEMORY;
+        vf->alloc_length = initial_buf;
+    } else if (pos + n > vf->alloc_length) {
+        HRESULT hr = ewf_grow_virtual_file_buffer(vf, pos + n);
+        if (!SUCCEEDED(hr)) {
+            return hr;
         }
-        f->data = ptr;
-        f->alloc_length = f->alloc_length + n;
     }
 
-    if (memcpy_s((char *) f->data + f->length, f->alloc_length - f->length, data, n) != 0) {
-        dprintf("EWF: Failed to copy %d bytes at offset %d (max %d)\n", (int) n, (int) f->length,
-                (int) f->alloc_length);
+    if (memcpy_s((char *) vf->data + pos, vf->alloc_length - vf->length, data, n) != 0) {
+        dprintf("EWF: Failed to copy %d bytes at offset %d (max %d)\n", (int) n, (int) vf->length,
+                (int) vf->alloc_length);
         return E_NOT_SUFFICIENT_BUFFER;
     }
-    f->length += n;
+    handle->offset += n;
+    if (handle->offset > vf->length) {
+        vf->length = handle->offset;
+    }
+    irp->write.pos = n;
 
 #if LOG_EWF
-    dprintf("EWF: Write %d bytes to %ls\n", (int) n, f->path);
+    dprintf("EWF: Write %d bytes to %ls\n", (int) n, vf->path);
     dump_const_iobuf(&irp->write);
-    dprintf("EWF: File content (%d, allocated %d)\n", (int) f->length, (int) f->alloc_length);
-    dump(f->data, f->length);
+    dprintf("EWF: File content (%d, allocated %d)\n", (int) vf->length, (int) vf->alloc_length);
+    dump(vf->data, vf->length);
 #endif
+
+    return S_OK;
+}
+
+static HRESULT ewf_handle_ftype(struct irp* irp, const struct ewf_real_handle* handle) {
+#if LOG_EWF
+    dprintf("EWF: Faking file type to FILE_TYPE_DISK\n");
+#endif
+    irp->file_type = FILE_TYPE_DISK;
+    return S_OK;
+}
+
+static HRESULT ewf_handle_seek(struct irp* irp, struct ewf_real_handle* handle) {
+    int64_t target = 0;
+    if (irp->seek_origin == FILE_BEGIN) {
+        target = irp->seek_offset;
+    } else if (irp->seek_origin == FILE_CURRENT) {
+        target += irp->seek_offset;
+    } else if (irp->seek_origin == FILE_END) {
+        target = (int64_t)handle->offset + target;
+    } else {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return E_INVALIDARG;
+    }
+
+    struct ewf_virtual_file* vf = handle->virtual_file;
+
+    if (target < 0) {
+        SetLastError(ERROR_NEGATIVE_SEEK);
+        return E_FAIL;
+    }
+    if (target > vf->length) {
+        vf->length = target;
+    }
+    if (target > vf->alloc_length) {
+        HRESULT hr = ewf_grow_virtual_file_buffer(vf, target);
+        if (!SUCCEEDED(hr)) {
+            return hr;
+        }
+    }
+
+#if LOG_EWF
+    dprintf("EWF: Moved file pointer of %ls to: %lld\n", vf->path, target);
+#endif
+
+    handle->offset = target;
+    irp->seek_pos = handle->offset;
 
     return S_OK;
 }

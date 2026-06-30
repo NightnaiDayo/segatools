@@ -149,6 +149,7 @@ static HMODULE WINAPI hook_LoadLibraryW(const wchar_t *name)
 
             dll_hook_insert_hooks(result);
             path_hook_insert_hooks(result);
+            iohook_apply_hooks(result);
 
             reg_hook_insert_hooks(result);
             clock_hook_insert_hooks(result);
