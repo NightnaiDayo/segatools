@@ -204,6 +204,11 @@ static HANDLE WINAPI hook_CreateFileW(
         return next_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
     }
 
+    // ignore alpb billing files
+    if (wcsstr(lpFileName, L"C:\\Users\\AppUser\\temp") != NULL) {
+        return next_CreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+    }
+
     layered_dprintf(LAYEREDFS_VERBOSITY_ALL_OPENS, "LayeredFS: Open file: %ls\n", lpFileName);
 
     wchar_t relativePath[MAX_PATH] = {0};
