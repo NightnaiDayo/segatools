@@ -58,6 +58,7 @@ void platform_config_load(struct platform_config *cfg, const wchar_t *filename)
     system_config_load(&cfg->system, filename);
     openssl_config_load(&cfg->openssl, filename);
     ewf_config_load(&cfg->ewf, filename);
+    layeredfs_config_load(&cfg->layeredfs, filename);
 }
 
 void amvideo_config_load(struct amvideo_config *cfg, const wchar_t *filename)
@@ -449,4 +450,29 @@ void ewf_config_load(struct ewf_config* cfg, const wchar_t* filename) {
 
     cfg->enable = GetPrivateProfileIntW(L"ewf", L"enable", 0, filename);
     cfg->full = GetPrivateProfileIntW(L"ewf", L"full", 0, filename);
+}
+
+
+void layeredfs_config_load(struct layeredfs_config *cfg, const wchar_t *filename) {
+
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    cfg->enable = GetPrivateProfileIntW(L"layeredfs", L"enable", 1, filename);
+    cfg->allowAmdaemon = GetPrivateProfileIntW(L"layeredfs", L"allowAmdaemon", 0, filename);
+    cfg->verbosity = GetPrivateProfileIntW(L"layeredfs", L"verbosity", 0, filename);
+    GetPrivateProfileStringW(
+            L"layeredfs",
+            L"modDirectory",
+            L"mods",
+            cfg->modDirectory,
+            _countof(cfg->modDirectory),
+            filename);
+    GetPrivateProfileStringW(
+            L"layeredfs",
+            L"rootDirectory",
+            L".",
+            cfg->rootDirectory,
+            _countof(cfg->rootDirectory),
+            filename);
 }

@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "layeredfs.h"
 #include "platform/ewf.h"
 #include "platform/amvideo.h"
 #include "platform/clock.h"
@@ -32,6 +33,7 @@ struct platform_config {
     struct system_config system;
     struct openssl_config openssl;
     struct ewf_config ewf;
+    struct layeredfs_config layeredfs;
 };
 
 HRESULT platform_hook_init(

@@ -107,5 +107,11 @@ HRESULT platform_hook_init(
         return hr;
     }
 
+    hr = layeredfs_hook_init(&cfg->layeredfs);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     return S_OK;
 }

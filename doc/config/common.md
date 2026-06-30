@@ -813,3 +813,50 @@ This is a file that will be set to the content of what would be written to the `
 This allows whatever executed the game process to react what should happen next (System Test Mode selected, network delivery completed, ...) without requiring admin permissions. 
 
 The file is deleted on startup of segatools.
+
+## `[layeredfs]`
+
+Configure file redirection. This allows you to replace file reads from the game with your own custom versions.
+
+Mods are placed in a folder named "mods", following by an arbitrary folder name denoting your mod's name. 
+
+If the game for example loads a file named `rom/gm_param.properties`, place your modified copy at `mods/examplemod/rom/gm_param.properties`.
+
+Mod folders have the same load order as options; the file in the mod folder last in alphabetical order wins. i.e. if both `mods/mod01/rom/gm_param.properties` and `mods/mod02/rom/gm_param.properties` exist, `mod02` will be used.
+
+
+### `enable`
+
+Default: `1`
+
+Enables LayeredFS.
+
+### `allowAmdaemon`
+
+Default: `0`
+
+Also applies LayeredFS mods for amdaemon. Usually not needed. Amdaemon opens 1000s of instances of the billing files per second, so enabling this may cause a slowdown in I/O polling.
+
+### `verbosity`
+
+Default: `0`
+
+Sets the verbosity of LayeredFS console logging.
+
+* 0: Disable logs
+* 1: Report which files have been replaced
+* 2: Additionally report which files and paths have been checked for replacement
+* 3: Additionally report every file the game is trying to open
+
+### `modDirectory`
+
+Default: `mods`
+
+Path to the directory where mods are stored.
+
+### `rootDirectory`
+
+Default: `.` (current directory)
+
+Path to the directory which is the base of where files will be replaced.
+

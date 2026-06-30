@@ -24,6 +24,8 @@ platform_lib = static_library(
         'hwmon.h',
         'hwreset.c',
         'hwreset.h',
+        'layeredfs.c',
+        'layeredfs.h',
         'misc.c',
         'misc.h',
         'netenv.c',

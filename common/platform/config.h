@@ -39,3 +39,4 @@ void vfs_config_load(struct vfs_config *cfg, const wchar_t *filename);
 void system_config_load(struct system_config *cfg, const wchar_t *filename);
 void openssl_config_load(struct openssl_config *cfg, const wchar_t *filename);
 void ewf_config_load(struct ewf_config *cfg, const wchar_t *filename);
+void layeredfs_config_load(struct layeredfs_config *cfg, const wchar_t *filename);
