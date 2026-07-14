@@ -1806,8 +1806,6 @@ static BOOL WINAPI hook_DeviceIoControl(
     }
 
     if (hFile == INVALID_HANDLE_VALUE || nInBufferSize == 0 || nInBufferSize > MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
-        dprintf("invalid param\n");
-
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
