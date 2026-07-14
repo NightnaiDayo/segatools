@@ -47,6 +47,14 @@ void apm3_di_config_load(struct apm3_di_config *cfg, const wchar_t *filename)
             _countof(cfg->device_name),
             filename);
 
+    cfg->test = GetPrivateProfileIntW(L"dinput", L"test", 0, filename);
+    cfg->service = GetPrivateProfileIntW(L"dinput", L"service", 0, filename);
+
+    cfg->up = GetPrivateProfileIntW(L"dinput", L"up", 0, filename);
+    cfg->right = GetPrivateProfileIntW(L"dinput", L"right", 0, filename);
+    cfg->down = GetPrivateProfileIntW(L"dinput", L"down", 0, filename);
+    cfg->left = GetPrivateProfileIntW(L"dinput", L"left", 0, filename);
+
     cfg->home = GetPrivateProfileIntW(L"dinput", L"home", 0, filename);
     cfg->start = GetPrivateProfileIntW(L"dinput", L"start", 0, filename);
 

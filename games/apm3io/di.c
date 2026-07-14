@@ -21,11 +21,13 @@ static BOOL CALLBACK apm3_di_enum_callback(
         const DIDEVICEINSTANCEW *dev,
         void *ctx);
 static void apm3_di_get_gamebtns(uint16_t *gamebtn_out);
+static void apm3_di_get_opbtns(uint8_t *opbtn_out);
 static uint8_t apm3_di_decode_pov(DWORD pov);
 
 
 static const struct apm3_io_backend apm3_di_backend = {
     .get_gamebtns   = apm3_di_get_gamebtns,
+    .get_opbtns     = apm3_di_get_opbtns
 };
 
 static HWND apm3_di_wnd;
@@ -34,7 +36,15 @@ static IDirectInputDevice8W *apm3_di_dev;
 static IDirectInputEffect *apm3_di_fx;
 static uint8_t apm3_di_home;
 static uint8_t apm3_di_start;
+static uint8_t apm3_di_service;
+static uint8_t apm3_di_test;
+static uint8_t apm3_di_extra_up;
+static uint8_t apm3_di_extra_right;
+static uint8_t apm3_di_extra_down;
+static uint8_t apm3_di_extra_left;
 static uint8_t apm3_di_button[APM3_BUTTON_COUNT];
+
+static union apm3_di_state state = {0};
 
 HRESULT apm3_di_init(
         const struct apm3_di_config *cfg,
@@ -136,6 +146,8 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg)
             cfg->device_name);
     dprintf("Stick: Home button  . . . : %i\n", cfg->home);
     dprintf("Stick: Start button . . . : %i\n", cfg->start);
+    dprintf("Stick: Service button . . : %i\n", cfg->service);
+    dprintf("Stick: Test button  . . . : %i\n", cfg->test);
 
     /* Print the configuration for all 8 buttons */
     for (i = 0; i < APM3_BUTTON_COUNT; i++) {
@@ -146,7 +158,14 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg)
 
     apm3_di_start = cfg->start;
     apm3_di_home = cfg->home;
-    
+    apm3_di_service = cfg->service;
+    apm3_di_test = cfg->test;
+
+    apm3_di_extra_up = cfg->up;
+    apm3_di_extra_right = cfg->right;
+    apm3_di_extra_down = cfg->down;
+    apm3_di_extra_left = cfg->left;
+
     for (i = 0; i < APM3_BUTTON_COUNT; i++) {
         apm3_di_button[i] = cfg->button[i];
     }
@@ -184,7 +203,6 @@ static BOOL CALLBACK apm3_di_enum_callback(
 
 static void apm3_di_get_gamebtns(uint16_t *gamebtn_out)
 {
-    union apm3_di_state state;
     uint16_t gamebtn;
     HRESULT hr;
 
@@ -197,6 +215,22 @@ static void apm3_di_get_gamebtns(uint16_t *gamebtn_out)
     }
 
     gamebtn = apm3_di_decode_pov(state.st.rgdwPOV[0]);
+
+    if (apm3_di_extra_up && state.st.rgbButtons[apm3_di_extra_up - 1]) {
+        gamebtn |= APM3_IO_GAMEBTN_UP;
+    }
+
+    if (apm3_di_extra_right && state.st.rgbButtons[apm3_di_extra_right - 1]) {
+        gamebtn |= APM3_IO_GAMEBTN_RIGHT;
+    }
+
+    if (apm3_di_extra_down && state.st.rgbButtons[apm3_di_extra_down - 1]) {
+        gamebtn |= APM3_IO_GAMEBTN_DOWN;
+    }
+
+    if (apm3_di_extra_left && state.st.rgbButtons[apm3_di_extra_left - 1]) {
+        gamebtn |= APM3_IO_GAMEBTN_LEFT;
+    }
 
     if (apm3_di_start && state.st.rgbButtons[apm3_di_start - 1]) {
         gamebtn |= APM3_IO_GAMEBTN_START;
@@ -254,4 +288,18 @@ static uint8_t apm3_di_decode_pov(DWORD pov)
         case 31500: return APM3_IO_GAMEBTN_LEFT | APM3_IO_GAMEBTN_UP;
         default:    return 0;
     }
+}
+
+static void apm3_di_get_opbtns(uint8_t *opbtn_out) {
+
+    uint8_t opbtn = 0;
+
+    if (apm3_di_service && state.st.rgbButtons[apm3_di_service - 1]) {
+        opbtn |= APM3_IO_OPBTN_SERVICE;
+    }
+    if (apm3_di_test && state.st.rgbButtons[apm3_di_test - 1]) {
+        opbtn |= APM3_IO_OPBTN_TEST;
+    }
+
+    *opbtn_out = opbtn;
 }

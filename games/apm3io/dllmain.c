@@ -83,6 +83,10 @@ void apm3_io_get_opbtns(uint8_t *opbtn_out)
         apm3_io_coin = false;
     }
 
+    if (apm3_io_backend->get_opbtns != NULL) {
+        apm3_io_backend->get_opbtns(&opbtn);
+    }
+
     *opbtn_out = opbtn;
 }
 

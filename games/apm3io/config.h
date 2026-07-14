@@ -8,9 +8,15 @@
 
 struct apm3_di_config {
     wchar_t device_name[64];
+    uint8_t test;
+    uint8_t service;
     uint8_t start;
     uint8_t home;
     uint8_t button[8];
+    uint8_t up;
+    uint8_t right;
+    uint8_t down;
+    uint8_t left;
 };
 
 struct apm3_xi_config {
