@@ -559,6 +559,18 @@ Default `192.168.100.0`
 The LAN IP range that the game will expect. The prefix length is hardcoded into
 the game program: for some games this is `/24`, for others it is `/20`.
 
+### `persistence`
+
+Default: `0`
+
+This makes data saved to the keychip (play count, logs, ...) persistent. This should only be enabled if you and your server operator know what you're doing. Can lead to error messages otherwise.
+
+### `persistent_path`
+
+Default: `DEVICE\\nusec.bin`
+
+Path to the file where keychip data is saved to if `persistence` is enabled.
+
 ## `[netenv]`
 
 Configure network environment virtualization. This module helps bypass various
