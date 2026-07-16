@@ -55,12 +55,18 @@ goto END
 
 :APP
 
+pushd C:\
 call W:\game.bat
+popd
+
 taskkill /f /im emoneyUI.exe > nul 2>&1
 goto BEGIN
 
 :APPTEST
+pushd C:\
 call W:\gametest.bat
+popd
+
 goto BEGIN
 
 :END
