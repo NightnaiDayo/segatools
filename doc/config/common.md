@@ -629,6 +629,46 @@ Default `DEVICE\sram.bin`
 
 Path to the storage file for SRAM emulation.
 
+## `[unity]`
+
+Configure the Unity hook and optional Mono debugger integration.
+
+### `enable`
+
+Default: `1`
+
+Enable the Unity hook. This allows custom .NET code to run before the game.
+
+### `targetAssembly`
+
+Default: Empty string
+
+Path to a .NET DLL to load before the game. This is useful for modding
+frameworks such as BepInEx. If it is empty, no assembly is loaded.
+
+### `enableDebug`
+
+Default: `0`
+
+Enable the Mono debugger server without patching Mono. Setting the
+`DNSPY_UNITY_DBG2` environment variable also enables the debugger and uses its
+value as the debugger options. See the
+[dnSpy Unity debugging documentation](https://github.com/dnSpyEx/dnSpy/wiki/Debugging-Unity-Games#debugging-release-builds)
+for details.
+
+### `debugAddress`
+
+Default: `127.0.0.1:55555`
+
+Address and port for the Mono debugger server when `enableDebug` is enabled.
+
+### `debugSuspend`
+
+Default: `0`
+
+Set to `1` to suspend the game until a debugger attaches. The default value
+allows the game to continue running while waiting for a debugger.
+
 ## `[vfs]`
 
 Configure Windows path redirection hooks.
