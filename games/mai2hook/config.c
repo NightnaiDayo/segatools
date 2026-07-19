@@ -10,6 +10,7 @@
 #include "mai2hook/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 void mai2_dll_config_load(
     struct mai2_dll_config *cfg,
@@ -18,12 +19,13 @@ void mai2_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-        L"mai2io",
-        L"path",
-        L"",
+    io_path_config_load(
         cfg->path,
         _countof(cfg->path),
+        L"mai2io",
+        L"path",
+        L"SEGATOOLS_MAI2IO_PATH",
+        L"mai2io.dll",
         filename);
 }
 

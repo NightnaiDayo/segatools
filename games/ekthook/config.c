@@ -11,6 +11,7 @@
 #include "hooklib/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 void led15093_config_load(struct led15093_config *cfg, const wchar_t *filename)
 {
@@ -80,12 +81,13 @@ void ekt_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"ektio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"ektio",
+            L"path",
+            L"SEGATOOLS_EKTIO_PATH",
+            L"ektio.dll",
             filename);
 }
 

@@ -114,7 +114,7 @@ bool hook_ApmSys_mountVhd(const wchar_t* vhdOriginalPath, const wchar_t* vhdPatc
 
     // Game drive
     wchar_t device[3];
-    device[0] = mountDriveLetter;
+    device[0] = (unsigned char) mountDriveLetter;
     device[1] = ':';
     device[2] = '\0';
 
@@ -136,9 +136,19 @@ bool hook_ApmSys_mountVhd(const wchar_t* vhdOriginalPath, const wchar_t* vhdPatc
         return 1;
     }
 
+    // Appdata drive
+    device[0] = 'Y';
+
+    dprintf("Mount: Mapping %ls to %ls\n", device, vcfg->appdata);
+    if (!DefineDosDeviceW(0, device, vcfg->appdata)) {
+        dprintf("DefineDosDevice failed: %lx\n", GetLastError());
+        return 1;
+    }
+
     if (mcfg->delay) {
         Sleep(1500);
     }
+
     return 0;
 }
 bool hook_ApmSys_unmountVhd(char mountDriveLetter) {
@@ -161,12 +171,20 @@ bool hook_ApmSys_unmountVhd(char mountDriveLetter) {
         dprintf("DefineDosDevice failed: %lx\n", GetLastError());
         return 1;
     }
+
+    // Appdata drive
+    device[0] = 'Y';
+    if (!DefineDosDevice(DDD_REMOVE_DEFINITION, device, NULL)) {
+        dprintf("DefineDosDevice failed: %lx\n", GetLastError());
+        return 1;
+    }
     return 0;
 }
 
 void CALLBACK UnmountApmDrives(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow) {
     hook_ApmSys_unmountVhd('W');
     hook_ApmSys_unmountVhd('X');
+    hook_ApmSys_unmountVhd('Y');
 }
 
 bool hook_ApmSys_unmountFscrypt(const wchar_t* mountFolderPath) {

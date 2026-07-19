@@ -329,6 +329,16 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
             cfg->billing_pub,
             _countof(cfg->billing_pub),
             filename);
+
+    cfg->persistence = GetPrivateProfileIntW(L"keychip", L"persistence", 0, filename);
+
+    GetPrivateProfileStringW(
+            L"keychip",
+            L"persistent_path",
+            L"DEVICE\\nusec.bin",
+            cfg->persistent_path,
+            _countof(cfg->persistent_path),
+            filename);
 }
 
 void pcbid_config_load(struct pcbid_config *cfg, const wchar_t *filename)

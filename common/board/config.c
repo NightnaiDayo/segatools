@@ -11,6 +11,7 @@
 #include "board/vfd.h"
 
 #include "util/dprintf.h"
+#include "util/io-path.h"
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -44,24 +45,26 @@ static void aime_dll_config_load(struct aime_dll_config *cfg, const wchar_t *fil
             // Always empty, due to amdaemon being 64 bit in 32 bit mode
             memset(cfg->path, 0, sizeof(cfg->path));
         #elif defined(ENV64BIT)
-            GetPrivateProfileStringW(
-                    L"aimeio",
-                    L"path",
-                    L"",
+            io_path_config_load(
                     cfg->path,
                     _countof(cfg->path),
+                    L"aimeio",
+                    L"path",
+                    L"SEGATOOLS_AIMEIO_PATH",
+                    L"aimeio.dll",
                     filename);
         #else
             #error "Unknown environment"
         #endif
     } else {
-        GetPrivateProfileStringW(
-            L"aimeio",
-            L"path",
-            L"",
-            cfg->path,
-            _countof(cfg->path),
-            filename);
+        io_path_config_load(
+                cfg->path,
+                _countof(cfg->path),
+                L"aimeio",
+                L"path",
+                L"SEGATOOLS_AIMEIO_PATH",
+                L"aimeio.dll",
+                filename);
     }
 }
 

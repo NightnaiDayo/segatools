@@ -9,6 +9,7 @@
 #include "hooklib/dvd.h"
 #include "hooklib/y3.h"
 #include "hooklib/y3-dll.h"
+#include "util/io-path.h"
 
 void dvd_config_load(struct dvd_config *cfg, const wchar_t *filename)
 {
@@ -158,12 +159,13 @@ void y3_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"y3io",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"y3io",
+            L"path",
+            L"SEGATOOLS_Y3IO_PATH",
+            L"y3io.dll",
             filename);
 }
 

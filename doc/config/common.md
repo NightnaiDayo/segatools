@@ -17,6 +17,61 @@ Then you can copy `segatools.ini` to `another_config.ini` but with different dns
 set SEGATOOLS_CONFIG_PATH=.\another_config.ini
 ```
 
+## IO DLL path resolution
+
+Custom IO DLL paths are resolved in this order:
+
+1. The section-specific INI value, such as `[mai2io] path=`.
+2. The section-specific environment variable, such as `SEGATOOLS_MAI2IO_PATH`.
+3. `SEGATOOLS_IO_ROOT` joined with the default IO DLL filename, such as
+   `%SEGATOOLS_IO_ROOT%\mai2io.dll`.
+4. Empty path, which keeps the built-in IO implementation.
+
+INI paths and environment-variable paths support Windows environment variable
+expansion, so an INI entry like this is valid:
+
+```ini
+[mai2io]
+path=%SEGATOOLS_IO_ROOT%\mai2io.dll
+```
+
+Supported IO environment variables:
+
+| INI section | Direct environment variable | `SEGATOOLS_IO_ROOT` filename |
+| --- | --- | --- |
+| `[aimeio]` | `SEGATOOLS_AIMEIO_PATH` | `aimeio.dll` |
+| `[apm3io]` | `SEGATOOLS_APM3IO_PATH` | `apm3io.dll` |
+| `[carolio]` | `SEGATOOLS_CAROLIO_PATH` | `carolio.dll` |
+| `[chuniio]` | `SEGATOOLS_CHUNIIO_PATH` | `chuniio.dll` \* |
+| `[cmio]` | `SEGATOOLS_CMIO_PATH` | `cmio.dll` |
+| `[cxbio]` | `SEGATOOLS_CXBIO_PATH` | `cxbio.dll` |
+| `[divaio]` | `SEGATOOLS_DIVAIO_PATH` | `divaio.dll` |
+| `[ektio]` | `SEGATOOLS_EKTIO_PATH` | `ektio.dll` |
+| `[fgoio]` | `SEGATOOLS_FGOIO_PATH` | `fgoio.dll` |
+| `[idacio]` | `SEGATOOLS_IDACIO_PATH` | `idacio.dll` |
+| `[idzio]` | `SEGATOOLS_IDZIO_PATH` | `idzio.dll` |
+| `[kemonoio]` | `SEGATOOLS_KEMONOIO_PATH` | `kemonoio.dll` |
+| `[mai2io]` | `SEGATOOLS_MAI2IO_PATH` | `mai2io.dll` |
+| `[mercuryio]` | `SEGATOOLS_MERCURYIO_PATH` | `mercuryio.dll` |
+| `[mu3io]` | `SEGATOOLS_MU3IO_PATH` | `mu3io.dll` |
+| `[sekitoio]` | `SEGATOOLS_SEKITOIO_PATH` | `sekitoio.dll` |
+| `[swdcio]` | `SEGATOOLS_SWDCIO_PATH` | `swdcio.dll` |
+| `[tokyoio]` | `SEGATOOLS_TOKYOIO_PATH` | `tokyoio.dll` |
+| `[y3io]` | `SEGATOOLS_Y3IO_PATH` | `y3io.dll` |
+
+\* The `%SEGATOOLS_IO_ROOT%\chuniio.dll` fallback applies to the
+single-32-bit-DLL Chunithm hook (`chunihook`) only. Chunithm NEW and later
+(`chusanhook`) resolve the single-DLL `[chuniio] path=` / `SEGATOOLS_CHUNIIO_PATH`
+from the INI value or environment variable only, with no `SEGATOOLS_IO_ROOT`
+default; those builds use the `path32`/`path64` mechanism below for their
+`SEGATOOLS_IO_ROOT` defaults.
+
+For Chunithm NEW and later hooks that use separate 32-bit and 64-bit IO DLLs,
+`[chuniio] path32=` maps to `SEGATOOLS_CHUNIIO_PATH32` and
+`[chuniio] path64=` maps to `SEGATOOLS_CHUNIIO_PATH64`. When only
+`SEGATOOLS_IO_ROOT` is set, these hooks look for `chuniio_x86.dll` and
+`chuniio_x64.dll`.
+
 ## `[aimeio]`
 
 Controls the card reader driver.
@@ -25,6 +80,8 @@ Controls the card reader driver.
 
 Specify a path for a third-party card reader driver DLL. Default is empty
 (use built-in emulation based on text files and keyboard input).
+If empty, `SEGATOOLS_AIMEIO_PATH` is used if set, followed by
+`%SEGATOOLS_IO_ROOT%\aimeio.dll`.
 
 In previous versions of Segatools this was accomplished by replacing the
 AIMEIO.DLL file that came with Segatools. Segatools no longer ships with a
@@ -558,6 +615,18 @@ Default `192.168.100.0`
 
 The LAN IP range that the game will expect. The prefix length is hardcoded into
 the game program: for some games this is `/24`, for others it is `/20`.
+
+### `persistence`
+
+Default: `0`
+
+This makes data saved to the keychip (play count, logs, ...) persistent. This should only be enabled if you and your server operator know what you're doing. Can lead to error messages otherwise.
+
+### `persistent_path`
+
+Default: `DEVICE\\nusec.bin`
+
+Path to the file where keychip data is saved to if `persistence` is enabled.
 
 ## `[netenv]`
 

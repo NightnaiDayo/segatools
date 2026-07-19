@@ -10,6 +10,7 @@
 #include "apm3hook/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 void apm3_dll_config_load(
         struct apm3_dll_config *cfg,
@@ -18,12 +19,13 @@ void apm3_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"apm3io",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"apm3io",
+            L"path",
+            L"SEGATOOLS_APM3IO_PATH",
+            L"apm3io.dll",
             filename);
 }
 

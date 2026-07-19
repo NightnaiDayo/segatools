@@ -12,6 +12,7 @@
 #include "platform/config.h"
 
 #include "chusanhook/config.h"
+#include "util/io-path.h"
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -42,32 +43,34 @@ void chuni_dll_config_load(
     // path32 for 32bit, path64 for 64bit
     // path for 32bit only dlls (internal chu2to3 engine)
 
-    GetPrivateProfileStringW(
-            L"chuniio",
-            L"path",
-            L"",
+    if (io_path_config_load(
             cfg->path,
             _countof(cfg->path),
-            filename);
-    if (cfg->path[0] != L'\0') {
+            L"chuniio",
+            L"path",
+            L"SEGATOOLS_CHUNIIO_PATH",
+            NULL,
+            filename)) {
         cfg->chu2to3 = 1;
     } else {
         cfg->chu2to3 = 0;
     #if defined(ENV32BIT)	
-			GetPrivateProfileStringW(
-					L"chuniio",
-					L"path32",
-					L"",
-					cfg->path,
-					_countof(cfg->path),
-					filename);
+            io_path_config_load(
+                    cfg->path,
+                    _countof(cfg->path),
+                    L"chuniio",
+                    L"path32",
+                    L"SEGATOOLS_CHUNIIO_PATH32",
+                    L"chuniio_x86.dll",
+                    filename);
     #elif defined(ENV64BIT)
-        GetPrivateProfileStringW(
-                L"chuniio",
-                L"path64",
-                L"",
+        io_path_config_load(
                 cfg->path,
                 _countof(cfg->path),
+                L"chuniio",
+                L"path64",
+                L"SEGATOOLS_CHUNIIO_PATH64",
+                L"chuniio_x64.dll",
                 filename);
     #else
         #error "Unknown environment"
