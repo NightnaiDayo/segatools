@@ -9,8 +9,7 @@
    feedback), so this source file provides some utilities for creating a
    generic message-only window. */
 
-static LRESULT WINAPI hkb_io_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam,
-                                      LPARAM lparam);
+static LRESULT WINAPI hkb_io_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 HRESULT hkb_io_wnd_create(HINSTANCE inst, HWND* out) {
     HRESULT hr;
@@ -37,9 +36,7 @@ HRESULT hkb_io_wnd_create(HINSTANCE inst, HWND* out) {
         goto fail;
     }
 
-    hwnd = CreateWindowExW(0, (wchar_t*)(intptr_t)atom, L"", 0, CW_USEDEFAULT,
-                           CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                           HWND_MESSAGE, NULL, inst, NULL);
+    hwnd = CreateWindowExW(0, (wchar_t*)(intptr_t)atom, L"", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, HWND_MESSAGE, NULL, inst, NULL);
 
     if (hwnd == NULL) {
         hr = HRESULT_FROM_WIN32(GetLastError());
@@ -58,10 +55,9 @@ fail:
     return hr;
 }
 
-static LRESULT WINAPI hkb_io_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam,
-                                      LPARAM lparam) {
+static LRESULT WINAPI hkb_io_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch (msg) {
-        default:
-            return DefWindowProcW(hwnd, msg, wparam, lparam);
+    default:
+        return DefWindowProcW(hwnd, msg, wparam, lparam);
     }
 }

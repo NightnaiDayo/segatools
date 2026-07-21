@@ -14,7 +14,9 @@ static HRESULT hkb_io4_poll(void* ctx, struct io4_state* state);
 static uint16_t coins;
 static bool io_is_terminal;
 
-static const struct io4_ops hkb_io4_ops = {.poll = hkb_io4_poll,};
+static const struct io4_ops hkb_io4_ops = {
+    .poll = hkb_io4_poll,
+};
 
 HRESULT hkb_io4_hook_init(const struct io4_config* cfg, bool is_terminal) {
     HRESULT hr;

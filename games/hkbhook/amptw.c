@@ -10,7 +10,6 @@
 #include "hook/procaddr.h"
 #include "hook/table.h"
 #include "hooklib/touch.h"
-#include "util/dprintf.h"
 
 static int hook_Amptw_getResult(void* pContext, int* pResult);
 
@@ -34,8 +33,7 @@ void amptw_hook_init(const struct touch_screen_config* cfg, HMODULE hmodule) {
 void amptw_apply_hooks(HMODULE module) {
     hook_table_apply(module, "amptw.dll", touch_hooks, _countof(touch_hooks));
 
-    proc_addr_table_push(module, "amptw.dll", touch_hooks,
-                         _countof(touch_hooks));
+    proc_addr_table_push(module, "amptw.dll", touch_hooks, _countof(touch_hooks));
 }
 
 static int hook_Amptw_getResult(void* pContext, int* pResult) {

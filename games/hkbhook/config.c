@@ -14,12 +14,10 @@ void hkb_dll_config_load(struct hkb_dll_config* cfg, const wchar_t* filename) {
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(L"hkbio", L"path", L"", cfg->path,
-                             _countof(cfg->path), filename);
+    GetPrivateProfileStringW(L"hkbio", L"path", L"", cfg->path, _countof(cfg->path), filename);
 }
 
-void led15093_config_load(struct led15093_config* cfg,
-                          const wchar_t* filename) {
+void led15093_config_load(struct led15093_config* cfg, const wchar_t* filename) {
     assert(cfg != NULL);
     assert(filename != NULL);
 
@@ -30,34 +28,27 @@ void led15093_config_load(struct led15093_config* cfg,
     memset(cfg->boot_chip_number, ' ', sizeof(cfg->boot_chip_number));
 
     cfg->enable = GetPrivateProfileIntW(L"led15093", L"enable", 1, filename);
-    cfg->port_no[0] = GetPrivateProfileIntW(L"led15093", L"portNo1", 0,
-                                            filename);
-    cfg->port_no[1] = GetPrivateProfileIntW(L"led15093", L"portNo2", 0,
-                                            filename);
-    cfg->high_baudrate = GetPrivateProfileIntW(L"led15093", L"highBaud", 0,
-                                               filename);
+    cfg->port_no[0] = GetPrivateProfileIntW(L"led15093", L"portNo1", 0, filename);
+    cfg->port_no[1] = GetPrivateProfileIntW(L"led15093", L"portNo2", 0, filename);
+    cfg->high_baudrate = GetPrivateProfileIntW(L"led15093", L"highBaud", 0, filename);
     cfg->fw_ver = GetPrivateProfileIntW(L"led15093", L"fwVer", 0xA0, filename);
-    cfg->fw_sum =
-        GetPrivateProfileIntW(L"led15093", L"fwSum", 0xAA53, filename);
+    cfg->fw_sum = GetPrivateProfileIntW(L"led15093", L"fwSum", 0xAA53, filename);
 
-    GetPrivateProfileStringW(L"led15093", L"boardNumber", L"15093-06", tmpstr,
-                             _countof(tmpstr), filename);
+    GetPrivateProfileStringW(L"led15093", L"boardNumber", L"15093-06", tmpstr, _countof(tmpstr), filename);
 
     size_t n = wcstombs(cfg->board_number, tmpstr, sizeof(cfg->board_number));
     for (int i = n; i < sizeof(cfg->board_number); i++) {
         cfg->board_number[i] = ' ';
     }
 
-    GetPrivateProfileStringW(L"led15093", L"chipNumber", L"6710A", tmpstr,
-                             _countof(tmpstr), filename);
+    GetPrivateProfileStringW(L"led15093", L"chipNumber", L"6710A", tmpstr, _countof(tmpstr), filename);
 
     n = wcstombs(cfg->chip_number, tmpstr, sizeof(cfg->chip_number));
     for (int i = n; i < sizeof(cfg->chip_number); i++) {
         cfg->chip_number[i] = ' ';
     }
 
-    GetPrivateProfileStringW(L"led15093", L"bootChipNumber", L"6709 ", tmpstr,
-                             _countof(tmpstr), filename);
+    GetPrivateProfileStringW(L"led15093", L"bootChipNumber", L"6709 ", tmpstr, _countof(tmpstr), filename);
 
     n = wcstombs(cfg->boot_chip_number, tmpstr, sizeof(cfg->boot_chip_number));
     for (int i = n; i < sizeof(cfg->boot_chip_number); i++) {
@@ -65,8 +56,7 @@ void led15093_config_load(struct led15093_config* cfg,
     }
 }
 
-void hkb_hook_config_load(struct hkb_hook_config* cfg,
-                          const wchar_t* filename) {
+void hkb_hook_config_load(struct hkb_hook_config* cfg, const wchar_t* filename) {
     assert(cfg != NULL);
     assert(filename != NULL);
 

@@ -13,12 +13,12 @@
 static void hkb_kb_get_gamebtns(uint16_t* gamebtn_out);
 
 static const struct hkb_io_backend hkb_kb_backend = {
-    .get_gamebtns = hkb_kb_get_gamebtns};
+    .get_gamebtns = hkb_kb_get_gamebtns
+};
 
 static struct hkb_kb_config config;
 
-HRESULT hkb_kb_init(const struct hkb_kb_config* cfg,
-                    const struct hkb_io_backend** backend) {
+HRESULT hkb_kb_init(const struct hkb_kb_config* cfg, const struct hkb_io_backend** backend) {
     assert(cfg != NULL);
     assert(backend != NULL);
 

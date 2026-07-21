@@ -11,8 +11,7 @@ HRESULT hkb_di_dev_start(IDirectInputDevice8W* dev, HWND wnd) {
     assert(dev != NULL);
     assert(wnd != NULL);
 
-    HRESULT hr = IDirectInputDevice8_SetCooperativeLevel(
-        dev, wnd, DISCL_BACKGROUND | DISCL_EXCLUSIVE);
+    HRESULT hr = IDirectInputDevice8_SetCooperativeLevel(dev, wnd, DISCL_BACKGROUND | DISCL_EXCLUSIVE);
 
     if (FAILED(hr)) {
         dprintf("DirectInput: SetCooperativeLevel failed: %08x\n", (int)hr);
@@ -40,8 +39,7 @@ HRESULT hkb_di_dev_start(IDirectInputDevice8W* dev, HWND wnd) {
 }
 
 
-HRESULT hkb_di_dev_poll(IDirectInputDevice8W* dev, HWND wnd,
-                        union hkb_di_state* out) {
+HRESULT hkb_di_dev_poll(IDirectInputDevice8W* dev, HWND wnd, union hkb_di_state* out) {
     MSG msg;
 
     assert(dev != NULL);

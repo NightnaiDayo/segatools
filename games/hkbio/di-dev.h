@@ -11,5 +11,4 @@ union hkb_di_state {
 };
 
 HRESULT hkb_di_dev_start(IDirectInputDevice8W* dev, HWND wnd);
-HRESULT hkb_di_dev_poll(IDirectInputDevice8W* dev, HWND wnd,
-                        union hkb_di_state* out);
+HRESULT hkb_di_dev_poll(IDirectInputDevice8W* dev, HWND wnd, union hkb_di_state* out);

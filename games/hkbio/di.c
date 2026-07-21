@@ -11,8 +11,7 @@
 #include "util/str.h"
 
 static HRESULT hkb_di_config_apply(const struct hkb_di_config* cfg);
-static BOOL CALLBACK hkb_di_enum_callback(const DIDEVICEINSTANCEW* dev,
-                                          void* ctx);
+static BOOL CALLBACK hkb_di_enum_callback(const DIDEVICEINSTANCEW* dev, void* ctx);
 static void hkb_di_get_gamebtns(uint16_t* gamebtn_out);
 static void hkb_di_get_opbtns(uint8_t* opbtn_out);
 static uint8_t hkb_di_decode_pov(DWORD pov);
@@ -36,10 +35,11 @@ static uint8_t hkb_di_extra_left;
 static uint8_t hkb_di_left_2;
 static uint8_t hkb_di_right_2;
 
-static union hkb_di_state state = {0};
+static union hkb_di_state state = {
+    0
+};
 
-HRESULT hkb_di_init(const struct hkb_di_config* cfg, HINSTANCE inst,
-                    const struct hkb_io_backend** backend) {
+HRESULT hkb_di_init(const struct hkb_di_config* cfg, HINSTANCE inst, const struct hkb_io_backend** backend) {
     assert(cfg != NULL);
     assert(backend != NULL);
 
@@ -57,17 +57,14 @@ HRESULT hkb_di_init(const struct hkb_di_config* cfg, HINSTANCE inst,
         return hr;
     }
 
-    hr = DirectInput8Create(inst, DIRECTINPUT_VERSION, &IID_IDirectInput8W,
-                            (void**)&hkb_di_api, NULL);
+    hr = DirectInput8Create(inst, DIRECTINPUT_VERSION, &IID_IDirectInput8W, (void**)&hkb_di_api, NULL);
 
     if (FAILED(hr)) {
         dprintf("DirectInput: DirectInput8Create failed: %08x\n", (int)hr);
         return hr;
     }
 
-    hr = IDirectInput8_EnumDevices(hkb_di_api, DI8DEVCLASS_GAMECTRL,
-                                   hkb_di_enum_callback, (void *) cfg,
-                                   DIEDFL_ATTACHEDONLY);
+    hr = IDirectInput8_EnumDevices(hkb_di_api, DI8DEVCLASS_GAMECTRL, hkb_di_enum_callback, (void *) cfg, DIEDFL_ATTACHEDONLY);
 
     if (FAILED(hr)) {
         dprintf("DirectInput: EnumDevices failed: %08x\n", (int)hr);
@@ -146,8 +143,7 @@ static HRESULT hkb_di_config_apply(const struct hkb_di_config* cfg) {
     return S_OK;
 }
 
-static BOOL CALLBACK hkb_di_enum_callback(const DIDEVICEINSTANCEW* dev,
-                                          void* ctx) {
+static BOOL CALLBACK hkb_di_enum_callback(const DIDEVICEINSTANCEW* dev, void* ctx) {
     const struct hkb_di_config* cfg = ctx;
 
     if (wcsstr(dev->tszProductName, cfg->device_name) == NULL) {
@@ -156,8 +152,7 @@ static BOOL CALLBACK hkb_di_enum_callback(const DIDEVICEINSTANCEW* dev,
 
     dprintf("Stick: Using DirectInput device \"%S\"\n", dev->tszProductName);
 
-    HRESULT hr = IDirectInput8_CreateDevice(hkb_di_api, &dev->guidInstance,
-                                            &hkb_di_dev, NULL);
+    HRESULT hr = IDirectInput8_CreateDevice(hkb_di_api, &dev->guidInstance, &hkb_di_dev, NULL);
 
     if (FAILED(hr)) {
         dprintf("Stick: CreateDevice failed: %08x\n", (int)hr);
@@ -214,24 +209,24 @@ static void hkb_di_get_gamebtns(uint16_t* gamebtn_out) {
 
 static uint8_t hkb_di_decode_pov(DWORD pov) {
     switch (pov) {
-        case 0:
-            return HKB_IO_GAMEBTN_TERMINAL_UP;
-        case 4500:
-            return HKB_IO_GAMEBTN_TERMINAL_UP | HKB_IO_GAMEBTN_TERMINAL_RIGHT;
-        case 9000:
-            return HKB_IO_GAMEBTN_TERMINAL_RIGHT;
-        case 13500:
-            return HKB_IO_GAMEBTN_TERMINAL_RIGHT | HKB_IO_GAMEBTN_TERMINAL_DOWN;
-        case 18000:
-            return HKB_IO_GAMEBTN_TERMINAL_DOWN;
-        case 22500:
-            return HKB_IO_GAMEBTN_TERMINAL_DOWN | HKB_IO_GAMEBTN_TERMINAL_LEFT;
-        case 27000:
-            return HKB_IO_GAMEBTN_TERMINAL_LEFT;
-        case 31500:
-            return HKB_IO_GAMEBTN_TERMINAL_LEFT | HKB_IO_GAMEBTN_TERMINAL_UP;
-        default:
-            return 0;
+    case 0:
+        return HKB_IO_GAMEBTN_TERMINAL_UP;
+    case 4500:
+        return HKB_IO_GAMEBTN_TERMINAL_UP | HKB_IO_GAMEBTN_TERMINAL_RIGHT;
+    case 9000:
+        return HKB_IO_GAMEBTN_TERMINAL_RIGHT;
+    case 13500:
+        return HKB_IO_GAMEBTN_TERMINAL_RIGHT | HKB_IO_GAMEBTN_TERMINAL_DOWN;
+    case 18000:
+        return HKB_IO_GAMEBTN_TERMINAL_DOWN;
+    case 22500:
+        return HKB_IO_GAMEBTN_TERMINAL_DOWN | HKB_IO_GAMEBTN_TERMINAL_LEFT;
+    case 27000:
+        return HKB_IO_GAMEBTN_TERMINAL_LEFT;
+    case 31500:
+        return HKB_IO_GAMEBTN_TERMINAL_LEFT | HKB_IO_GAMEBTN_TERMINAL_UP;
+    default:
+        return 0;
     }
 }
 
