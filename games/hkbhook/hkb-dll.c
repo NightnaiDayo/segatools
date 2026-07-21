@@ -76,18 +76,12 @@ HRESULT hkb_dll_init(const struct hkb_dll_config* cfg, HINSTANCE self) {
         hkb_dll.api_version = get_api_version();
     } else {
         hkb_dll.api_version = 0x0100;
-        dprintf(
-            "Custom IO DLL does not expose hkb_io_get_api_version, "
-            "assuming API version 1.0.\n"
-            "Please ask the developer to update their DLL.\n");
+        dprintf("Custom IO DLL does not expose hkb_io_get_api_version, " "assuming API version 1.0.\n" "Please ask the developer to update their DLL.\n");
     }
 
     if (hkb_dll.api_version >= 0x0200) {
         hr = E_NOTIMPL;
-        dprintf(
-            "HKB IO: Custom IO DLL implements an unsupported "
-            "API version (%04x). Please update Segatools.\n",
-            hkb_dll.api_version);
+        dprintf("HKB IO: Custom IO DLL implements an unsupported " "API version (%04x). Please update Segatools.\n", hkb_dll.api_version);
 
         goto end;
     }
@@ -97,10 +91,7 @@ HRESULT hkb_dll_init(const struct hkb_dll_config* cfg, HINSTANCE self) {
 
     if (FAILED(hr)) {
         if (src != self) {
-            dprintf(
-                "HKB IO: Custom IO DLL does not provide function "
-                "\"%s\". Please contact your IO DLL's developer for "
-                "further assistance.\n", sym->sym);
+            dprintf("HKB IO: Custom IO DLL does not provide function " "\"%s\". Please contact your IO DLL's developer for " "further assistance.\n", sym->sym);
 
             goto end;
         } else {

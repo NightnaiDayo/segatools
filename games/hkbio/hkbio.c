@@ -45,8 +45,7 @@ HRESULT hkb_io_init(void) {
         hr = hkb_di_init(&hkb_io_cfg.di, inst, &hkb_io_backend);
     } else {
         hr = E_INVALIDARG;
-        dprintf("HKB IO: Invalid IO mode \"%S\", use keyboard or dinput\n",
-                hkb_io_cfg.mode);
+        dprintf("HKB IO: Invalid IO mode \"%S\", use keyboard or dinput\n", hkb_io_cfg.mode);
     }
 
     return hr;

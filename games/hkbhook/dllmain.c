@@ -78,14 +78,12 @@ static DWORD CALLBACK hkb_pre_startup(void) {
     if (strncmp(hkb_hook_cfg.platform.nusec.platform_id, "ACA4", 4) == 0) {
         // Terminal
         is_terminal = true;
-    } else if (strncmp(hkb_hook_cfg.platform.nusec.platform_id, "ACA2", 4) ==
-               0) {
+    } else if (strncmp(hkb_hook_cfg.platform.nusec.platform_id, "ACA2", 4) == 0) {
         // Satellite
         is_terminal = false;
     } else {
         // Unknown
-        dprintf("Unknown platform ID: %s\n",
-                hkb_hook_cfg.platform.nusec.platform_id);
+        dprintf("Unknown platform ID: %s\n", hkb_hook_cfg.platform.nusec.platform_id);
         goto fail;
     }
 
@@ -97,15 +95,13 @@ static DWORD CALLBACK hkb_pre_startup(void) {
 
     /* Initialize emulation hooks */
 
-    hr = platform_hook_init(&hkb_hook_cfg.platform, "SDEC",
-                            is_terminal ? "ACA4" : "ACA2", hkb_hook_mod);
+    hr = platform_hook_init(&hkb_hook_cfg.platform, "SDEC", is_terminal ? "ACA4" : "ACA2", hkb_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
     }
 
-    hr = sg_reader_hook_init(&hkb_hook_cfg.aime, is_terminal ? 1 : 3, 3,
-                             hkb_hook_mod);
+    hr = sg_reader_hook_init(&hkb_hook_cfg.aime, is_terminal ? 1 : 3, 3, hkb_hook_mod);
 
     if (FAILED(hr)) {
         goto fail;
@@ -129,9 +125,11 @@ static DWORD CALLBACK hkb_pre_startup(void) {
         goto fail;
     }
 
-    unsigned int led_port_no[2] = {is_terminal ? 3 : 2, 0};
-    hr = led15093_hook_init(&hkb_hook_cfg.led15093, hkb_dll.led_init,
-                            hkb_dll.led_set_leds, led_port_no);
+    unsigned int led_port_no[2] = {
+        is_terminal ? 3 : 2,
+        0
+    };
+    hr = led15093_hook_init(&hkb_hook_cfg.led15093, hkb_dll.led_init, hkb_dll.led_set_leds, led_port_no);
 
     if (FAILED(hr)) {
         goto fail;
