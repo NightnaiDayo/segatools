@@ -308,6 +308,25 @@ $(BUILD_DIR_ZIP)/sekito.zip:
 	$(V)strip $(BUILD_DIR_ZIP)/sekito/*.{exe,dll}
 	$(V)cd $(BUILD_DIR_ZIP)/sekito ; zip -r ../sekito.zip *
 
+$(BUILD_DIR_ZIP)/hkb.zip:
+	$(V)echo ... $@
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/hkb
+	$(V)mkdir -p $(BUILD_DIR_ZIP)/hkb/DEVICE
+	$(V)cp $(BUILD_DIR_64)/subprojects/capnhook/inject/inject.exe \
+		$(BUILD_DIR_GAMES_64)/hkbhook/hkbhook.dll \
+		$(DIST_DIR)/hkb/segatools_satellite.ini \
+		$(DIST_DIR)/hkb/segatools_terminal.ini \
+		$(DIST_DIR)/hkb/config_hook_satellite.ini \
+		$(DIST_DIR)/hkb/config_hook_terminal.ini \
+		$(DIST_DIR)/hkb/launch_satellite.bat \
+		$(DIST_DIR)/hkb/launch_terminal.bat \
+    	$(BUILD_DIR_ZIP)/hkb
+	$(V)cp pki/billing.pub \
+		pki/ca.crt \
+    	$(BUILD_DIR_ZIP)/hkb/DEVICE
+	$(V)strip $(BUILD_DIR_ZIP)/hkb/*.{exe,dll}
+	$(V)cd $(BUILD_DIR_ZIP)/hkb ; zip -r ../hkb.zip *
+
 $(BUILD_DIR_ZIP)/doc.zip: \
 		$(DOC_DIR)/config \
 		$(DOC_DIR)/chunihook.md \
@@ -336,6 +355,7 @@ $(BUILD_DIR_ZIP)/segatools.zip: \
 		$(BUILD_DIR_ZIP)/apm3.zip \
 		$(BUILD_DIR_ZIP)/ekt.zip \
 		$(BUILD_DIR_ZIP)/sekito.zip \
+		$(BUILD_DIR_ZIP)/hkb.zip \
 		CHANGELOG.md \
 		README.md \
 
