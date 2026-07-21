@@ -15,7 +15,11 @@
 static int hook_Amptw_getResult(void* pContext, int* pResult);
 
 static const struct hook_symbol touch_hooks[] = {
-    {.name = "Amptw_getResult", .patch = hook_Amptw_getResult},};
+    {
+        .name  = "Amptw_getResult",
+        .patch = hook_Amptw_getResult
+    },
+};
 
 void amptw_hook_init(const struct touch_screen_config* cfg, HMODULE hmodule) {
     assert(cfg != NULL);
