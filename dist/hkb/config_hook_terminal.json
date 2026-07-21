@@ -1,0 +1,10 @@
+{
+  "common": {
+    "language": "english"
+  },
+  "network": {
+    "property": {
+      "dhcp": true
+    }
+  }
+}
