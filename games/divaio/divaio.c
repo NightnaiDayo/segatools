@@ -185,11 +185,14 @@ static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx) {
         // sent to the game if the IO backend returns true for either left or right hand.
         QueryPerformanceCounter(&current_auto_time);
         if ((double)(current_auto_time.QuadPart - last_auto_time.QuadPart) / ((double)freq.QuadPart / 1000) > 30) {
-            // Wrap around the 32 cells whenever we hit the edges. Unsure if there's a better solution.
+            // Wrap around the 32 cells whenever we hit the edges.
+            // Ensure we have one frame of no-touch when wrapping around, otherwise
+            // the game misdetects this as a very far swipe into the other direction.
+            // Unsure if there's a better solution.
             if (++slider_auto_right_pos >= DIVA_SLIDER_CELL_COUNT) {
-                slider_auto_right_pos = 0;
+                slider_auto_right_pos = -1;
             }
-            if (--slider_auto_left_pos < 0) {
+            if (--slider_auto_left_pos < -1) {
                 slider_auto_left_pos = DIVA_SLIDER_CELL_COUNT - 1;
             }
 
@@ -203,14 +206,15 @@ static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx) {
         }
 
         if (diva_io_backend->get_auto_status != NULL) {
-            bool l, r;
+            bool l;
+            bool r;
 
             diva_io_backend->get_auto_status(&l, &r);
 
-            if (l) {
+            if (l && slider_auto_left_pos > -1) {
                 slider_status |= 1 << slider_auto_left_pos;
             }
-            if (r) {
+            if (r && slider_auto_right_pos > -1) {
                 slider_status |= 1 << slider_auto_right_pos;
             }
         }

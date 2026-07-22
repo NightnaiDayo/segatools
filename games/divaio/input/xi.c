@@ -44,12 +44,6 @@ HRESULT diva_xi_init(const struct diva_xi_config* cfg, const struct diva_io_back
     return S_OK;
 }
 
-HRESULT diva_io_poll(void) {
-    memset(&xi, 0, sizeof(xi));
-    XInputGetState(0, &xi);
-    return S_OK;
-}
-
 static HRESULT diva_xi_config_apply(const struct diva_xi_config* cfg) {
     dprintf("XInput: --- Begin configuration ---\n");
     dprintf("XInput: Test Button : %i\n", cfg->use_select_as_test);
@@ -65,6 +59,9 @@ static void diva_xi_get_gamebtns(uint8_t* gamebtn_out) {
     assert(gamebtn_out != NULL);
 
     uint16_t gamebtn = 0;
+
+    memset(&xi, 0, sizeof(xi));
+    XInputGetState(0, &xi);
 
     const WORD xb = xi.Gamepad.wButtons;
 
@@ -106,6 +103,9 @@ void diva_xi_get_opbtns(uint8_t* opbtn) {
 void diva_xi_get_auto_status(bool* left, bool* right) {
     assert(left != NULL);
     assert(right != NULL);
+
+    *left = false;
+    *right = false;
 
     const int left_x = xi.Gamepad.sThumbLX;
     const int right_x = xi.Gamepad.sThumbRX;

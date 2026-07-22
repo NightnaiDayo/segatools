@@ -179,13 +179,12 @@ static HRESULT diva_di_config_apply(const struct diva_di_config* cfg) {
     }
 
     diva_di_auto_axis_left = diva_di_get_axis(cfg->auto_left_axis);
-    diva_di_auto_axis_right = diva_di_get_axis(cfg->auto_left_axis);
+    diva_di_auto_axis_right = diva_di_get_axis(cfg->auto_right_axis);
 
     /* Print some debug output to make sure config works... */
 
     dprintf("Stick: --- Begin configuration ---\n");
-    dprintf("Stick: Device name . . . . : Contains \"%S\"\n",
-    cfg->device_name);
+    dprintf("Stick: Device name  . . : Contains \"%S\"\n", cfg->device_name);
     dprintf("Stick: Start key  . . . : %u\n", cfg->start);
     for (int i = 0; i < 2; i++) {
         dprintf("Stick: Square key %d . . : %u\n", i+1, cfg->square[i]);
@@ -308,8 +307,8 @@ void diva_di_get_auto_status(bool* left, bool* right) {
 
     // hardcoded deadzone is kinda ugly
     if (diva_di_auto_axis_left != NULL) {
-        bool l = *(LONG*)&state.bytes[diva_di_auto_axis_left->off] > 0x9FFF;
-        bool r = *(LONG*)&state.bytes[diva_di_auto_axis_left->off] < 0x5FFF;
+        bool l = *(LONG*)&state.bytes[diva_di_auto_axis_left->off] < 0x5FFF;
+        bool r = *(LONG*)&state.bytes[diva_di_auto_axis_left->off] > 0x9FFF;
         if (diva_di_auto_left_invert) {
             *left |= r;
             *right |= l;
@@ -319,8 +318,8 @@ void diva_di_get_auto_status(bool* left, bool* right) {
         }
     }
     if (diva_di_auto_axis_right != NULL) {
-        bool l = *(LONG*)&state.bytes[diva_di_auto_axis_right->off] > 0x9FFF;
-        bool r = *(LONG*)&state.bytes[diva_di_auto_axis_right->off] < 0x5FFF;
+        bool l = *(LONG*)&state.bytes[diva_di_auto_axis_right->off] < 0x5FFF;
+        bool r = *(LONG*)&state.bytes[diva_di_auto_axis_right->off] > 0x9FFF;
         if (diva_di_auto_right_invert) {
             *left |= r;
             *right |= l;
