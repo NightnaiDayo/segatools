@@ -44,14 +44,6 @@ void gfx_gl_hook_init(const struct gfx_config *cfg, HINSTANCE self)
         return;
     }
 
-    if (cfg->dpiAware) {
-        if (SetProcessDPIAware()) {
-            dprintf("Gfx: Game process set to DPI aware.\n");
-        } else {
-            dprintf("Gfx: Failed to set process DPI aware\n");
-        }
-    }
-
     memcpy(&gfx_config, cfg, sizeof(*cfg));
     hook_table_apply(NULL, "glut32.dll", glut_hooks, _countof(glut_hooks));
 

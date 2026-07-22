@@ -22,7 +22,6 @@
 #include "divahook/jvs.h"
 #include "divahook/slider.h"
 
-#include "gfxhook/gfx.h"
 #include "gfxhook/gl.h"
 
 #include "hook/process.h"

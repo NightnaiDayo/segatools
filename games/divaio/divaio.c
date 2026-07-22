@@ -246,6 +246,10 @@ void diva_io_led_set_leds(uint8_t board, const uint8_t* rgb) {
 }
 
 HRESULT diva_io_touch_init() {
+    if (diva_touch_backend->init != NULL) {
+        return diva_touch_backend->init();
+    }
+
     return S_OK;
 }
 
@@ -277,10 +281,8 @@ static unsigned int __stdcall diva_io_touch_thread_proc(void* ctx) {
 
     while (!diva_io_touch_stop_flag) {
 
-        if (fgdet_in_foreground()) {
-            if (diva_touch_backend->update != NULL) {
-                diva_touch_backend->update(callback);
-            }
+        if (diva_touch_backend->update != NULL) {
+            diva_touch_backend->update(callback);
         }
 
         Sleep(1);
