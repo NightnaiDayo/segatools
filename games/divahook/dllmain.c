@@ -65,7 +65,6 @@ static DWORD CALLBACK diva_pre_startup(void)
     /* Hook Win32 APIs */
 
     dvd_hook_init(&diva_hook_cfg.dvd, diva_hook_mod);
-    gfx_hook_init(&diva_hook_cfg.gfx);
     gfx_gl_hook_init(&diva_hook_cfg.gfx, diva_hook_mod);
     serial_hook_init();
 

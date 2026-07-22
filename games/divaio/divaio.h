@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define DIVA_SLIDER_CELL_COUNT 32
+
 enum {
     DIVA_IO_OPBTN_TEST     = 0x01,
     DIVA_IO_OPBTN_SERVICE  = 0x02

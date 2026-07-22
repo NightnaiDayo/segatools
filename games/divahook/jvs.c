@@ -14,6 +14,7 @@
 #include "jvs/jvs-bus.h"
 
 #include "util/dprintf.h"
+#include "util/fg-detect.h"
 
 static void diva_jvs_read_switches(void *ctx, struct io3_switch_state *out);
 static void diva_jvs_read_coin_counter(
@@ -62,6 +63,10 @@ static void diva_jvs_read_switches(void *ctx, struct io3_switch_state *out)
 
     opbtn = 0;
     gamebtn = 0;
+
+    if (!fgdet_in_foreground()) {
+        return;
+    }
 
     diva_dll.jvs_poll(&opbtn, &gamebtn);
 
