@@ -20,6 +20,8 @@
 #include "util/fg-detect.h"
 #include "util/str.h"
 
+#define DIVA_SLIDER_AUTO_FRAME_DELAY 5
+
 static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx);
 static unsigned int __stdcall diva_io_touch_thread_proc(void* ctx);
 
@@ -76,22 +78,21 @@ HRESULT diva_io_jvs_init(void) {
     if (wstr_ieq(diva_io_cfg.input_mode, L"keyboard")) {
         dprintf("Diva IO: Using keyboard\n");
 
-        diva_kb_init(&diva_io_cfg.kb, &diva_io_backend);
+        return diva_kb_init(&diva_io_cfg.kb, &diva_io_backend);
     } else if (wstr_ieq(diva_io_cfg.input_mode, L"dinput")) {
         dprintf("Diva IO: Using DirectInput\n");
 
-        diva_di_init(&diva_io_cfg.di, inst, &diva_io_backend);
+        return diva_di_init(&diva_io_cfg.di, inst, &diva_io_backend);
     } else if (wstr_ieq(diva_io_cfg.input_mode, L"xinput")) {
         dprintf("Diva IO: Using XInput\n");
 
-        diva_xi_init(&diva_io_cfg.xi, &diva_io_backend);
+        return diva_xi_init(&diva_io_cfg.xi, &diva_io_backend);
     } else {
         dprintf("Diva IO: Invalid input mode \"%S\". Use 'keyboard', 'dinput' or 'xinput'.\n", diva_io_cfg.touch_mode);
 
         return E_INVALIDARG;
     }
 
-    return S_OK;
 }
 
 void diva_io_jvs_poll(uint8_t* opbtn_out, uint8_t* gamebtn_out) {
@@ -148,6 +149,10 @@ void diva_io_slider_start(diva_io_slider_callback_t callback) {
         return;
     }
 
+    if (diva_io_backend == NULL) {
+        return;
+    }
+
     diva_io_slider_thread = (HANDLE)_beginthreadex(
         NULL,
         0,
@@ -186,14 +191,15 @@ static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx) {
         QueryPerformanceCounter(&current_auto_time);
         if ((double)(current_auto_time.QuadPart - last_auto_time.QuadPart) / ((double)freq.QuadPart / 1000) > 30) {
             // Wrap around the 32 cells whenever we hit the edges.
-            // Ensure we have one frame of no-touch when wrapping around, otherwise
-            // the game misdetects this as a very far swipe into the other direction.
+            // Ensure we have a few frames of no-touch when wrapping around, otherwise
+            // the game misdetects this as a very far swipe into the other direction,
+            // causing the menu to scroll back and forth.
             // Unsure if there's a better solution.
-            if (++slider_auto_right_pos >= DIVA_SLIDER_CELL_COUNT) {
-                slider_auto_right_pos = -1;
+            if (++slider_auto_right_pos >= DIVA_SLIDER_CELL_COUNT + DIVA_SLIDER_AUTO_FRAME_DELAY) {
+                slider_auto_right_pos = DIVA_SLIDER_CELL_COUNT / 2;
             }
-            if (--slider_auto_left_pos < -1) {
-                slider_auto_left_pos = DIVA_SLIDER_CELL_COUNT - 1;
+            if (--slider_auto_left_pos < -DIVA_SLIDER_AUTO_FRAME_DELAY) {
+                slider_auto_left_pos = DIVA_SLIDER_CELL_COUNT / 2 - 1;
             }
 
             last_auto_time = current_auto_time;
@@ -211,11 +217,17 @@ static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx) {
 
             diva_io_backend->get_auto_status(&l, &r);
 
-            if (l && slider_auto_left_pos > -1) {
+            if (l && slider_auto_left_pos > -1 && slider_auto_left_pos < DIVA_SLIDER_CELL_COUNT) {
                 slider_status |= 1 << slider_auto_left_pos;
             }
-            if (r && slider_auto_right_pos > -1) {
+            if (r && slider_auto_right_pos > -1 && slider_auto_right_pos < DIVA_SLIDER_CELL_COUNT) {
                 slider_status |= 1 << slider_auto_right_pos;
+            }
+
+            // Reset auto-sliders to center if they aren't moved
+            if (!l && !r) {
+                slider_auto_left_pos = DIVA_SLIDER_CELL_COUNT / 2 - 1;
+                slider_auto_right_pos = DIVA_SLIDER_CELL_COUNT / 2;
             }
         }
 

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <windows.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 static HRESULT diva_wintouch_init();
 static void diva_wintouch_update(diva_io_touch_callback_t callback);
