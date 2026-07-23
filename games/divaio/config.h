@@ -45,6 +45,10 @@ struct diva_io_config {
     wchar_t input_mode[16];
     wchar_t touch_mode[16];
 
+    uint16_t hold_transfer_time_min;
+    uint16_t hold_transfer_time_max;
+    uint8_t dropped_input_frames;
+
     struct diva_kb_config kb;
     struct diva_di_config di;
     struct diva_xi_config xi;

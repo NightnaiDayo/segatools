@@ -25,10 +25,13 @@
 static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx);
 static unsigned int __stdcall diva_io_touch_thread_proc(void* ctx);
 
+static LARGE_INTEGER performanceFrequency;
+
 static struct diva_io_config diva_io_cfg;
 static const struct diva_io_backend* diva_io_backend;
 static bool diva_io_coin;
 static uint16_t diva_io_coins;
+static struct diva_button_states diva_button_states = {0};
 
 static HANDLE diva_io_slider_thread;
 static bool diva_io_slider_stop_flag;
@@ -45,6 +48,9 @@ uint16_t diva_io_get_api_version(void) {
 
 HRESULT diva_io_jvs_init(void) {
     assert(diva_io_backend == NULL);
+
+
+    QueryPerformanceFrequency(&performanceFrequency);
 
     HINSTANCE inst = GetModuleHandleW(NULL);
 
@@ -95,6 +101,56 @@ HRESULT diva_io_jvs_init(void) {
 
 }
 
+inline static void diva_io_reset_hold_timeouts(struct diva_button_state* state) {
+    ULONGLONG ticks = GetTickCount64();
+    state->doubleTapTimeoutBegin = ticks + diva_io_cfg.hold_transfer_time_min;
+    state->doubleTapTimeoutEnd = ticks + diva_io_cfg.hold_transfer_time_max;
+}
+
+static void diva_io_set_game_button(uint8_t* gamebtn, int input_bit, struct diva_button_state* state) {
+
+    if (state->dropFrames > 0) {
+        state->dropFrames--;
+        return;
+    }
+
+    // anything pressed
+    if (state->primary || state->secondary) {
+
+        // just pressed anything
+        if ((state->primary || state->secondary) && !(state->prevPrimary || state->prevSecondary)) {
+            diva_io_reset_hold_timeouts(state);
+        }
+
+        // just pressed both in the same frame
+        // OR if we switched buttons exactly in the same frame, this is also a double-tap!
+        if (
+            (state->primary && state->secondary && !(state->prevPrimary && state->prevSecondary)) ||
+            (!state->primary && state->prevPrimary && state->secondary && !state->prevSecondary) ||
+            (state->primary && !state->prevPrimary && !state->secondary && state->prevSecondary)
+            ) {
+
+            // if we are outside the takeover range, add dropped frame(s) to simulate re-press
+            ULONGLONG ticks = GetTickCount64();
+            if (ticks < state->doubleTapTimeoutBegin || ticks > state->doubleTapTimeoutEnd) {
+                state->dropFrames = diva_io_cfg.dropped_input_frames;
+
+                // also reset double-tap timer for quick alternations
+                diva_io_reset_hold_timeouts(state);
+            }
+
+            // otherwise it's a hold-takeover, do nothing special
+        }
+
+        if (state->dropFrames == 0) {
+            *gamebtn |= input_bit;
+        }
+    }
+
+    state->prevPrimary = state->primary;
+    state->prevSecondary = state->secondary;
+}
+
 void diva_io_jvs_poll(uint8_t* opbtn_out, uint8_t* gamebtn_out) {
     assert(opbtn_out != NULL);
     assert(gamebtn_out != NULL);
@@ -107,10 +163,6 @@ void diva_io_jvs_poll(uint8_t* opbtn_out, uint8_t* gamebtn_out) {
         diva_io_backend->get_opbtns(&opbtn);
     }
 
-    if (diva_io_backend->get_gamebtns != NULL) {
-        diva_io_backend->get_gamebtns(&gamebtn);
-    }
-
     if (GetAsyncKeyState(diva_io_cfg.vk_test) & 0x8000) {
         opbtn |= DIVA_IO_OPBTN_TEST;
     }
@@ -118,6 +170,19 @@ void diva_io_jvs_poll(uint8_t* opbtn_out, uint8_t* gamebtn_out) {
     if (GetAsyncKeyState(diva_io_cfg.vk_service) & 0x8000) {
         opbtn |= DIVA_IO_OPBTN_SERVICE;
     }
+
+    if (diva_io_backend->get_gamebtns != NULL) {
+        diva_io_backend->get_gamebtns(&diva_button_states);
+    }
+
+    if (diva_button_states.start) {
+        gamebtn |= DIVA_IO_GAMEBTN_START;
+    }
+
+    diva_io_set_game_button(&gamebtn, DIVA_IO_GAMEBTN_CIRCLE, &diva_button_states.circle);
+    diva_io_set_game_button(&gamebtn, DIVA_IO_GAMEBTN_CROSS, &diva_button_states.cross);
+    diva_io_set_game_button(&gamebtn, DIVA_IO_GAMEBTN_TRIANGLE, &diva_button_states.triangle);
+    diva_io_set_game_button(&gamebtn, DIVA_IO_GAMEBTN_SQUARE, &diva_button_states.square);
 
     *opbtn_out = opbtn;
     *gamebtn_out = gamebtn;
@@ -177,11 +242,10 @@ void diva_io_slider_set_leds(const uint8_t* rgb) {
 static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx) {
     uint8_t pressure[DIVA_SLIDER_CELL_COUNT];
     uint32_t slider_status = 0;
-    LARGE_INTEGER freq, last_auto_time, current_auto_time;
+    LARGE_INTEGER last_auto_time, current_auto_time;
 
     const diva_io_slider_callback_t callback = ctx;
 
-    QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&last_auto_time);
 
     while (!diva_io_slider_stop_flag) {
@@ -189,7 +253,7 @@ static unsigned int __stdcall diva_io_slider_thread_proc(void* ctx) {
         // Move the auto-slider every 30 ms to simulate constant movement. It's only actually
         // sent to the game if the IO backend returns true for either left or right hand.
         QueryPerformanceCounter(&current_auto_time);
-        if ((double)(current_auto_time.QuadPart - last_auto_time.QuadPart) / ((double)freq.QuadPart / 1000) > 30) {
+        if ((double)(current_auto_time.QuadPart - last_auto_time.QuadPart) / ((double)performanceFrequency.QuadPart / 1000) > 30) {
             // Wrap around the 32 cells whenever we hit the edges.
             // Ensure we have a few frames of no-touch when wrapping around, otherwise
             // the game misdetects this as a very far swipe into the other direction,

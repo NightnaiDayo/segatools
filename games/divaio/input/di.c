@@ -32,7 +32,7 @@ static HRESULT diva_di_config_apply(const struct diva_di_config* cfg);
 static BOOL CALLBACK diva_di_enum_callback(
     const DIDEVICEINSTANCEW* dev,
     void* ctx);
-static void diva_di_get_gamebtns(uint8_t* gamebtn_out);
+static void diva_di_get_gamebtns(struct diva_button_states* states);
 static void diva_di_get_opbtns(uint8_t* opbtn_out);
 static uint8_t diva_di_decode_pov(DWORD pov);
 static void diva_di_get_auto_status(bool* left, bool* right);
@@ -241,8 +241,8 @@ static BOOL CALLBACK diva_di_enum_callback(
     return DIENUM_STOP;
 }
 
-static void diva_di_get_gamebtns(uint8_t* gamebtn_out) {
-    assert(gamebtn_out != NULL);
+static void diva_di_get_gamebtns(struct diva_button_states* states) {
+    assert(states != NULL);
 
     HRESULT hr = diva_di_dev_poll(diva_di_dev, diva_di_wnd, &state);
 
@@ -250,31 +250,21 @@ static void diva_di_get_gamebtns(uint8_t* gamebtn_out) {
         return;
     }
 
-    uint16_t gamebtn = diva_di_decode_pov(state.st.rgdwPOV[0]);
+    uint16_t pov = diva_di_decode_pov(state.st.rgdwPOV[0]);
 
-    if (diva_di_start && state.st.rgbButtons[diva_di_start - 1]) {
-        gamebtn |= DIVA_IO_GAMEBTN_START;
-    }
-
-    for (int i = 0; i < 2; i++) {
-        if (diva_di_cross[i] && state.st.rgbButtons[diva_di_cross[i] - 1]) {
-            gamebtn |= DIVA_IO_GAMEBTN_CROSS;
-        }
-
-        if (diva_di_circle[i] && state.st.rgbButtons[diva_di_circle[i] - 1]) {
-            gamebtn |= DIVA_IO_GAMEBTN_CIRCLE;
-        }
-
-        if (diva_di_square[i] && state.st.rgbButtons[diva_di_square[i] - 1]) {
-            gamebtn |= DIVA_IO_GAMEBTN_SQUARE;
-        }
-
-        if (diva_di_triangle[i] && state.st.rgbButtons[diva_di_triangle[i] - 1]) {
-            gamebtn |= DIVA_IO_GAMEBTN_TRIANGLE;
-        }
-    }
-
-    *gamebtn_out = gamebtn;
+    states->start = diva_di_start && state.st.rgbButtons[diva_di_start - 1];
+    states->cross.primary = diva_di_cross[0] && state.st.rgbButtons[diva_di_cross[0] - 1];
+    states->cross.secondary = diva_di_cross[1] && state.st.rgbButtons[diva_di_cross[1] - 1];
+    states->cross.secondary |= pov & DIVA_IO_GAMEBTN_CROSS;
+    states->circle.primary = diva_di_circle[0] && state.st.rgbButtons[diva_di_circle[0] - 1];
+    states->circle.secondary = diva_di_circle[1] && state.st.rgbButtons[diva_di_circle[1] - 1];
+    states->circle.secondary |= pov & DIVA_IO_GAMEBTN_CIRCLE;
+    states->square.primary = diva_di_square[0] && state.st.rgbButtons[diva_di_square[0] - 1];
+    states->square.secondary = diva_di_square[1] && state.st.rgbButtons[diva_di_square[1] - 1];
+    states->square.secondary |= pov & DIVA_IO_GAMEBTN_SQUARE;
+    states->triangle.primary = diva_di_triangle[0] && state.st.rgbButtons[diva_di_triangle[0] - 1];
+    states->triangle.secondary = diva_di_triangle[1] && state.st.rgbButtons[diva_di_triangle[1] - 1];
+    states->triangle.secondary |= pov & DIVA_IO_GAMEBTN_TRIANGLE;
 }
 
 static uint8_t diva_di_decode_pov(DWORD pov) {

@@ -108,6 +108,10 @@ void diva_io_config_load(struct diva_io_config* cfg, const wchar_t* filename) {
     cfg->vk_service = GetPrivateProfileIntW(L"io3", L"service", VK_F2, filename);
     cfg->vk_coin = GetPrivateProfileIntW(L"io3", L"coin", VK_F3, filename);
 
+    cfg->hold_transfer_time_min = GetPrivateProfileIntW(L"io3", L"holdTransferTimeMin", 500, filename);
+    cfg->hold_transfer_time_max = GetPrivateProfileIntW(L"io3", L"holdTransferTimeMax", 2000, filename);
+    cfg->dropped_input_frames = GetPrivateProfileIntW(L"io3", L"doubleTapReleaseDelayFrames", 1, filename);
+
     GetPrivateProfileStringW(
         L"io3",
         L"mode",

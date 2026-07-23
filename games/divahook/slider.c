@@ -164,7 +164,7 @@ static HRESULT slider_req_nop(uint8_t cmd)
 {
     struct slider_hdr resp;
 
-    dprintf("Diva slider: No-op cmd 0x%#02x\n", cmd);
+    dprintf("Diva slider: No-op cmd %#02x\n", cmd);
 
     resp.sync = SLIDER_FRAME_SYNC;
     resp.cmd = cmd;

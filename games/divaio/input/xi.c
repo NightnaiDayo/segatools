@@ -11,7 +11,7 @@
 
 #include "util/dprintf.h"
 
-static void diva_xi_get_gamebtns(uint8_t* gamebtn_out);
+static void diva_xi_get_gamebtns(struct diva_button_states* states);
 static void diva_xi_get_opbtns(uint8_t* opbtn);
 static void diva_xi_get_auto_status(bool* left, bool* right);
 
@@ -54,38 +54,24 @@ static HRESULT diva_xi_config_apply(const struct diva_xi_config* cfg) {
     return S_OK;
 }
 
-static void diva_xi_get_gamebtns(uint8_t* gamebtn_out) {
+static void diva_xi_get_gamebtns(struct diva_button_states* states) {
 
-    assert(gamebtn_out != NULL);
-
-    uint16_t gamebtn = 0;
+    assert(states != NULL);
 
     memset(&xi, 0, sizeof(xi));
     XInputGetState(0, &xi);
 
     const WORD xb = xi.Gamepad.wButtons;
 
-    if (xb & XINPUT_GAMEPAD_START) {
-        gamebtn |= DIVA_IO_GAMEBTN_START;
-    }
-
-    if (xb & (XINPUT_GAMEPAD_A | XINPUT_GAMEPAD_DPAD_DOWN)) {
-        gamebtn |= DIVA_IO_GAMEBTN_CROSS;
-    }
-
-    if (xb & (XINPUT_GAMEPAD_B | XINPUT_GAMEPAD_DPAD_RIGHT)) {
-        gamebtn |= DIVA_IO_GAMEBTN_CIRCLE;
-    }
-
-    if (xb & (XINPUT_GAMEPAD_X | XINPUT_GAMEPAD_DPAD_LEFT)) {
-        gamebtn |= DIVA_IO_GAMEBTN_SQUARE;
-    }
-
-    if (xb & (XINPUT_GAMEPAD_Y | XINPUT_GAMEPAD_DPAD_UP)) {
-        gamebtn |= DIVA_IO_GAMEBTN_TRIANGLE;
-    }
-
-    *gamebtn_out = gamebtn;
+    states->start = xb & XINPUT_GAMEPAD_START;
+    states->cross.primary = xb & XINPUT_GAMEPAD_A;
+    states->cross.secondary = xb & XINPUT_GAMEPAD_DPAD_DOWN;
+    states->circle.primary = xb & XINPUT_GAMEPAD_B;
+    states->circle.secondary = xb & XINPUT_GAMEPAD_DPAD_RIGHT;
+    states->triangle.primary = xb & XINPUT_GAMEPAD_Y;
+    states->triangle.secondary = xb & XINPUT_GAMEPAD_DPAD_UP;
+    states->square.primary = xb & XINPUT_GAMEPAD_X;
+    states->square.secondary = xb & XINPUT_GAMEPAD_DPAD_LEFT;
 }
 
 void diva_xi_get_opbtns(uint8_t* opbtn) {

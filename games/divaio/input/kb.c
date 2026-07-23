@@ -19,7 +19,7 @@ static uint8_t diva_kb_auto_left;
 static uint8_t diva_kb_auto_right;
 static uint8_t diva_kb_slider[DIVA_SLIDER_CELL_COUNT];
 
-static void diva_kb_get_gamebtns(uint8_t* gamebtn_out);
+static void diva_kb_get_gamebtns(struct diva_button_states* states);
 static void diva_kb_get_auto_status(bool* l, bool* r);
 static void diva_kb_get_slider(uint32_t* slider);
 
@@ -126,32 +126,15 @@ static HRESULT diva_kb_config_apply(const struct diva_kb_config* cfg) {
     return S_OK;
 }
 
-static void diva_kb_get_gamebtns(uint8_t* gamebtn_out) {
-    assert(gamebtn_out != NULL);
+static void diva_kb_get_gamebtns(struct diva_button_states* states) {
+    assert(states != NULL);
 
-    uint8_t gamebtn = 0;
+    states->start = GetAsyncKeyState(diva_kb_start) & 0x8000;
+    states->cross.primary = GetAsyncKeyState(diva_kb_cross) & 0x8000;
+    states->square.primary = GetAsyncKeyState(diva_kb_square) & 0x8000;
+    states->triangle.primary = GetAsyncKeyState(diva_kb_triangle) & 0x8000;
+    states->circle.primary = GetAsyncKeyState(diva_kb_circle) & 0x8000;
 
-    if (GetAsyncKeyState(diva_kb_start) & 0x8000) {
-        gamebtn |= DIVA_IO_GAMEBTN_START;
-    }
-
-    if (GetAsyncKeyState(diva_kb_triangle) & 0x8000) {
-        gamebtn |= DIVA_IO_GAMEBTN_TRIANGLE;
-    }
-
-    if (GetAsyncKeyState(diva_kb_square) & 0x8000) {
-        gamebtn |= DIVA_IO_GAMEBTN_SQUARE;
-    }
-
-    if (GetAsyncKeyState(diva_kb_circle) & 0x8000) {
-        gamebtn |= DIVA_IO_GAMEBTN_CIRCLE;
-    }
-
-    if (GetAsyncKeyState(diva_kb_cross) & 0x8000) {
-        gamebtn |= DIVA_IO_GAMEBTN_CROSS;
-    }
-
-    *gamebtn_out = gamebtn;
 }
 
 static void diva_kb_get_auto_status(bool* l, bool* r) {
