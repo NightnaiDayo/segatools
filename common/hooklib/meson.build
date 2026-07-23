@@ -35,6 +35,8 @@ hooklib_lib = static_library(
         'touch.h',
         'printer_chc.c',
         'printer_chc.h',
+        'printer_cp.c',
+        'printer_cp.h',
         'printer_cx.c',
         'printer_cx.h',
         'y3.c',

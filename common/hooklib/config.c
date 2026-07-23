@@ -152,6 +152,38 @@ void printer_cx_config_load(struct printer_cx_config *cfg, const wchar_t *filena
 
 }
 
+void printer_cp_config_load(struct printer_cp_config *cfg, const wchar_t *filename){
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    cfg->enable = GetPrivateProfileIntW(L"printer", L"enable", 1, filename);
+    cfg->print_time = GetPrivateProfileIntW(L"printer", L"printTime", 35, filename);
+
+    GetPrivateProfileStringW(
+            L"printer",
+            L"printerOutPath",
+            L"DEVICE\\print",
+            cfg->printer_out_path,
+            _countof(cfg->printer_out_path),
+            filename);
+
+    wchar_t tmpstr[7];
+
+    GetPrivateProfileStringW(
+        L"printer",
+        L"serialNo",
+        L"FAKEPR",
+        tmpstr,
+        _countof(tmpstr),
+        filename);
+
+    size_t n = wcstombs(cfg->serial_no, tmpstr, sizeof(cfg->serial_no));
+    for (int i = n; i < sizeof(cfg->serial_no); i++) {
+        cfg->serial_no[i] = '\0';
+    }
+
+}
+
 void y3_dll_config_load(
         struct y3_dll_config *cfg,
         const wchar_t *filename)

@@ -7,7 +7,7 @@
 #include "board/sg-reader.h"
 
 #include "hooklib/dvd.h"
-#include "hooklib/touch.h"
+#include "hooklib/printer_cp.h"
 
 #include "gfxhook/config.h"
 
@@ -26,6 +26,7 @@ struct diva_hook_config {
     struct diva_dll_config dll;
     struct slider_config slider;
     struct elo_config touch;
+    struct printer_cp_config printer;
 };
 
 void diva_dll_config_load(

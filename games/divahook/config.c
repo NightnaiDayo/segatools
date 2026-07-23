@@ -1,20 +1,16 @@
 #include <assert.h>
-#include <stddef.h>
 #include <stdlib.h>
 
 #include "amex/amex.h"
 #include "amex/config.h"
 
 #include "board/config.h"
-#include "board/sg-reader.h"
 
 #include "hooklib/config.h"
-#include "hooklib/dvd.h"
 
 #include "divahook/config.h"
 
 #include "platform/config.h"
-#include "platform/platform.h"
 #include "util/io-path.h"
 
 void diva_dll_config_load(
@@ -66,4 +62,5 @@ void diva_hook_config_load(
     diva_dll_config_load(&cfg->dll, filename);
     slider_config_load(&cfg->slider, filename);
     elo_config_load(&cfg->touch, filename);
+    printer_cp_config_load(&cfg->printer, filename);
 }

@@ -7,6 +7,7 @@
      COM1:  838-14772 (Elo Touchsystems 2701) Touch Controller Board
     COM10:  TN32MSEC003S "Gen 1" Aime Reader
     COM11:  837-15275 Touch Slider
+      USB:  MITSUBISHI CP9550DS Printer
 */
 
 #include <windows.h>
@@ -26,6 +27,7 @@
 
 #include "hook/process.h"
 
+#include "hooklib/printer_cp.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
 
@@ -109,8 +111,10 @@ static DWORD CALLBACK diva_pre_startup(void)
         goto fail;
     }
 
-    if (diva_hook_cfg.amex.jvs.enable && diva_hook_cfg.amex.jvs.foreground) {
-        fgdet_init(L"Hatsune Miku Project DIVA Arcade Future Tone", false);
+    hr = printer_cp_hook_init(&diva_hook_cfg.printer, diva_hook_mod);
+
+    if (FAILED(hr)) {
+        goto fail;
     }
 
     /* Initialize debug helpers */
