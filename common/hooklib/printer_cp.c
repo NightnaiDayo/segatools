@@ -18,16 +18,16 @@
 #include "hook/table.h"
 #include "util/dprintf.h"
 
-static WINAPI int hook_CPU9CheckPrinter(char* result, void* a2);
-static WINAPI int hook_CPUXSearchPrinters(char* data, int countRequested, void* a3, int* connectedPrinterCount);
-static WINAPI int hook_CPUASendImage(struct printer_cp_image* image, void* a2, void* a3, void* a4);
-static WINAPI int hook_CPUXInit2();
-static WINAPI int hook_CPU9CheckPrintEnd(int a1, bool* printEnd, void* a3);
-static WINAPI int hook_CPU9CheckPaperRemain(char* result, void* a2);
-static WINAPI int hook_CPU9GetFWInfo(char* firmware, void* a2);
-static WINAPI int hook_CPU9PrintOut(void* a1, void* a2);
-static WINAPI int hook_CPUXInit();
-static WINAPI int hook_CPUASetPrintParameter(void* a1, void* a2);
+static int WINAPI hook_CPU9CheckPrinter(char* result, void* a2);
+static int WINAPI hook_CPUXSearchPrinters(char* data, int countRequested, void* a3, int* connectedPrinterCount);
+static int WINAPI hook_CPUASendImage(struct printer_cp_image* image, void* a2, void* a3, void* a4);
+static int WINAPI hook_CPUXInit2();
+static int WINAPI hook_CPU9CheckPrintEnd(int a1, bool* printEnd, void* a3);
+static int WINAPI hook_CPU9CheckPaperRemain(char* result, void* a2);
+static int WINAPI hook_CPU9GetFWInfo(char* firmware, void* a2);
+static int WINAPI hook_CPU9PrintOut(void* a1, void* a2);
+static int WINAPI hook_CPUXInit();
+static int WINAPI hook_CPUASetPrintParameter(void* a1, void* a2);
 
 static const struct hook_symbol printer_syms[] = {
     {
@@ -101,7 +101,7 @@ void printer_cp_hook_insert_hooks(HMODULE target) {
     hook_table_apply(target, "CPUSBSG.dll", printer_syms, _countof(printer_syms));
 }
 
-static WINAPI int hook_CPU9CheckPrinter(char* result, void* a2) {
+static int WINAPI hook_CPU9CheckPrinter(char* result, void* a2) {
     dprintf("CP9550DS: %s\n", __func__);
 
     // this can be null!?
@@ -113,7 +113,7 @@ static WINAPI int hook_CPU9CheckPrinter(char* result, void* a2) {
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPUXSearchPrinters(char* data, int countRequested, void* a3, int* connectedPrinterCount) {
+static int WINAPI hook_CPUXSearchPrinters(char* data, int countRequested, void* a3, int* connectedPrinterCount) {
     dprintf("CP9550DS: %s(%d)\n", __func__, countRequested);
 
     *connectedPrinterCount = 1;
@@ -139,7 +139,7 @@ static WINAPI int hook_CPUXSearchPrinters(char* data, int countRequested, void* 
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPUASendImage(struct printer_cp_image* image, void* a2, void* a3, void* a4) {
+static int WINAPI hook_CPUASendImage(struct printer_cp_image* image, void* a2, void* a3, void* a4) {
     dprintf("CP9550DS: %s(%d, %d, %d, %d, %d)\n", __func__, image->unk1, image->unk2, image->unk3, image->width, image->height);
 
     wchar_t dumpPath[MAX_PATH];
@@ -175,20 +175,20 @@ static WINAPI int hook_CPUASendImage(struct printer_cp_image* image, void* a2, v
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPUXInit2() {
+static int WINAPI hook_CPUXInit2() {
     dprintf("CP9550DS: %s\n", __func__);
 
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPU9CheckPrintEnd(int a1, bool* printEnd, void* a3) {
+static int WINAPI hook_CPU9CheckPrintEnd(int a1, bool* printEnd, void* a3) {
 
     *printEnd = GetTickCount64() - print_start_time > printer_config.print_time * 1000;
 
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPU9CheckPaperRemain(char* result, void* a2) {
+static int WINAPI hook_CPU9CheckPaperRemain(char* result, void* a2) {
     dprintf("CP9550DS: %s\n", __func__);
 
     // paper count
@@ -197,7 +197,7 @@ static WINAPI int hook_CPU9CheckPaperRemain(char* result, void* a2) {
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPU9GetFWInfo(char* firmware, void* a2) {
+static int WINAPI hook_CPU9GetFWInfo(char* firmware, void* a2) {
     dprintf("CP9550DS: %s\n", __func__);
 
     // this doesn't seem to be checked anywhere. shows in test menu though.
@@ -210,19 +210,19 @@ static WINAPI int hook_CPU9GetFWInfo(char* firmware, void* a2) {
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPU9PrintOut(void* a1, void* a2) {
+static int WINAPI hook_CPU9PrintOut(void* a1, void* a2) {
     dprintf("CP9550DS: %s\n", __func__);
 
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPUXInit() {
+static int WINAPI hook_CPUXInit() {
     dprintf("CP9550DS: %s\n", __func__);
 
     return PRINTER_ERROR_NONE;
 }
 
-static WINAPI int hook_CPUASetPrintParameter(void* a1, void* a2) {
+static int WINAPI hook_CPUASetPrintParameter(void* a1, void* a2) {
     dprintf("CP9550DS: %s\n", __func__);
 
     return PRINTER_ERROR_NONE;
