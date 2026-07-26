@@ -203,9 +203,9 @@ static int WINAPI hook_CPU9GetFWInfo(char* firmware, void* a2) {
     // this doesn't seem to be checked anywhere. shows in test menu though.
     // this is also a string??
     memset(firmware, 0, 18);
-    firmware[0] = '1';
-    firmware[6] = '1';
-    firmware[12] = '1';
+    strcpy(firmware, "293A30");
+    strcpy(firmware + 6, "378B10");
+    strcpy(firmware + 12, "170A20");
 
     return PRINTER_ERROR_NONE;
 }
