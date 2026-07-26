@@ -154,6 +154,12 @@ static int WINAPI hook_CPUASendImage(struct printer_cp_image* image, void* a2, v
     
     int size = image->width * image->height * 3;
     uint8_t* raw_image = (uint8_t*) malloc(size);
+
+    if (raw_image == NULL) {
+        dprintf("CP9550DS: Memory allocation failed\n");
+        return PRINTER_ERROR_GENERIC;
+    }
+
     for (int i = 0; i < image->width * image->height; i++) {
         // flip red and blue channels
         raw_image[i * 3] = *(image->data + i * 3 + 2);
@@ -164,6 +170,8 @@ static int WINAPI hook_CPUASendImage(struct printer_cp_image* image, void* a2, v
     dprintf("CP9550DS: Saving image to %ls\n", dumpPath);
 
     int ret = WriteDataToBitmapFile(dumpPath, 24, image->width, image->height, raw_image, size, NULL, 0, false);
+
+    free(raw_image);
 
     if (ret < 0) {
         dprintf("CP9550DS: WriteDataToBitmapFile returned %d\n", ret);

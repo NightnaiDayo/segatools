@@ -16,6 +16,7 @@ divaio_lib = static_library(
         'divaio.h',
         'config.c',
         'config.h',
+        'input/backend.h',
         'input/di.c',
         'input/di.h',
         'input/di-dev.c',
