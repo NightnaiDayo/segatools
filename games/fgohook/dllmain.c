@@ -29,7 +29,7 @@
 #include "hooklib/dll.h"
 #include "hooklib/dvd.h"
 #include "hooklib/touch.h"
-#include "hooklib/printer.h"
+#include "hooklib/printer_chc.h"
 #include "hooklib/createprocess.h"
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
@@ -81,7 +81,7 @@ static DWORD CALLBACK fgo_pre_startup(void)
 
     /* Hook external DLL APIs */
 
-    printer_hook_init(&fgo_hook_cfg.printer, 4, fgo_hook_mod);
+    printer_chc_hook_init(&fgo_hook_cfg.printer, 4, fgo_hook_mod);
     if (fgo_hook_cfg.printer.enable) {
         dll_hook_push(fgo_hook_mod, L"C330Ausb.dll");
         dll_hook_push(fgo_hook_mod, L"C330AFWDLusb.dll");
@@ -143,7 +143,7 @@ static DWORD CALLBACK fgo_pre_startup(void)
         goto fail;
     }
 
-    hr = createprocess_push_hook_a("am/amdaemon.exe", "inject -d -k fgohook.dll ", "", false);
+    hr = createprocess_push_hook_a("am/amdaemon.exe", "inject -d -k fgohook.dll ", "", false, false);
 
     if (FAILED(hr)) {
         goto fail;

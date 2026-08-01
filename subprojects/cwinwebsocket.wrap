@@ -1,0 +1,5 @@
+[wrap-git]
+directory = cwinwebsocket
+url = https://github.com/akechi-haruka/cwinwebsocket
+revision = HEAD
+

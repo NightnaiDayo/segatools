@@ -32,6 +32,9 @@ static uint8_t swdc_di_rumble_duration;
 static uint8_t swdc_di_base_damper;
 static uint8_t swdc_di_deadband;
 
+/* Fixed spring boost multiplier */
+static const float swdc_di_spring_boost = 1.0f;
+
 HRESULT swdc_di_dev_init(const struct swdc_di_config* cfg,
                          IDirectInputDevice8W* dev, HWND wnd) {
     assert(cfg != NULL);
@@ -63,6 +66,7 @@ HRESULT swdc_di_dev_init(const struct swdc_di_config* cfg,
     swdc_di_deadband = cfg->ffb_deadband > 200
                         ? 200
                         : cfg->ffb_deadband;
+
 
     return S_OK;
 }
@@ -242,7 +246,8 @@ void swdc_di_ffb_damper(uint8_t force) {
 
     /* SPRING (centering) */
     memset(&cond, 0, sizeof(cond));
-    cond.lPositiveCoefficient = (LONG)(((uint32_t)force * ffb_strength) / swdc_di_ffb_scale);
+    LONG base_coeff = (LONG)(((uint32_t)force * ffb_strength) / swdc_di_ffb_scale);
+	LONG boosted_coeff = (LONG)((float)base_coeff * swdc_di_spring_boost);
     cond.lNegativeCoefficient = cond.lPositiveCoefficient;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;

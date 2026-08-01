@@ -12,7 +12,7 @@ if ERRORLEVEL 1 (
     goto failure
 )
 
-docker run -it --rm -v %~dp0:/segatools --name %CONTAINER_NAME% %IMAGE_NAME%
+docker run -it --rm -v "%~dp0:/segatools" --name %CONTAINER_NAME% %IMAGE_NAME%
 
 if ERRORLEVEL 1 (
     goto failure

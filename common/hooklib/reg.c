@@ -12,12 +12,15 @@
 #include "util/dprintf.h"
 #include "util/str.h"
 
+#define MAX_CONCURRENT_REG_HANDLES 4
+
 struct reg_hook_key {
     HKEY root;
     const wchar_t *name;
     const struct reg_hook_val *vals;
     size_t nvals;
-    HKEY handle;
+    HKEY handles[MAX_CONCURRENT_REG_HANDLES];
+    size_t nhandles;
 };
 
 /* Helper functions */
@@ -344,7 +347,7 @@ static LRESULT reg_hook_propagate_hr(HRESULT hr)
 static struct reg_hook_key *reg_hook_match_key_locked(HKEY handle)
 {
     struct reg_hook_key *key;
-    size_t i;
+    size_t i, j;
 
     if (handle == NULL || handle == INVALID_HANDLE_VALUE) {
         return NULL;
@@ -353,8 +356,10 @@ static struct reg_hook_key *reg_hook_match_key_locked(HKEY handle)
     for (i = 0 ; i < reg_hook_nkeys ; i++) {
         key = &reg_hook_keys[i];
 
-        if (key->handle == handle) {
-            return key;
+        for (j = 0; j < key->nhandles; j++) {
+            if (key->handles[j] == handle) {
+                return key;
+            }
         }
     }
 
@@ -414,9 +419,9 @@ static LSTATUS reg_hook_open_locked(
         return ERROR_SUCCESS;
     }
 
-    /* Assume only one handle will be open at a time */
+    /* Assume only MAX_CONCURRENT_REG_HANDLES handles will be open at a time */
 
-    if (key->handle != NULL) {
+    if (key->nhandles > MAX_CONCURRENT_REG_HANDLES) {
         return ERROR_SHARING_VIOLATION;
     }
 
@@ -433,7 +438,7 @@ static LSTATUS reg_hook_open_locked(
             out);
 
     if (err == ERROR_SUCCESS) {
-        key->handle = *out;
+        key->handles[key->nhandles++] = *out;
     }
 
     return err;
@@ -511,16 +516,22 @@ static LSTATUS WINAPI hook_RegCreateKeyExW(
 static LSTATUS WINAPI hook_RegCloseKey(HKEY handle)
 {
     struct reg_hook_key *key;
-    size_t i;
+    size_t i, j, k;
 
     EnterCriticalSection(&reg_hook_lock);
 
     for (i = 0 ; i < reg_hook_nkeys ; i++) {
         key = &reg_hook_keys[i];
 
-        if (key->handle == handle) {
-            //dprintf("Registry: Closed virtual key %S\n", key->name);
-            key->handle = NULL;
+        for (j = 0; j < key->nhandles; j++) {
+            if (key->handles[j] == handle) {
+                for (k = j; k < MAX_CONCURRENT_REG_HANDLES - 1; k++) {
+                    key->handles[k] = key->handles[k + 1];
+                }
+                key->handles[MAX_CONCURRENT_REG_HANDLES - 1] = NULL;
+                key->nhandles--;
+                //dprintf("Registry: Closed virtual key %S\n", key->name);
+            }
         }
     }
 

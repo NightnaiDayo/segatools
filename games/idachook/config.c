@@ -13,6 +13,7 @@
 
 #include "platform/config.h"
 #include "platform/platform.h"
+#include "util/io-path.h"
 
 
 void led15070_config_load(struct led15070_config *cfg, const wchar_t *filename)
@@ -59,12 +60,13 @@ void idac_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"idacio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"idacio",
+            L"path",
+            L"SEGATOOLS_IDACIO_PATH",
+            L"idacio.dll",
             filename);
 }
 

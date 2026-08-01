@@ -12,6 +12,9 @@
 #include "platform/amvideo.h"
 #include "platform/clock.h"
 #include "platform/config.h"
+
+#include <shlwapi.h>
+
 #include "platform/dns.h"
 #include "platform/epay.h"
 #include "platform/hwmon.h"
@@ -23,6 +26,7 @@
 #include "platform/platform.h"
 #include "platform/vfs.h"
 #include "platform/system.h"
+#include "util/dprintf.h"
 #include "platform/openssl.h"
 #include "util/dprintf.h"
 
@@ -31,6 +35,14 @@ void platform_config_load(struct platform_config *cfg, const wchar_t *filename)
 {
     assert(cfg != NULL);
     assert(filename != NULL);
+
+    if (!PathFileExistsW(filename)) {
+        wchar_t temp[MAX_PATH];
+        dprintf("ERROR: Configuration does not exist\n");
+        dprintf("            Configured: \"%ls\"\n", filename);
+        GetFullPathNameW(filename, _countof(temp), temp, NULL);
+        dprintf("            Expanded:   \"%ls\"\n", temp);
+    }
 
     amvideo_config_load(&cfg->amvideo, filename);
     clock_config_load(&cfg->clock, filename);
@@ -156,6 +168,15 @@ void misc_config_load(struct misc_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"misc", L"enable", 1, filename);
+    cfg->allowMasterKeyWrite = GetPrivateProfileIntW(L"misc", L"allowMasterKeyWrite", 0, filename);
+    cfg->allowReboot = GetPrivateProfileIntW(L"misc", L"allowReboot", 0, filename);
+    GetPrivateProfileStringW(
+            L"misc",
+            L"nextProcessFilePath",
+            L"DEVICE\\NextProcess.txt",
+            cfg->nextProcessFile,
+            _countof(cfg->nextProcessFile),
+            filename);
 }
 
 void netenv_config_load(struct netenv_config *cfg, const wchar_t *filename)
@@ -168,6 +189,11 @@ void netenv_config_load(struct netenv_config *cfg, const wchar_t *filename)
     memset(cfg, 0, sizeof(*cfg));
 
     cfg->enable = GetPrivateProfileIntW(L"netenv", L"enable", 0, filename);
+    cfg->redirect_broadcast = GetPrivateProfileIntW(
+            L"netenv",
+            L"redirectBroadcast",
+            1,
+            filename);
 
     cfg->addr_suffix = GetPrivateProfileIntW(
             L"netenv",
@@ -206,6 +232,7 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
     wchar_t game_id[5];
     wchar_t platform_id[5];
     wchar_t subnet[16];
+    wchar_t bcast[16];
     unsigned int ip[4];
     size_t i;
 
@@ -217,6 +244,7 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
     memset(game_id, 0, sizeof(game_id));
     memset(platform_id, 0, sizeof(platform_id));
     memset(subnet, 0, sizeof(subnet));
+    memset(bcast, 0, sizeof(bcast));
 
     cfg->enable = GetPrivateProfileIntW(L"keychip", L"enable", 1, filename);
 
@@ -260,6 +288,14 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
             _countof(subnet),
             filename);
 
+    GetPrivateProfileStringW(
+            L"netenv",
+            L"broadcast",
+            L"255.255.255.255",
+            bcast,
+            _countof(bcast),
+            filename);
+
     for (i = 0 ; i < 16 ; i++) {
         cfg->keychip_id[i] = (char) keychip_id[i];
     }
@@ -275,6 +311,9 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
     swscanf(subnet, L"%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
     cfg->subnet = (ip[0] << 24) | (ip[1] << 16) | (ip[2] << 8) | 0;
 
+    swscanf(bcast, L"%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
+    cfg->bcast = (ip[0] << 24) | (ip[1] << 16) | (ip[2] << 8) | (ip[3]);
+
     GetPrivateProfileStringW(
             L"keychip",
             L"billingCa",
@@ -289,6 +328,16 @@ void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
             L"DEVICE\\billing.pub",
             cfg->billing_pub,
             _countof(cfg->billing_pub),
+            filename);
+
+    cfg->persistence = GetPrivateProfileIntW(L"keychip", L"persistence", 0, filename);
+
+    GetPrivateProfileStringW(
+            L"keychip",
+            L"persistent_path",
+            L"DEVICE\\nusec.bin",
+            cfg->persistent_path,
+            _countof(cfg->persistent_path),
             filename);
 }
 
@@ -314,6 +363,7 @@ void vfs_config_load(struct vfs_config *cfg, const wchar_t *filename)
     assert(filename != NULL);
 
     cfg->enable = GetPrivateProfileIntW(L"vfs", L"enable", 1, filename);
+    cfg->allowAmfsDownloads = GetPrivateProfileIntW(L"vfs", L"allowAmfsDownloads", 0, filename);
 
     GetPrivateProfileStringW(
             L"vfs",

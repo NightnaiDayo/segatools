@@ -9,6 +9,7 @@
 
 struct netenv_config {
     bool enable;
+    bool redirect_broadcast;
     uint8_t addr_suffix;
     uint8_t router_suffix;
     uint8_t mac_addr[6];
@@ -18,3 +19,4 @@ HRESULT netenv_hook_init(
         const struct netenv_config *cfg,
         const struct nusec_config *kc_cfg);
 
+void netenv_hook_apply_hooks(HMODULE mod);

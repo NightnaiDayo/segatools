@@ -244,6 +244,12 @@ static HRESULT led15070_handle_irp_locked(int board, struct irp *irp)
         }
     }
 
+    if (irp->op == IRP_OP_READ) {
+        if (irp->ovl != NULL && boarduart->readable.pos == 0) {
+            Sleep(1);
+        }
+    }
+
     hr = uart_handle_irp(boarduart, irp);
 
     if (FAILED(hr) || irp->op != IRP_OP_WRITE) {

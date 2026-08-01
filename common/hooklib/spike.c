@@ -246,6 +246,9 @@ void spike_hook_read_config(const wchar_t *target, const wchar_t *spike_file) {
     wchar_t patch_data[64];
     char *ret;
     FILE *f;
+    int current_rva_mode = 0; // 0 = dec, 1 = hex
+    wchar_t new_rva_mode[16];
+
     f = _wfopen(spike_file, L"r");
 
     if (f == NULL) {
@@ -265,52 +268,62 @@ void spike_hook_read_config(const wchar_t *target, const wchar_t *spike_file) {
             continue;
         }
 
-        match = sscanf(line, "levels %lli %i", &rva, &count);
+        match = sscanf(line, "mode %16ls", new_rva_mode);
+
+        if (match == 1) {
+            if (wcscmp(new_rva_mode, L"hex") == 0) {
+                current_rva_mode = 1;
+            } else if (wcscmp(new_rva_mode, L"dec") == 0) {
+                current_rva_mode = 0;
+            }
+        }
+
+        match = sscanf(line, current_rva_mode ? "levels %llx %i" : "levels %lli %i", &rva, &count);
 
         if (match == 2) {
             spike_insert_log_levels((uintptr_t)rva, count);
         }
 
-        match = sscanf(line, "j_vprintf %lli", &rva);
+        match = sscanf(line, current_rva_mode ? "j_vprintf %llx" : "j_vprintf %lli", &rva);
 
         if (match == 1) {
             spike_insert_jmp(target, (uintptr_t)rva, spike_fn_vprintf);
         }
 
-        match = sscanf(line, "j_vwprintf %lli", &rva);
+        match = sscanf(line, current_rva_mode ? "j_vwprintf %llx" : "j_vwprintf %lli", &rva);
 
         if (match == 1) {
             spike_insert_jmp(target, (uintptr_t)rva, spike_fn_vwprintf);
         }
 
-        match = sscanf(line, "j_printf %lli", &rva);
+        match = sscanf(line, current_rva_mode ? "j_printf %llx" : "j_printf %lli", &rva);
 
         if (match == 1) {
             spike_insert_jmp(target, (uintptr_t)rva, spike_fn_printf);
         }
 
-        match = sscanf(line, "j_puts %lli", &rva);
+        match = sscanf(line, current_rva_mode ? "j_puts %llx" : "j_puts %lli", &rva);
 
         if (match == 1) {
             spike_insert_jmp(target, (uintptr_t)rva, spike_fn_puts);
         }
 
-        match = sscanf(line, "j_perror %lli", &rva);
+        match = sscanf(line, current_rva_mode ? "j_perror %llx" : "j_perror %lli", &rva);
 
         if (match == 1) {
             spike_insert_jmp(target, (uintptr_t)rva, spike_fn_perror);
         }
 
-        match = sscanf(line, "c_fputs %lli", &rva); /* c == "callback" */
+        match = sscanf(line, current_rva_mode ? "c_fputs %llx" : "c_fputs %lli", &rva); /* c == "callback" */
 
         if (match == 1) {
             spike_insert_ptr(target, (uintptr_t)rva, spike_fn_fputs);
         }
-        match = sscanf(line, "patch_memory_nop %255ls %lli %i", filename, &rva, &count);
+        match = sscanf(line, current_rva_mode ? "patch_memory_nop %255ls %llx %i" : "patch_memory_nop %255ls %lli %i", filename, &rva, &count);
         if (match == 3 && (_wcsicmp(filename, target) == 0)) {
             spike_insert_nop((LPCWSTR)filename, (uintptr_t)rva, count);
         }
-        match = sscanf(line, "patch_memory_data %255ls %lli %64ls", filename, &rva, patch_data);
+        match = sscanf(line, current_rva_mode ? "patch_memory_data %255ls %llx %64ls" : "patch_memory_data %255ls %lli %64ls", filename, &rva, patch_data);
         if (match == 3 && (_wcsicmp(filename, target) == 0)) {
             spike_insert_data((LPCWSTR)filename, (uintptr_t)rva, patch_data);
         }

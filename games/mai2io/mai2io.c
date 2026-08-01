@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <process.h>
+#include <string.h>
 
 #include "mai2hook/touch.h"
 #include "mai2io/config.h"
@@ -160,34 +161,30 @@ void mai2_io_touch_set_sens(uint8_t *bytes) {
 }
 
 void mai2_io_touch_update(bool player1, bool player2) {
-    if (mai2_io_cfg.debug_input_1p) {
-        if (player1 && mai2_io_touch_1p_thread == NULL) {
-            mai2_io_touch_1p_thread = (HANDLE)_beginthreadex(
-                NULL, 0, mai2_io_touch_1p_thread_proc, _callback, 0, NULL);
-        } else if (!player1 && mai2_io_touch_1p_thread != NULL) {
-            mai2_io_touch_1p_stop_flag = true;
+    if (player1 && mai2_io_touch_1p_thread == NULL) {
+        mai2_io_touch_1p_thread = (HANDLE)_beginthreadex(
+            NULL, 0, mai2_io_touch_1p_thread_proc, _callback, 0, NULL);
+    } else if (!player1 && mai2_io_touch_1p_thread != NULL) {
+        mai2_io_touch_1p_stop_flag = true;
 
-            WaitForSingleObject(mai2_io_touch_1p_thread, INFINITE);
-            CloseHandle(mai2_io_touch_1p_thread);
-            mai2_io_touch_1p_thread = NULL;
+        WaitForSingleObject(mai2_io_touch_1p_thread, INFINITE);
+        CloseHandle(mai2_io_touch_1p_thread);
+        mai2_io_touch_1p_thread = NULL;
 
-            mai2_io_touch_1p_stop_flag = false;
-        }
+        mai2_io_touch_1p_stop_flag = false;
     }
 
-    if (mai2_io_cfg.debug_input_2p) {
-        if (player2 && mai2_io_touch_2p_thread == NULL) {
-            mai2_io_touch_2p_thread = (HANDLE)_beginthreadex(
-                NULL, 0, mai2_io_touch_2p_thread_proc, _callback, 0, NULL);
-        } else if (!player2 && mai2_io_touch_2p_thread != NULL) {
-            mai2_io_touch_2p_stop_flag = true;
+    if (player2 && mai2_io_touch_2p_thread == NULL) {
+        mai2_io_touch_2p_thread = (HANDLE)_beginthreadex(
+            NULL, 0, mai2_io_touch_2p_thread_proc, _callback, 0, NULL);
+    } else if (!player2 && mai2_io_touch_2p_thread != NULL) {
+        mai2_io_touch_2p_stop_flag = true;
 
-            WaitForSingleObject(mai2_io_touch_2p_thread, INFINITE);
-            CloseHandle(mai2_io_touch_2p_thread);
-            mai2_io_touch_2p_thread = NULL;
+        WaitForSingleObject(mai2_io_touch_2p_thread, INFINITE);
+        CloseHandle(mai2_io_touch_2p_thread);
+        mai2_io_touch_2p_thread = NULL;
 
-            mai2_io_touch_2p_stop_flag = false;
-        }
+        mai2_io_touch_2p_stop_flag = false;
     }
 }
 
@@ -197,14 +194,18 @@ static unsigned int __stdcall mai2_io_touch_1p_thread_proc(void *ctx) {
     while (!mai2_io_touch_1p_stop_flag) {
         uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
-        for (int i = 0; i < 34; i++) {
-            if (GetAsyncKeyState(mai2_io_cfg.vk_1p_touch[i])) {
-                int byteIndex = i / 5;
-                int bitIndex = i % 5;
-                state[byteIndex] |= (1 << bitIndex);
+        if (mai2_io_cfg.debug_input_1p) {
+            for (int i = 0; i < 34; i++) {
+                if (GetAsyncKeyState(mai2_io_cfg.vk_1p_touch[i])) {
+                    int byteIndex = i / 5;
+                    int bitIndex = i % 5;
+                    state[byteIndex] |= (1 << bitIndex);
+                }
             }
         }
+
         callback(1, state);
+
         Sleep(1);
     }
     return 0;
@@ -216,14 +217,18 @@ static unsigned int __stdcall mai2_io_touch_2p_thread_proc(void *ctx) {
     while (!mai2_io_touch_2p_stop_flag) {
         uint8_t state[7] = {0, 0, 0, 0, 0, 0, 0};
 
-        for (int i = 0; i < 34; i++) {
-            if (GetAsyncKeyState(mai2_io_cfg.vk_2p_touch[i])) {
-                int byteIndex = i / 5;
-                int bitIndex = i % 5;
-                state[byteIndex] |= (1 << bitIndex);
+        if (mai2_io_cfg.debug_input_2p) {
+            for (int i = 0; i < 34; i++) {
+                if (GetAsyncKeyState(mai2_io_cfg.vk_2p_touch[i])) {
+                    int byteIndex = i / 5;
+                    int bitIndex = i % 5;
+                    state[byteIndex] |= (1 << bitIndex);
+                }
             }
         }
+
         callback(2, state);
+
         Sleep(1);
     }
     return 0;

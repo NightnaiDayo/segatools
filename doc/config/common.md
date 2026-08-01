@@ -17,6 +17,61 @@ Then you can copy `segatools.ini` to `another_config.ini` but with different dns
 set SEGATOOLS_CONFIG_PATH=.\another_config.ini
 ```
 
+## IO DLL path resolution
+
+Custom IO DLL paths are resolved in this order:
+
+1. The section-specific INI value, such as `[mai2io] path=`.
+2. The section-specific environment variable, such as `SEGATOOLS_MAI2IO_PATH`.
+3. `SEGATOOLS_IO_ROOT` joined with the default IO DLL filename, such as
+   `%SEGATOOLS_IO_ROOT%\mai2io.dll`.
+4. Empty path, which keeps the built-in IO implementation.
+
+INI paths and environment-variable paths support Windows environment variable
+expansion, so an INI entry like this is valid:
+
+```ini
+[mai2io]
+path=%SEGATOOLS_IO_ROOT%\mai2io.dll
+```
+
+Supported IO environment variables:
+
+| INI section | Direct environment variable | `SEGATOOLS_IO_ROOT` filename |
+| --- | --- | --- |
+| `[aimeio]` | `SEGATOOLS_AIMEIO_PATH` | `aimeio.dll` |
+| `[apm3io]` | `SEGATOOLS_APM3IO_PATH` | `apm3io.dll` |
+| `[carolio]` | `SEGATOOLS_CAROLIO_PATH` | `carolio.dll` |
+| `[chuniio]` | `SEGATOOLS_CHUNIIO_PATH` | `chuniio.dll` \* |
+| `[cmio]` | `SEGATOOLS_CMIO_PATH` | `cmio.dll` |
+| `[cxbio]` | `SEGATOOLS_CXBIO_PATH` | `cxbio.dll` |
+| `[divaio]` | `SEGATOOLS_DIVAIO_PATH` | `divaio.dll` |
+| `[ektio]` | `SEGATOOLS_EKTIO_PATH` | `ektio.dll` |
+| `[fgoio]` | `SEGATOOLS_FGOIO_PATH` | `fgoio.dll` |
+| `[idacio]` | `SEGATOOLS_IDACIO_PATH` | `idacio.dll` |
+| `[idzio]` | `SEGATOOLS_IDZIO_PATH` | `idzio.dll` |
+| `[kemonoio]` | `SEGATOOLS_KEMONOIO_PATH` | `kemonoio.dll` |
+| `[mai2io]` | `SEGATOOLS_MAI2IO_PATH` | `mai2io.dll` |
+| `[mercuryio]` | `SEGATOOLS_MERCURYIO_PATH` | `mercuryio.dll` |
+| `[mu3io]` | `SEGATOOLS_MU3IO_PATH` | `mu3io.dll` |
+| `[sekitoio]` | `SEGATOOLS_SEKITOIO_PATH` | `sekitoio.dll` |
+| `[swdcio]` | `SEGATOOLS_SWDCIO_PATH` | `swdcio.dll` |
+| `[tokyoio]` | `SEGATOOLS_TOKYOIO_PATH` | `tokyoio.dll` |
+| `[y3io]` | `SEGATOOLS_Y3IO_PATH` | `y3io.dll` |
+
+\* The `%SEGATOOLS_IO_ROOT%\chuniio.dll` fallback applies to the
+single-32-bit-DLL Chunithm hook (`chunihook`) only. Chunithm NEW and later
+(`chusanhook`) resolve the single-DLL `[chuniio] path=` / `SEGATOOLS_CHUNIIO_PATH`
+from the INI value or environment variable only, with no `SEGATOOLS_IO_ROOT`
+default; those builds use the `path32`/`path64` mechanism below for their
+`SEGATOOLS_IO_ROOT` defaults.
+
+For Chunithm NEW and later hooks that use separate 32-bit and 64-bit IO DLLs,
+`[chuniio] path32=` maps to `SEGATOOLS_CHUNIIO_PATH32` and
+`[chuniio] path64=` maps to `SEGATOOLS_CHUNIIO_PATH64`. When only
+`SEGATOOLS_IO_ROOT` is set, these hooks look for `chuniio_x86.dll` and
+`chuniio_x64.dll`.
+
 ## `[aimeio]`
 
 Controls the card reader driver.
@@ -25,6 +80,8 @@ Controls the card reader driver.
 
 Specify a path for a third-party card reader driver DLL. Default is empty
 (use built-in emulation based on text files and keyboard input).
+If empty, `SEGATOOLS_AIMEIO_PATH` is used if set, followed by
+`%SEGATOOLS_IO_ROOT%\aimeio.dll`.
 
 In previous versions of Segatools this was accomplished by replacing the
 AIMEIO.DLL file that came with Segatools. Segatools no longer ships with a
@@ -59,7 +116,7 @@ This is required for some games (e.g. Chunithm) but not others (e.g. WACCA).
 
 Default: `1`
 
-Changes the Aime card reader generation, this will also change the LED info 
+Changes the Aime card reader generation, this will also change the LED info
 provided for the game.
 
 - `1`: TN32MSEC003S H/W Ver3.0 / TN32MSEC003S F/W Ver1.2
@@ -112,6 +169,12 @@ The "proxy flag" of the emulated Thinca authentication card. This should be 2 if
 Default: `DEVICE\authdata.bin`
 
 Path to the binary file containing data for a Thinca authentication card (see `emoney.txt`)
+
+### `mobileFelica`
+
+Default: `0`
+
+Whether to simulate the scanned FeliCa being a mobile device (1) or an IC card (0). Changes behavior of Aime DB and the card registration flow slightly.
 
 ## `[vfd]`
 
@@ -198,7 +261,7 @@ resolves to one).
 
 Default: `title`
 
-Leave it as `title` to use the title server returned by ALL.Net. Rewrites 
+Leave it as `title` to use the title server returned by ALL.Net. Rewrites
 the title server hostname for certain games, such as crossbeats REV.
 
 ### `router`
@@ -485,9 +548,9 @@ integer `modelType` setting, but they are combined here for convenience.
 - `ACA`: ALLS UX/HX/MX
 
 `modelType` is one of the following:
-- `1`: Server (SV) 
-- `2`: Satalite (ST) 
-- `3`: Live (LV) 
+- `1`: Server (SV)
+- `2`: Satalite (ST)
+- `3`: Live (LV)
 - `4`: Terminal (TN)
 
 It's safe to assume that every game you'll be playing with these tools will be a Satalite.
@@ -500,20 +563,20 @@ Default: `1`
 
 Override the keychip's region code. Most games seem to pay attention to the
 DS EEPROM region code and not the keychip region code, and this seems to be
-a bit mask that controls which Nu PCB region codes this keychip is authorized
-for. So it probably only affects the system software and not the game software.
-Bit values are:
+a bit mask that controls which Nu/ALLS PCB region codes this keychip is authorized
+for. It can affect the system software and the game software.
+Values are:
 
-- 1: JPN: Japan
-- 2: USA (unused)
-- 3: EXP: Export (for Asian markets)
-- 4: CHS: China (Simplified Chinese?)
+- `1`: JPN: Japan
+- `2`: USA (unused)
+- `4`: EXP: Export (for Asian markets)
+- `8`: CHS: China (Simplified Chinese?)
 
 ### `billingCa`
 
 Default: `DEVICE\\ca.crt`
 
-Set the billing certificate path. This has to match the one used for the 
+Set the billing certificate path. This has to match the one used for the
 SSL billing server. The DER certificate must fit in 1024 bytes so it must be
 small.
 
@@ -553,6 +616,18 @@ Default `192.168.100.0`
 The LAN IP range that the game will expect. The prefix length is hardcoded into
 the game program: for some games this is `/24`, for others it is `/20`.
 
+### `persistence`
+
+Default: `0`
+
+This makes data saved to the keychip (play count, logs, ...) persistent. This should only be enabled if you and your server operator know what you're doing. Can lead to error messages otherwise.
+
+### `persistent_path`
+
+Default: `DEVICE\\nusec.bin`
+
+Path to the file where keychip data is saved to if `persistence` is enabled.
+
 ## `[netenv]`
 
 Configure network environment virtualization. This module helps bypass various
@@ -588,6 +663,20 @@ Default: `01:02:03:04:05:06`
 
 The MAC address of the virtualized Ethernet adapter. The exact value shouldn't
 ever matter.
+
+### `redirectBroadcast`
+
+Default: `1`
+
+Redirect UDP packets sent to the virtual keychip subnet's broadcast address to
+the address configured by `broadcast`. Disable this if you want to preserve the
+original subnet-local broadcast destination.
+
+### `broadcast`
+
+Default: `255.255.255.255`
+
+The UDP broadcast address that should be used if packets are being sent to the virtual keychip's subnet. This is used for cab-to-cab communication (Local Play, Satellite to Terminal, etc.). Depending on your network adapters (VPNs etc), sometimes you must explicitely specify your real LANs subnet.
 
 ## `[pcbid]`
 
@@ -669,9 +758,35 @@ Default: `0`
 Set to `1` to suspend the game until a debugger attaches. The default value
 allows the game to continue running while waiting for a debugger.
 
+### `[touch]`
+
+Configure WinTouch emulation for mouse input.
+
+#### `enable`
+
+Default: `1`
+
+Enable WinTouch touchscreen emulation for the mouse. Disable to use a native WinTouch-compatible touchscreen.
+
+#### `remap`
+
+Default: `1`
+
+Enable coordinate remapping. Disable this if you running in windowed mode and find the touch position shifted when moving the window.
+
+#### `cursor`
+
+Default: `1`
+
+Display a cursor to indicate touch position.
+
 ## `[vfs]`
 
 Configure Windows path redirection hooks.
+
+All of these paths can have a path-part prepended to them by setting the environment variable
+`SEGATOOLS_VFS_RELATIVE_PATH`. This will only apply if the path set in the configuration is relative. Absolute parts are
+not touched.
 
 ### `enable`
 
@@ -701,6 +816,25 @@ Default: Empty string
 Configure the location of the "Option" data mount point. This mount point is
 optional (hence the name, probably) and contains directories which contain
 minor over-the-air content updates.
+
+### `redirection#from`, `redirection#to`
+
+Default: Empty string
+
+Advanced feature intended for owners of real hardware. This allows arbitrary file reads to be redirected to other paths. Since serial ports are also "file" reads, this can be used to redirect hardcoded COM ports to other ports. Up to 64 redirections can be used by incrementing the number in the key: `redirection1from`, `redirection2from`, ...
+
+Example for redirecting COM 5 to COM 10:
+
+```
+redirection0from=\\.\COM5
+redirection0to=\\.\COM10
+```
+
+### `allowAmfsDownloads`
+
+Default: `0`
+
+Allows network services to download arbitrary files to the AMFS directory specified above. This has security implications, do not enable this, unless you trust your server operator.
 
 ## `[epay]`
 
@@ -763,15 +897,28 @@ unless you know what you're doing!
 
 The Windows directory is always excluded from virtualization.
 
-### `redirection#from`, `redirection#to`
+## `[misc]`
 
-Default: Empty string
+Configure miscellaneous hooks and features.
 
-Advanced feature intended for owners of real hardware. This allows arbitrary file reads to be redirected to other paths. Since serial ports are also "file" reads, this can be used to redirect hardcoded COM ports to other ports. Up to 64 redirections can be used by incrementing the number in the key: `redirection1from`, `redirection2from`, ...
+### `allowMasterKeyWrite`
 
-Example for redirecting COM 5 to COM 10:
+Default: `0`
 
-```
-redirection0from=\\.\COM5
-redirection0to=\\.\COM10
-```
+Allows the game to write to specific registry keys relevant for the boot process. Only intended for owners of real hardware.
+
+### `allowReboot`
+
+Default: `0`
+
+Allows the game to reboot the computer. Only intended for owners of real hardware.
+
+### `nextProcessFilePath`
+
+Default: `DEVICE\NextProcess.txt`
+
+This is a file that will be set to the content of what would be written to the `NextProcess` registry key when the game is terminated.
+
+This allows whatever executed the game process to react what should happen next (System Test Mode selected, network delivery completed, ...) without requiring admin permissions.
+
+The file is deleted on startup of segatools.

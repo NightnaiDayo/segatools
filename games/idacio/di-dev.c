@@ -32,6 +32,9 @@ static uint8_t idac_di_rumble_duration;
 static uint8_t idac_di_base_damper;
 static uint8_t idac_di_deadband;
 
+/* Fixed spring boost multiplier */
+static const float idac_di_spring_boost = 1.0f;
+
 HRESULT idac_di_dev_init(const struct idac_di_config* cfg,
                          IDirectInputDevice8W* dev, HWND wnd) {
     assert(cfg != NULL);
@@ -240,13 +243,18 @@ void idac_di_ffb_damper(uint8_t force) {
     DIEFFECT fx;
     DICONDITION cond;
 
+
     /* SPRING (centering) */
     memset(&cond, 0, sizeof(cond));
-    cond.lPositiveCoefficient = (LONG)(((uint32_t)force * ffb_strength) / idac_di_ffb_scale);
-    cond.lNegativeCoefficient = cond.lPositiveCoefficient;
+    LONG base_coeff = (LONG)(((uint32_t)force * ffb_strength) / idac_di_ffb_scale);
+
+    LONG boosted_coeff = (LONG)((float)base_coeff * idac_di_spring_boost);
+
+    cond.lPositiveCoefficient = boosted_coeff;
+    cond.lNegativeCoefficient = boosted_coeff;
     cond.dwPositiveSaturation = DI_FFNOMINALMAX;
     cond.dwNegativeSaturation = DI_FFNOMINALMAX;
-    
+
     /* If user enters 25, result is 0.025 * DI_FFNOMINALMAX */
     cond.lDeadBand = (DI_FFNOMINALMAX * (LONG)idac_di_deadband) / 1000;
 

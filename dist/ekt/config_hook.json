@@ -1,0 +1,13 @@
+{
+  "common": {
+    "language": "english"
+  },
+  "network": {
+    "property": {
+      "dhcp": true
+    }
+  },
+  "allnet_auth": {
+    "type": "1.0"
+  }
+}

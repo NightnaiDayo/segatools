@@ -10,6 +10,8 @@
 
 #include "platform/nusec.h"
 
+#include <shlwapi.h>
+
 #include "util/dprintf.h"
 #include "util/dump.h"
 #include "util/str.h"
@@ -45,10 +47,6 @@
 #define NUSEC_IOCTL_UNK_844             CTL_CODE(0x22, 0x844, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 #define NUSEC_IOCTL_UNK_894             CTL_CODE(0x22, 0x894, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #define NUSEC_IOCTL_UNK_895             CTL_CODE(0x22, 0x895, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-
-struct nusec_log_record {
-    uint8_t unknown[60];
-};
 
 static HRESULT nusec_handle_irp(struct irp *irp);
 static HRESULT nusec_handle_open(struct irp *irp);
@@ -118,13 +116,68 @@ static const struct reg_hook_val nusec_reg_vals[] = {
 };
 
 static HANDLE nusec_fd;
-static uint32_t nusec_nearfull;
-static uint32_t nusec_play_count;
-static uint32_t nusec_play_limit;
-static struct nusec_log_record nusec_log[7154];
-static size_t nusec_log_head;
-static size_t nusec_log_tail;
+static struct nusec_save_data nusec;
 static struct nusec_config nusec_cfg;
+
+HRESULT nusec_load_data() {
+
+    if (!nusec_cfg.persistence || !PathFileExistsW(nusec_cfg.persistent_path)) {
+
+        dprintf("Security: Initialized default values\n");
+
+        memset(&nusec, 0, sizeof(nusec));
+
+        // High 16 bits is billing type, low is actual playlimit
+        nusec.nearfull = (nusec_cfg.billing_type << 16) + 512;
+        nusec.play_count = 0;
+        nusec.play_limit = 1024;
+
+        return S_FALSE;
+    }
+
+    DWORD bytesRead = 0;
+    HANDLE hSave = CreateFileW(nusec_cfg.persistent_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+
+        if (!ReadFile(hSave, &nusec, sizeof(nusec), &bytesRead, NULL)){
+            CloseHandle(hSave);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        CloseHandle(hSave);
+
+        if (bytesRead != sizeof(nusec)){
+            return E_FAIL;
+        }
+        return S_OK;
+    } else {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+}
+
+HRESULT nusec_save_data() {
+
+    if (!nusec_cfg.persistence) {
+        return S_FALSE;
+    }
+
+    DWORD bytesWritten = 0;
+    HANDLE hSave = CreateFileW(nusec_cfg.persistent_path, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSave != NULL) {
+
+        if (!WriteFile(hSave, &nusec, sizeof(nusec), &bytesWritten, NULL)){
+            CloseHandle(hSave);
+            dprintf("Security: Failed writing persistent data: %lx\n", GetLastError());
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        CloseHandle(hSave);
+        return S_OK;
+    } else {
+        dprintf("Security: Failed opening persistent data file for writing: %lx\n", GetLastError());
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+}
 
 HRESULT nusec_hook_init(
         const struct nusec_config *cfg,
@@ -143,6 +196,12 @@ HRESULT nusec_hook_init(
 
     memcpy(&nusec_cfg, cfg, sizeof(*cfg));
 
+    hr = nusec_load_data();
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     if (nusec_cfg.game_id[0] == '\0') {
         memcpy(nusec_cfg.game_id, game_id, sizeof(nusec_cfg.game_id));
     }
@@ -150,11 +209,6 @@ HRESULT nusec_hook_init(
     if (nusec_cfg.platform_id[0] == '\0') {
         memcpy(nusec_cfg.platform_id, platform_id, sizeof(nusec_cfg.platform_id));
     }
-    
-    // High 16 bits is billing type, low is actual playlimit
-    nusec_nearfull = (nusec_cfg.billing_type << 16) + 512;
-    nusec_play_count = 0;
-    nusec_play_limit = 1024;
 
     hr = iohook_open_nul_fd(&nusec_fd);
 
@@ -296,25 +350,25 @@ static HRESULT nusec_ioctl_erase_trace_log(struct irp *irp)
 
     dprintf("Security: %s(count=%i)\n", __func__, count);
 
-    avail = nusec_log_head - nusec_log_tail;
+    avail = nusec.log_head - nusec.log_tail;
 
     if (count < avail) {
         count = avail;
     }
 
-    nusec_log_tail += count;
+    nusec.log_tail += count;
 
-    return S_OK;
+    return nusec_save_data();
 }
 
 static HRESULT nusec_ioctl_td_erase_used(struct irp *irp)
 {
     dprintf("Security: %s\n", __func__);
 
-    nusec_log_head = 0;
-    nusec_log_tail = 0;
+    nusec.log_head = 0;
+    nusec.log_tail = 0;
 
-    return S_OK;
+    return nusec_save_data();
 }
 
 static HRESULT nusec_ioctl_add_play_count(struct irp *irp)
@@ -329,13 +383,19 @@ static HRESULT nusec_ioctl_add_play_count(struct irp *irp)
     }
 
     dprintf("Security: Add play count: %i + %i = %i\n",
-            nusec_play_count,
+            nusec.play_count,
             delta,
-            nusec_play_count + delta);
+            nusec.play_count + delta);
 
-    nusec_play_count += delta;
+    nusec.play_count += delta;
 
-    return iobuf_write_le32(&irp->read, nusec_play_count);
+    hr = nusec_save_data();
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return iobuf_write_le32(&irp->read, nusec.play_count);
 }
 
 static HRESULT nusec_ioctl_get_billing_ca_cert(struct irp *irp)
@@ -438,7 +498,7 @@ static HRESULT nusec_ioctl_get_nearfull(struct irp *irp)
 {
     dprintf("Security: %s\n", __func__);
 
-    return iobuf_write_le32(&irp->read, nusec_nearfull);
+    return iobuf_write_le32(&irp->read, nusec.nearfull);
 }
 
 static HRESULT nusec_ioctl_get_nvram_available(struct irp *irp)
@@ -446,8 +506,8 @@ static HRESULT nusec_ioctl_get_nvram_available(struct irp *irp)
     size_t used;
     size_t avail;
 
-    used = nusec_log_head - nusec_log_tail;
-    avail = _countof(nusec_log) - used;
+    used = nusec.log_head - nusec.log_tail;
+    avail = _countof(nusec.log) - used;
 
     dprintf("Security: %s: used=%i avail=%i\n", __func__,
             (int) used,
@@ -472,14 +532,14 @@ static HRESULT nusec_ioctl_get_play_count(struct irp *irp)
 {
     dprintf("Security: %s\n", __func__);
 
-    return iobuf_write_le32(&irp->read, nusec_play_count);
+    return iobuf_write_le32(&irp->read, nusec.play_count);
 }
 
 static HRESULT nusec_ioctl_get_play_limit(struct irp *irp)
 {
     dprintf("Security: %s\n", __func__);
 
-    return iobuf_write_le32(&irp->read, nusec_play_limit);
+    return iobuf_write_le32(&irp->read, nusec.play_limit);
 }
 
 static HRESULT nusec_ioctl_get_trace_log_data(struct irp *irp)
@@ -513,9 +573,9 @@ static HRESULT nusec_ioctl_get_trace_log_data(struct irp *irp)
         return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
     }
 
-    while (count > 0 && pos != nusec_log_head) {
+    while (count > 0 && pos != nusec.log_head) {
         memcpy( &irp->read.bytes[irp->read.pos],
-                &nusec_log[pos % _countof(nusec_log)],
+                &nusec.log[pos % _countof(nusec.log)],
                 sizeof(struct nusec_log_record));
 
         irp->read.pos += sizeof(struct nusec_log_record);
@@ -532,29 +592,45 @@ static HRESULT nusec_ioctl_get_trace_log_state(struct irp *irp)
 
     dprintf("Security: %s H: %i T: %i\n",
             __func__,
-            (int) nusec_log_head,
-            (int) nusec_log_tail);
+            (int) nusec.log_head,
+            (int) nusec.log_tail);
 
-         iobuf_write_le32(&irp->read, nusec_log_head - nusec_log_tail);
-    hr = iobuf_write_le32(&irp->read, nusec_log_tail);
+         iobuf_write_le32(&irp->read, nusec.log_head - nusec.log_tail);
+    hr = iobuf_write_le32(&irp->read, nusec.log_tail);
 
     return hr;
 }
 
 static HRESULT nusec_ioctl_put_nearfull(struct irp *irp)
 {
+    HRESULT hr;
+
     dprintf("Security: %s\n", __func__);
     dump_const_iobuf(&irp->write);
 
-    return iobuf_read_le32(&irp->write, &nusec_nearfull);
+    hr = iobuf_read_le32(&irp->write, &nusec.nearfull);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return nusec_save_data();
 }
 
 static HRESULT nusec_ioctl_put_play_limit(struct irp *irp)
 {
+    HRESULT hr;
+
     dprintf("Security: %s\n", __func__);
     dump_const_iobuf(&irp->write);
 
-    return iobuf_read_le32(&irp->write, &nusec_play_limit);
+    hr = iobuf_read_le32(&irp->write, &nusec.play_limit);
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    return nusec_save_data();
 }
 
 static HRESULT nusec_ioctl_put_trace_log_data(struct irp *irp)
@@ -568,21 +644,21 @@ static HRESULT nusec_ioctl_put_trace_log_data(struct irp *irp)
         return E_INVALIDARG;
     }
 
-    if (nusec_log_head - nusec_log_tail >= _countof(nusec_log)) {
+    if (nusec.log_head - nusec.log_tail >= _countof(nusec.log)) {
         dprintf("    Log buffer is full!\n");
 
         return HRESULT_FROM_WIN32(ERROR_DISK_FULL);
     }
 
-    memcpy( &nusec_log[nusec_log_head % _countof(nusec_log)],
+    memcpy( &nusec.log[nusec.log_head % _countof(nusec.log)],
             irp->write.bytes,
             sizeof(struct nusec_log_record));
 
-    nusec_log_head++;
+    nusec.log_head++;
 
-    dprintf("    H: %i T: %i\n", (int) nusec_log_head, (int) nusec_log_tail);
+    dprintf("    H: %i T: %i\n", (int) nusec.log_head, (int) nusec.log_tail);
 
-    return S_OK;
+    return nusec_save_data();
 }
 
 static HRESULT nusec_reg_read_game_id(void *bytes, uint32_t *nbytes)

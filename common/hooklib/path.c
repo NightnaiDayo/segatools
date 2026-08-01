@@ -2,7 +2,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,12 +11,12 @@
 
 #include "hooklib/path.h"
 
+#include <winioctl.h>
 #include <util/dprintf.h>
 
 /* Helpers */
 
 static void path_hook_init(void);
-static BOOL path_transform_a(char **out, const char *src);
 
 /* API hooks */
 
@@ -110,6 +110,16 @@ static BOOL WINAPI hook_MoveFileW(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName);
 
+static BOOL WINAPI hook_CopyFileA(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists);
+
+static BOOL WINAPI hook_CopyFileW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists);
+
 static BOOL WINAPI hook_MoveFileExA(
         const char *lpExistingFileName,
         const char *lpNewFileName,
@@ -119,19 +129,6 @@ static BOOL WINAPI hook_MoveFileExW(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName,
         uint32_t dwFlags);
-
-        
-static BOOL WINAPI hook_CopyFileA(
-        const LPCSTR lpExistingFileName,
-        const LPCSTR lpNewFileName,
-        BOOL   bFailIfExists
-);
-
-static BOOL WINAPI hook_CopyFileW(
-        const LPCWSTR  lpExistingFileName,
-        const LPCWSTR  lpNewFileName,
-        BOOL   bFailIfExists
-);
 
 static BOOL WINAPI hook_CopyFileExA(
         LPCSTR             lpExistingFileName,
@@ -203,6 +200,24 @@ static UINT WINAPI hook_GetDriveTypeA(
 static UINT WINAPI hook_GetDriveTypeW(
         LPCWSTR lpRootPathName
 );
+
+static BOOL WINAPI hook_GetDiskFreeSpaceW(
+        LPCWSTR lpRootPathName,
+        LPDWORD lpSectorsPerCluster,
+        LPDWORD lpBytesPerSector,
+        LPDWORD lpNumberOfFreeClusters,
+        LPDWORD lpTotalNumberOfClusters
+);
+
+static BOOL WINAPI hook_DeviceIoControl(
+        HANDLE hFile,
+        uint32_t dwIoControlCode,
+        void *lpInBuffer,
+        uint32_t nInBufferSize,
+        void *lpOutBuffer,
+        uint32_t nOutBufferSize,
+        uint32_t *lpBytesReturned,
+        OVERLAPPED *lpOverlapped);
 
 /* Link pointers */
 
@@ -296,6 +311,16 @@ static BOOL (WINAPI *next_MoveFileW)(
         const wchar_t *lpExistingFileName,
         const wchar_t *lpNewFileName);
 
+static BOOL (WINAPI *next_CopyFileA)(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists);
+
+static BOOL (WINAPI *next_CopyFileW)(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists);
+
 static BOOL (WINAPI *next_MoveFileExA)(
         const char *lpExistingFileName,
         const char *lpNewFileName,
@@ -388,6 +413,24 @@ static UINT (WINAPI *next_GetDriveTypeW)(
 static UINT (WINAPI *next_GetDriveTypeA)(
         LPCSTR lpRootPathName
 );
+
+static BOOL (WINAPI *next_GetDiskFreeSpaceW)(
+        LPCWSTR lpRootPathName,
+        LPDWORD lpSectorsPerCluster,
+        LPDWORD lpBytesPerSector,
+        LPDWORD lpNumberOfFreeClusters,
+        LPDWORD lpTotalNumberOfClusters
+);
+
+static BOOL (WINAPI *next_DeviceIoControl)(
+        HANDLE hFile,
+        uint32_t dwIoControlCode,
+        void *lpInBuffer,
+        uint32_t nInBufferSize,
+        void *lpOutBuffer,
+        uint32_t nOutBufferSize,
+        uint32_t *lpBytesReturned,
+        OVERLAPPED *lpOverlapped);
 
 /* Hook table */
 
@@ -490,7 +533,7 @@ static const struct hook_symbol path_hook_syms[] = {
         .link   = (void **) &next_CopyFileW,
     }, {
         .name   = "CopyFileExA",
-        .patch  = hook_CopyFileExW,
+        .patch  = hook_CopyFileExA,
         .link   = (void **) &next_CopyFileExA,
     }, {
         .name   = "CopyFileExW",
@@ -532,6 +575,14 @@ static const struct hook_symbol path_hook_syms[] = {
         .name   = "GetDriveTypeW",
         .patch  = hook_GetDriveTypeW,
         .link = (void **) &next_GetDriveTypeW,
+    }, {
+        .name   = "GetDiskFreeSpaceW",
+        .patch  = hook_GetDiskFreeSpaceW,
+        .link = (void **) &next_GetDiskFreeSpaceW,
+    }, {
+        .name   = "DeviceIoControl",
+        .patch  = hook_DeviceIoControl,
+        .link = (void **) &next_DeviceIoControl,
     }
 };
 
@@ -596,7 +647,7 @@ void path_hook_insert_hooks(HMODULE target)
             _countof(path_hook_syms));
 }
 
-static BOOL path_transform_a(char **out, const char *src)
+BOOL path_transform_a(char **out, const char *src)
 {
     wchar_t *src_w;
     size_t src_c;
@@ -1249,6 +1300,75 @@ static BOOL WINAPI hook_MoveFileW(
     return ok;
 }
 
+
+static BOOL WINAPI hook_CopyFileA(
+        const char *lpExistingFileName,
+        const char *lpNewFileName,
+        BOOL bFailIfExists)
+{
+    char *oldTrans;
+    char *newTrans;
+    BOOL ok;
+
+    ok = path_transform_a(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_a(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileA(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        bFailIfExists);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
+static BOOL WINAPI hook_CopyFileW(
+        const wchar_t *lpExistingFileName,
+        const wchar_t *lpNewFileName,
+        BOOL bFailIfExists)
+{
+    wchar_t *oldTrans;
+    wchar_t *newTrans;
+    BOOL ok;
+
+    ok = path_transform_w(&oldTrans, lpExistingFileName);
+
+    if (!ok) {
+        return FALSE;
+    }
+
+    ok = path_transform_w(&newTrans, lpNewFileName);
+
+    if (!ok) {
+        free(oldTrans);
+
+        return FALSE;
+    }
+
+    ok = next_CopyFileW(
+        oldTrans ? oldTrans : lpExistingFileName,
+        newTrans ? newTrans : lpNewFileName,
+        bFailIfExists);
+
+    free(oldTrans);
+    free(newTrans);
+
+    return ok;
+}
+
 static BOOL WINAPI hook_MoveFileExA(
         const char *lpExistingFileName,
         const char *lpNewFileName,
@@ -1310,75 +1430,6 @@ static BOOL WINAPI hook_MoveFileExW(
         oldTrans ? oldTrans : lpExistingFileName,
         newTrans ? newTrans : lpNewFileName,
         dwFlags);
-
-    free(oldTrans);
-    free(newTrans);
-
-    return ok;
-}
-
-static BOOL WINAPI hook_CopyFileA(
-        const LPCSTR lpExistingFileName,
-        const LPCSTR lpNewFileName,
-        BOOL   bFailIfExists
-)
-{
-    char *oldTrans;
-    char *newTrans;
-    BOOL ok;
-
-    ok = path_transform_a(&oldTrans, lpExistingFileName);
-
-    if (!ok) {
-        return FALSE;
-    }
-
-    ok = path_transform_a(&newTrans, lpNewFileName);
-
-    if (!ok) {
-        free(oldTrans);
-
-        return FALSE;
-    }
-
-    ok = next_CopyFileA(
-        oldTrans ? oldTrans : lpExistingFileName,
-        newTrans ? newTrans : lpNewFileName,
-        bFailIfExists);
-
-    free(oldTrans);
-    free(newTrans);
-
-    return ok;
-}
-
-static BOOL WINAPI hook_CopyFileW(
-        const LPCWSTR  lpExistingFileName,
-        const LPCWSTR  lpNewFileName,
-        BOOL   bFailIfExists
-) {
-    wchar_t *oldTrans;
-    wchar_t *newTrans;
-    BOOL ok;
-
-    ok = path_transform_w(&oldTrans, lpExistingFileName);
-
-    if (!ok) {
-        return FALSE;
-    }
-
-    ok = path_transform_w(&newTrans, lpNewFileName);
-
-    if (!ok) {
-        free(oldTrans);
-
-        return FALSE;
-    }
-
-    ok = next_CopyFileW(
-        oldTrans ? oldTrans : lpExistingFileName,
-        newTrans ? newTrans : lpNewFileName,
-        bFailIfExists);
 
     free(oldTrans);
     free(newTrans);
@@ -1712,4 +1763,261 @@ static UINT WINAPI hook_GetDriveTypeW(
     free(trans);
 
     return result;
+}
+
+static BOOL WINAPI hook_GetDiskFreeSpaceW(
+        LPCWSTR lpRootPathName,
+        LPDWORD lpSectorsPerCluster,
+        LPDWORD lpBytesPerSector,
+        LPDWORD lpNumberOfFreeClusters,
+        LPDWORD lpTotalNumberOfClusters
+) {
+    wchar_t *trans;
+    UINT result;
+    BOOL ok;
+
+    ok = path_transform_w(&trans, lpRootPathName);
+
+    if (!ok) {
+      return FALSE;
+    }
+
+    result = next_GetDiskFreeSpaceW(trans ? trans : lpRootPathName, lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters);
+
+    free(trans);
+
+    return result;
+}
+
+static BOOL WINAPI hook_DeviceIoControl(
+        HANDLE hFile,
+        uint32_t dwIoControlCode,
+        void *lpInBuffer,
+        uint32_t nInBufferSize,
+        void *lpOutBuffer,
+        uint32_t nOutBufferSize,
+        uint32_t *lpBytesReturned,
+        OVERLAPPED *lpOverlapped) {
+
+    if (dwIoControlCode != FSCTL_SET_REPARSE_POINT) {
+        return next_DeviceIoControl(hFile, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize, lpBytesReturned, lpOverlapped);
+    }
+
+    if (hFile == INVALID_HANDLE_VALUE || nInBufferSize == 0 || nInBufferSize > MAXIMUM_REPARSE_DATA_BUFFER_SIZE) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    REPARSE_DATA_BUFFER* mount = (REPARSE_DATA_BUFFER*)lpInBuffer;
+
+    wchar_t *trans;
+    wchar_t *src;
+
+    if (wcsstr(mount->SymbolicLinkReparseBuffer.PathBuffer, L"?\\") != NULL) { // strip prefix
+        src = mount->SymbolicLinkReparseBuffer.PathBuffer + 2;
+    } else {
+        src = mount->SymbolicLinkReparseBuffer.PathBuffer;
+    }
+
+    BOOL ok = path_transform_w(&trans, src);
+
+    if (!ok || trans == NULL) {
+        return next_DeviceIoControl(hFile, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize, lpBytesReturned, lpOverlapped);
+    }
+
+    wchar_t tmp[MAX_PATH];
+    swprintf_s(tmp, MAX_PATH, L"\\??\\%ls", trans);
+
+    size_t pathLen = wcslen(tmp);
+    size_t pathByteLen = pathLen * sizeof(wchar_t);
+
+    REPARSE_DATA_BUFFER* newMount = malloc(sizeof(REPARSE_DATA_BUFFER) + pathByteLen);
+    newMount->Reserved = mount->Reserved;
+    newMount->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
+    newMount->ReparseDataLength = 12 + pathByteLen;
+    newMount->MountPointReparseBuffer.SubstituteNameOffset = 0;
+    newMount->MountPointReparseBuffer.SubstituteNameLength = pathByteLen;
+    newMount->MountPointReparseBuffer.PrintNameOffset = pathByteLen + 2;
+    newMount->MountPointReparseBuffer.PrintNameLength = 0;
+    memcpy(newMount->MountPointReparseBuffer.PathBuffer, tmp, pathByteLen);
+
+    BOOL result = next_DeviceIoControl(hFile, dwIoControlCode, newMount, 8 + 12 + pathByteLen, lpOutBuffer, nOutBufferSize, lpBytesReturned, lpOverlapped);
+
+    free(trans);
+
+    return result;
+}
+
+char** str_split_a(char* a_str, const char a_delim) {
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+BOOL path_transform_args_a(const char* str, char delimiter, char* buf, size_t size) {
+    assert(str != NULL);
+    assert(buf != NULL);
+
+    if (size <= 0) {
+        return FALSE;
+    }
+
+    char* copy = strdup(str);
+    char** tokens = str_split_a(copy, delimiter);
+    char *trans;
+    BOOL ok;
+    BOOL failed = FALSE;
+
+    strcpy(buf, "");
+
+    if (tokens) {
+        int j;
+        for (j = 0; *(tokens + j); j++) {
+            ok = path_transform_a(&trans, *(tokens + j));
+            free(*(tokens + j));
+            if (ok) {
+                strcat_s(buf, size, trans ? trans : *(tokens+j));
+                if (*(tokens + j + 1)) {
+                    strcat_s(buf, size, " ");
+                }
+                free(trans);
+            } else {
+                failed = true;
+            }
+        }
+        free(tokens);
+    }
+
+    free(copy);
+
+    return !failed;
+}
+
+wchar_t** str_split_w(wchar_t* a_str, const wchar_t a_delim) {
+    wchar_t** result    = 0;
+    size_t count     = 0;
+    wchar_t* tmp        = a_str;
+    wchar_t* last_comma = 0;
+    wchar_t delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + wcslen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(wchar_t*) * count);
+
+    wchar_t* pt;
+
+    if (result)
+    {
+        size_t idx  = 0;
+        wchar_t* token = wcstok_s(a_str, delim, &pt);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = wcsdup(token);
+            token = wcstok_s(0, delim, &pt);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+BOOL path_transform_args_w(const wchar_t* str, wchar_t delimiter, wchar_t* buf, size_t size) {
+    assert(str != NULL);
+    assert(buf != NULL);
+
+    if (size <= 0) {
+        return FALSE;
+    }
+
+    wchar_t* copy = wcsdup(str);
+    wchar_t** tokens = str_split_w(copy, delimiter);
+    wchar_t *trans;
+    BOOL ok;
+    BOOL failed = FALSE;
+
+    wcscpy(buf, L"");
+
+    if (tokens) {
+        int j;
+        for (j = 0; *(tokens + j); j++) {
+            ok = path_transform_w(&trans, *(tokens + j));
+            if (ok) {
+                wcscat_s(buf, size, trans ? trans : *(tokens+j));
+                if (*(tokens + j + 1)) {
+                    wcscat_s(buf, size, L" ");
+                }
+                free(trans);
+            } else {
+                failed = true;
+            }
+            free(*(tokens + j));
+        }
+        free(tokens);
+    }
+
+    free(copy);
+
+    return !failed;
 }

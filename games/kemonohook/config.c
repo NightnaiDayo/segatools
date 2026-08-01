@@ -12,6 +12,7 @@
 #include "kemonohook/config.h"
 
 #include "platform/config.h"
+#include "util/io-path.h"
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -41,12 +42,13 @@ void kemono_dll_config_load(
         // Always empty, due to amdaemon being 64 bit in 32 bit mode
         memset(cfg->path, 0, sizeof(cfg->path));
     #elif defined(ENV64BIT)
-        GetPrivateProfileStringW(
-                L"kemonoio",
-                L"path",
-                L"",
+        io_path_config_load(
                 cfg->path,
                 _countof(cfg->path),
+                L"kemonoio",
+                L"path",
+                L"SEGATOOLS_KEMONOIO_PATH",
+                L"kemonoio.dll",
                 filename);
     #else
         #error "Unknown environment"
@@ -126,7 +128,7 @@ void kemono_hook_config_load(
     vfd_config_load(&cfg->vfd, filename);
     kemono_dll_config_load(&cfg->dll, filename);
     unity_config_load(&cfg->unity, filename);
-    printer_config_load(&cfg->printer, filename);
+    printer_chc_config_load(&cfg->printer, filename);
     amex_config_load(&cfg->amex, filename);
     led15093_config_load(&cfg->led15093, filename);
 }

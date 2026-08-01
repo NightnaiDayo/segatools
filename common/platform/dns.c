@@ -177,15 +177,15 @@ HRESULT dns_platform_hook_init(const struct dns_config *cfg)
         return hr;
     }
 
-    // Disable api/polling to the original servers
+    // ABaaS log server, receives system and error logs stored in appdata
 
-    hr = dns_hook_push(L"*.amlog.sys-all.net", NULL);
+    hr = dns_hook_push(L"*.amlog.sys-all.net", cfg->startup);
 
     if (FAILED(hr)) {
         return hr;
     }
 
-    hr = dns_hook_push(L"*.d-amlog.sys-all.net", NULL);
+    hr = dns_hook_push(L"*.d-amlog.sys-all.net", cfg->startup);
 
     if (FAILED(hr)) {
         return hr;

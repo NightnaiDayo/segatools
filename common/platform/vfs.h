@@ -15,6 +15,7 @@ struct vfs_config {
     wchar_t redirections_from[MAX_REDIRECTIONS][MAX_PATH];
     int redirections_from_len[MAX_REDIRECTIONS];
     wchar_t redirections_to[MAX_REDIRECTIONS][MAX_PATH];
+    bool allowAmfsDownloads;
 };
 
 HRESULT vfs_hook_init(const struct vfs_config *config, const char* game_id);

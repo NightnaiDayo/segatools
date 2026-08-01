@@ -70,6 +70,7 @@ void sg_nfc_init(
         unsigned int gen,
         unsigned int proxy_flag,
         const wchar_t* authdata_path,
+        bool mobile_felica,
         void *ops_ctx);
 
 void sg_nfc_transact(

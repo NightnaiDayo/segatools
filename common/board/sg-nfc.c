@@ -125,6 +125,7 @@ void sg_nfc_init(
         unsigned int gen,
         unsigned int proxy_flag,
         const wchar_t* authdata_path,
+        bool mobile_felica,
         void *ops_ctx)
 {
     assert(nfc != NULL);
@@ -136,6 +137,7 @@ void sg_nfc_init(
     nfc->gen = gen;
     nfc->proxy_flag = proxy_flag;
     nfc->authdata_path = authdata_path;
+    nfc->felica.is_mobile = mobile_felica;
 }
 
 #ifdef NDEBUG
@@ -445,12 +447,12 @@ static HRESULT sg_nfc_poll_felica(
     felica->type = 0x20;
     felica->id_len = sizeof(felica->IDm) + sizeof(felica->PMm);
     felica->IDm = _byteswap_uint64(IDm);
-    felica->PMm = _byteswap_uint64(felica_get_amusement_ic_PMm());
+    felica->PMm = _byteswap_uint64(felica_get_amusement_ic_PMm(nfc->felica.is_mobile));
 
     /* Initialize FeliCa IC emulator */
 
     nfc->felica.IDm = IDm;
-    nfc->felica.PMm = felica_get_amusement_ic_PMm();
+    nfc->felica.PMm = felica_get_amusement_ic_PMm(nfc->felica.is_mobile);
     nfc->felica.system_code = 0x88b4;
 
     return S_OK;

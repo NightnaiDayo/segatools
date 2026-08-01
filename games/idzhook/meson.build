@@ -24,6 +24,8 @@ shared_library(
     sources : [
         'config.c',
         'config.h',
+        'crt.c',
+        'crt.h',
         'dllmain.c',
         'idz-dll.c',
         'idz-dll.h',

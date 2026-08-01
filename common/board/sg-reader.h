@@ -14,6 +14,7 @@ struct aime_config {
     unsigned int gen;
     unsigned int proxy_flag;
     wchar_t authdata_path[MAX_PATH];
+    bool mobile_felica;
 };
 
 HRESULT sg_reader_hook_init(

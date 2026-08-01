@@ -1,0 +1,78 @@
+LIBRARY sekitohook
+
+EXPORTS
+    Direct3DCreate9
+    aime_io_get_api_version
+    aime_io_init
+    aime_io_led_set_color
+    aime_io_vfd_set_text
+    aime_io_vfd_set_state
+    aime_io_nfc_get_aime_id
+    aime_io_nfc_get_felica_id
+    aime_io_nfc_poll
+    aime_io_nfc_get_mifare_uid
+    aime_io_nfc_mifare_select
+    aime_io_nfc_mifare_set_key
+    aime_io_nfc_mifare_authenticate
+    aime_io_nfc_mifare_read_block
+    aime_io_nfc_felica_transact
+    aime_io_nfc_radio_on
+    aime_io_nfc_radio_off
+    aime_io_nfc_to_update_mode
+    aime_io_nfc_send_hex_data
+    sekito_io_get_api_version
+    sekito_io_get_gamebtns
+    sekito_io_get_opbtns
+    sekito_io_get_trackball_position
+    sekito_io_init
+    sekito_io_poll
+    sekito_io_led_init
+    sekito_io_led_set_colors
+    y3_io_get_api_version
+    y3_io_init
+    y3_io_close
+    y3_io_get_cards
+    amDllVideoClose
+    amDllVideoGetVBiosVersion
+    amDllVideoOpen
+    amDllVideoSetResolution
+    API_DLLVersion @1
+    API_GetLastError @2
+    API_GetErrorMessage @3
+    API_Connect @4
+    API_Close @5
+    API_Start @6
+    API_Stop @7
+    API_GetFirmVersion @8
+    API_GetFirmName @9
+    API_GetTargetCode @10
+    API_GetStatus @11
+    API_GetCounter @12
+    API_ClearError @13
+    API_Reset @14
+    API_GetCardInfo @15
+    API_GetCardInfoCharSize @16
+    API_SetDevice @17
+    API_SetCommand @18
+    API_FirmwareUpdate @19
+    API_Calibration @20
+    API_GetCalibrationResult @21
+    API_GetProcTime @22
+    API_GetMemStatus @23
+    API_GetMemCounter @24
+    API_SetSysControl @25
+    API_GetSysControl @26
+    API_SetParameter @27
+    API_GetParameter @28
+    API_TestReset @29
+    API_DebugReset @30
+    API_GetBoardType @31
+    API_GetCardDataSize @32
+    API_GetFirmDate @33
+    API_SystemCommand @34
+    API_CalcCheckSum @35
+    API_GetCheckSumResult @36
+    API_BlockRead @37
+    API_GetBlockReadResult @38
+    API_BlockWrite @39
+    API_GetDebugParam @40

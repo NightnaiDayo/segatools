@@ -15,6 +15,7 @@
 
 #include "platform/config.h"
 #include "platform/platform.h"
+#include "util/io-path.h"
 
 void diva_dll_config_load(
         struct diva_dll_config *cfg,
@@ -23,12 +24,13 @@ void diva_dll_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    GetPrivateProfileStringW(
-            L"divaio",
-            L"path",
-            L"",
+    io_path_config_load(
             cfg->path,
             _countof(cfg->path),
+            L"divaio",
+            L"path",
+            L"SEGATOOLS_DIVAIO_PATH",
+            L"divaio.dll",
             filename);
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <windows.h>
 
 #include <stddef.h>
@@ -19,6 +20,7 @@ struct felica {
     uint64_t IDm;
     uint64_t PMm;
     uint16_t system_code;
+    bool is_mobile;
 };
 
 HRESULT felica_transact(
@@ -26,4 +28,4 @@ HRESULT felica_transact(
         struct const_iobuf *req,
         struct iobuf *res);
 
-uint64_t felica_get_amusement_ic_PMm(void);
+uint64_t felica_get_amusement_ic_PMm(bool is_mobile);

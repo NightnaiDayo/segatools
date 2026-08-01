@@ -37,14 +37,14 @@ static HRESULT felica_cmd_write_without_encryption(
     struct const_iobuf* req,
     struct iobuf* res);
 
-uint64_t felica_get_amusement_ic_PMm(void)
+uint64_t felica_get_amusement_ic_PMm(bool is_mobile)
 {
     /*
      * AIC Card PMm, if this is returned from the card,
      * the aimelib will access the actual blocks for authentication.
      */
 
-    return 0x00F1000000014300;
+    return is_mobile ? 0x0018000000014300 : 0x00F1000000014300;
 }
 
 HRESULT felica_transact(

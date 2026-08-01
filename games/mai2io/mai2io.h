@@ -120,7 +120,8 @@ void mai2_io_touch_set_sens(uint8_t *bytes);
  *
  * This function determines whether the game is ready to accept touch input based on the states of player 1 and player 2.
  * If the game is ready, it creates or stops the corresponding threads to handle touch data for each player.
- * Whether or not threads are created for each player is controlled by `mai2_io_cfg.debug_input_1p` and `mai2_io_cfg.debug_input_2p` configuration.
+ * The `debug_input_1p` and `debug_input_2p` settings only control whether keyboard input is mapped into touch bits.
+ * When a player is active, the thread continues to send idle all-zero frames even with debug input disabled.
  *
  * @param player1 If `true`, indicates the game is ready to accept touch data from player 1, `false` means the game is not ready.
  * @param player2 If `true`, indicates the game is ready to accept touch data from player 2, `false` means the game is not ready.
