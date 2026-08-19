@@ -77,12 +77,12 @@ felicaGen=0
 ## Segatools configuration
 
 Configurable settings are exposed in the `segatools.ini` file. For a detailed
-description, please refer to [this document](doc/config/common.md).
+description, please refer to [this document](config/common.md).
 
 ## Initial D Arcade Stage Zero specific configuration
 
 For configuring IDZ specific features, e.g. IO, please refer to
-[this document](doc/config/initiald.md).
+[this document](config/initiald.md).
 
 ## FAQ
 
