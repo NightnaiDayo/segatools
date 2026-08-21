@@ -224,7 +224,41 @@ void netenv_config_load(struct netenv_config *cfg, const wchar_t *filename)
             &cfg->mac_addr[4],
             &cfg->mac_addr[5],
             &cfg->mac_addr[6]);
-}
+	
+	cfg->nat_rule_count = 0;
+	for (size_t i = 0; i < 16; i++) {
+        wchar_t rule_str[64];
+        wchar_t key_name[32];
+        unsigned int real_ip[4],virtual_ip[4];
+
+        swprintf_s(key_name, _countof(key_name), L"natRule%zu", i);
+		
+        GetPrivateProfileStringW(
+                L"netenv",
+                key_name,
+                L"",
+                rule_str,
+                _countof(rule_str),
+                filename);
+
+		swscanf(rule_str,
+				L"%u.%u.%u.%u:%u.%u.%u.%u", 
+				&real_ip[0],
+				&real_ip[1],
+				&real_ip[2],
+				&real_ip[3],
+				&virtual_ip[0],
+				&virtual_ip[1],
+				&virtual_ip[2],
+				&virtual_ip[3]);
+            
+		    cfg->nat_rules[cfg->nat_rule_count].real_ip = 
+					    (real_ip[0] << 24) | (real_ip[1] << 16) | (real_ip[2] << 8) | real_ip[3];
+            cfg->nat_rules[cfg->nat_rule_count].virtual_ip = 
+                (virtual_ip[0] << 24) | (virtual_ip[1] << 16) | (virtual_ip[2] << 8) | virtual_ip[3];
+            cfg->nat_rule_count++;
+        }
+    }
 
 void nusec_config_load(struct nusec_config *cfg, const wchar_t *filename)
 {

@@ -7,12 +7,19 @@
 
 #include "platform/nusec.h"
 
+struct netenv_nat_rule {
+    uint32_t virtual_ip;
+    uint32_t real_ip;
+};
+
 struct netenv_config {
     bool enable;
     bool redirect_broadcast;
     uint8_t addr_suffix;
     uint8_t router_suffix;
     uint8_t mac_addr[6];
+    struct netenv_nat_rule nat_rules[16];
+    size_t nat_rule_count;
 };
 
 HRESULT netenv_hook_init(

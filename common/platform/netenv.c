@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <iptypes.h>
 #include <winternl.h>
@@ -82,6 +83,86 @@ static int WINAPI hook_sendto(
         const struct sockaddr *to,
         int tolen);
 
+static int WINAPI hook_connect(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen);
+
+static int WINAPI hook_bind(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen);
+
+static int WINAPI hook_recvfrom(
+        SOCKET s,
+        char *buf,
+        int len,
+        int flags,
+        struct sockaddr *from,
+        int *fromlen);
+
+static SOCKET WINAPI hook_accept(
+        SOCKET s,
+        struct sockaddr *addr,
+        int *addrlen);
+
+static int WINAPI hook_getpeername(
+        SOCKET s,
+        struct sockaddr *name,
+        int *namelen);
+
+static int WINAPI hook_getsockname(
+        SOCKET s,
+        struct sockaddr *name,
+        int *namelen);
+
+static SOCKET WINAPI hook_WSAAccept(
+        SOCKET s,
+        struct sockaddr *addr,
+        LPINT addrlen,
+        LPCONDITIONPROC lpfnCondition,
+        DWORD_PTR dwCallbackData);
+
+static int WINAPI hook_WSARecvFrom(
+        SOCKET s,
+        LPWSABUF lpBuffers,
+        DWORD dwBufferCount,
+        LPDWORD lpNumberOfBytesRecvd,
+        LPDWORD lpFlags,
+        struct sockaddr *lpFrom,
+        LPINT lpFromlen,
+        LPWSAOVERLAPPED lpOverlapped,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+static int WINAPI hook_WSASendTo(
+        SOCKET s,
+        LPWSABUF lpBuffers,
+        DWORD dwBufferCount,
+        LPDWORD lpNumberOfBytesSent,
+        DWORD dwFlags,
+        const struct sockaddr *lpTo,
+        int iToLen,
+        LPWSAOVERLAPPED lpOverlapped,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+static int WINAPI hook_WSAConnect(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen,
+        LPWSABUF lpCallerData,
+        LPWSABUF lpCalleeData,
+        LPQOS lpSQOS,
+        LPQOS lpGQOS);
+
+static struct hostent * WINAPI hook_gethostbyname(
+        const char *name);
+
+static int WSAAPI hook_getaddrinfo(
+        const char *pNodeName,
+        const char *pServiceName,
+        const ADDRINFOA *pHints,
+        ADDRINFOA **ppResult);
+
 /* Link pointers */
 
 static uint32_t (WINAPI *next_GetAdaptersAddresses)(
@@ -126,6 +207,86 @@ static int (WINAPI *next_sendto)(
         const struct sockaddr *to,
         int tolen);
 
+static int (WINAPI *next_connect)(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen);
+
+static int (WINAPI *next_bind)(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen);
+
+static int (WINAPI *next_recvfrom)(
+        SOCKET s,
+        char *buf,
+        int len,
+        int flags,
+        struct sockaddr *from,
+        int *fromlen);
+
+static SOCKET (WINAPI *next_accept)(
+        SOCKET s,
+        struct sockaddr *addr,
+        int *addrlen);
+
+static int (WINAPI *next_getpeername)(
+        SOCKET s,
+        struct sockaddr *name,
+        int *namelen);
+
+static int (WINAPI *next_getsockname)(
+        SOCKET s,
+        struct sockaddr *name,
+        int *namelen);
+
+static SOCKET (WINAPI *next_WSAAccept)(
+        SOCKET s,
+        struct sockaddr *addr,
+        LPINT addrlen,
+        LPCONDITIONPROC lpfnCondition,
+        DWORD_PTR dwCallbackData);
+
+static int (WINAPI *next_WSARecvFrom)(
+        SOCKET s,
+        LPWSABUF lpBuffers,
+        DWORD dwBufferCount,
+        LPDWORD lpNumberOfBytesRecvd,
+        LPDWORD lpFlags,
+        struct sockaddr *lpFrom,
+        LPINT lpFromlen,
+        LPWSAOVERLAPPED lpOverlapped,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+static int (WINAPI *next_WSASendTo)(
+        SOCKET s,
+        LPWSABUF lpBuffers,
+        DWORD dwBufferCount,
+        LPDWORD lpNumberOfBytesSent,
+        DWORD dwFlags,
+        const struct sockaddr *lpTo,
+        int iToLen,
+        LPWSAOVERLAPPED lpOverlapped,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+static int (WINAPI *next_WSAConnect)(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen,
+        LPWSABUF lpCallerData,
+        LPWSABUF lpCalleeData,
+        LPQOS lpSQOS,
+        LPQOS lpGQOS);
+
+static struct hostent * (WINAPI *next_gethostbyname)(
+        const char *name);
+
+static int (WSAAPI *next_getaddrinfo)(
+        const char *pNodeName,
+        const char *pServiceName,
+        const ADDRINFOA *pHints,
+        ADDRINFOA **ppResult);
+
 
 static const struct hook_symbol netenv_hook_syms[] = {
     {
@@ -157,6 +318,66 @@ static struct hook_symbol netenv_hook_syms_ws2[] = {
         .patch      = hook_sendto,
         .ordinal    = 20,
         .link       = (void **) &next_sendto
+    }, {
+        .name       = "connect",
+        .patch      = hook_connect,
+        .ordinal    = 4,
+        .link       = (void **) &next_connect
+    }, {
+        .name       = "bind",
+        .patch      = hook_bind,
+        .ordinal    = 2,
+        .link       = (void **) &next_bind
+    }, {
+        .name       = "recvfrom",
+        .patch      = hook_recvfrom,
+        .ordinal    = 17,
+        .link       = (void **) &next_recvfrom
+    }, {
+        .name       = "accept",
+        .patch      = hook_accept,
+        .ordinal    = 1,
+        .link       = (void **) &next_accept
+    }, {
+        .name       = "getpeername",
+        .patch      = hook_getpeername,
+        .ordinal    = 5,
+        .link       = (void **) &next_getpeername
+    }, {
+        .name       = "getsockname",
+        .patch      = hook_getsockname,
+        .ordinal    = 6,
+        .link       = (void **) &next_getsockname
+    }, {
+        .name       = "WSAAccept",
+        .patch      = hook_WSAAccept,
+        .ordinal    = 29,
+        .link       = (void **) &next_WSAAccept
+    }, {
+        .name       = "WSARecvFrom",
+        .patch      = hook_WSARecvFrom,
+        .ordinal    = 73,
+        .link       = (void **) &next_WSARecvFrom
+    }, {
+        .name       = "WSASendTo",
+        .patch      = hook_WSASendTo,
+        .ordinal    = 76,
+        .link       = (void **) &next_WSASendTo
+    }, {
+        .name       = "WSAConnect",
+        .patch      = hook_WSAConnect,
+        .ordinal    = 32,
+        .link       = (void **) &next_WSAConnect
+    }, {
+        .name       = "gethostbyname",
+        .patch      = hook_gethostbyname,
+        .ordinal    = 52,
+        .link       = (void **) &next_gethostbyname
+    }, {
+        .name       = "getaddrinfo",
+        .patch      = hook_getaddrinfo,
+        .ordinal    = 176,
+        .link       = (void **) &next_getaddrinfo
     },
 };
 
@@ -169,6 +390,26 @@ static bool netenv_redirect_broadcast;
 static uint32_t netenv_last_logged_broadcast_src;
 static uint32_t netenv_last_logged_broadcast_dest;
 static bool netenv_broadcast_logged;
+static struct netenv_nat_rule netenv_nat_rules[16];
+static size_t netenv_nat_rule_count;
+
+static uint32_t netenv_nat_virtual_to_real(uint32_t virtual_ip) {
+    for (size_t i = 0; i < netenv_nat_rule_count; i++) {
+        if (netenv_nat_rules[i].virtual_ip == virtual_ip) {
+            return netenv_nat_rules[i].real_ip;
+        }
+    }
+    return virtual_ip;
+}
+
+static uint32_t netenv_nat_real_to_virtual(uint32_t real_ip) {
+    for (size_t i = 0; i < netenv_nat_rule_count; i++) {
+        if (netenv_nat_rules[i].real_ip == real_ip) {
+            return netenv_nat_rules[i].virtual_ip;
+        }
+    }
+    return real_ip;
+}
 
 HRESULT netenv_hook_init(
         const struct netenv_config *cfg,
@@ -193,6 +434,11 @@ HRESULT netenv_hook_init(
     netenv_ip_router = kc_cfg->subnet | cfg->router_suffix;
     memcpy(netenv_mac_addr, cfg->mac_addr, sizeof(netenv_mac_addr));
     netenv_redirect_broadcast = cfg->redirect_broadcast;
+    netenv_nat_rule_count = cfg->nat_rule_count;
+
+    if (netenv_nat_rule_count > 0) {
+        memcpy(netenv_nat_rules, cfg->nat_rules, sizeof(struct netenv_nat_rule) * netenv_nat_rule_count);
+    }
 
     netenv_hook_apply_hooks(NULL);
 
@@ -605,5 +851,266 @@ static int WINAPI hook_sendto(
         return next_sendto(s, buf, len, flags, (struct sockaddr*)&modified_to, sizeof(modified_to));
     }
 
+    if (netenv_nat_rule_count > 0) {
+        uint32_t dest_virtual = _byteswap_ulong(original_to->sin_addr.S_un.S_addr);
+        uint32_t dest_real = netenv_nat_virtual_to_real(dest_virtual);
+        if (dest_real != dest_virtual) {
+            struct sockaddr_in modified_to = {0};
+            memcpy(&modified_to, original_to, tolen);
+            modified_to.sin_addr.S_un.S_addr = _byteswap_ulong(dest_real);
+            return next_sendto(s, buf, len, flags, (struct sockaddr*)&modified_to, sizeof(modified_to));
+        }
+    }
+
     return next_sendto(s, buf, len, flags, to, tolen);
+}
+
+static int WINAPI hook_connect(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen) {
+    if (name->sa_family != AF_INET || netenv_nat_rule_count == 0) {
+        return next_connect(s, name, namelen);
+    }
+    
+    const struct sockaddr_in *original_name = (const struct sockaddr_in *)name;
+    uint32_t dest_virtual = _byteswap_ulong(original_name->sin_addr.S_un.S_addr);
+    uint32_t dest_real = netenv_nat_virtual_to_real(dest_virtual);
+    
+    if (dest_real != dest_virtual) {
+        struct sockaddr_in modified_name = {0};
+        memcpy(&modified_name, original_name, namelen);
+        modified_name.sin_addr.S_un.S_addr = _byteswap_ulong(dest_real);
+        return next_connect(s, (struct sockaddr*)&modified_name, sizeof(modified_name));
+    }
+    
+    return next_connect(s, name, namelen);
+}
+
+static int WINAPI hook_bind(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen) {
+    if (name->sa_family != AF_INET || netenv_nat_rule_count == 0) {
+        return next_bind(s, name, namelen);
+    }
+
+    const struct sockaddr_in *original_name = (const struct sockaddr_in *)name;
+    uint32_t bind_virtual = _byteswap_ulong(original_name->sin_addr.S_un.S_addr);
+    uint32_t bind_real = netenv_nat_virtual_to_real(bind_virtual);
+    
+    // Often games bind to INADDR_ANY (0.0.0.0). We only rewrite if they bind to their explicit virtual IP.
+    if (bind_real != bind_virtual && bind_virtual != 0) {
+        struct sockaddr_in modified_name = {0};
+        memcpy(&modified_name, original_name, namelen);
+        modified_name.sin_addr.S_un.S_addr = _byteswap_ulong(bind_real);
+        return next_bind(s, (struct sockaddr*)&modified_name, sizeof(modified_name));
+    }
+    
+    return next_bind(s, name, namelen);
+}
+
+static int WINAPI hook_recvfrom(
+        SOCKET s,
+        char *buf,
+        int len,
+        int flags,
+        struct sockaddr *from,
+        int *fromlen) {
+    int ret = next_recvfrom(s, buf, len, flags, from, fromlen);
+    if (ret != SOCKET_ERROR && from != NULL && from->sa_family == AF_INET && netenv_nat_rule_count > 0) {
+        struct sockaddr_in *from_in = (struct sockaddr_in *)from;
+        uint32_t src_real = _byteswap_ulong(from_in->sin_addr.S_un.S_addr);
+        uint32_t src_virtual = netenv_nat_real_to_virtual(src_real);
+        if (src_virtual != src_real) {
+            from_in->sin_addr.S_un.S_addr = _byteswap_ulong(src_virtual);
+        }
+    }
+    return ret;
+}
+
+static SOCKET WINAPI hook_accept(
+        SOCKET s,
+        struct sockaddr *addr,
+        int *addrlen) {
+    SOCKET ret = next_accept(s, addr, addrlen);
+    if (ret != INVALID_SOCKET && addr != NULL && addr->sa_family == AF_INET && netenv_nat_rule_count > 0) {
+        struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
+        uint32_t src_real = _byteswap_ulong(addr_in->sin_addr.S_un.S_addr);
+        uint32_t src_virtual = netenv_nat_real_to_virtual(src_real);
+        if (src_virtual != src_real) {
+            addr_in->sin_addr.S_un.S_addr = _byteswap_ulong(src_virtual);
+        }
+    }
+    return ret;
+}
+
+static int WINAPI hook_getpeername(
+        SOCKET s,
+        struct sockaddr *name,
+        int *namelen) {
+    int ret = next_getpeername(s, name, namelen);
+    if (ret == 0 && name != NULL && name->sa_family == AF_INET && netenv_nat_rule_count > 0) {
+        struct sockaddr_in *name_in = (struct sockaddr_in *)name;
+        uint32_t peer_real = _byteswap_ulong(name_in->sin_addr.S_un.S_addr);
+        uint32_t peer_virtual = netenv_nat_real_to_virtual(peer_real);
+        if (peer_virtual != peer_real) {
+            name_in->sin_addr.S_un.S_addr = _byteswap_ulong(peer_virtual);
+        }
+    }
+    return ret;
+}
+
+static int WINAPI hook_getsockname(
+        SOCKET s,
+        struct sockaddr *name,
+        int *namelen) {
+    int ret = next_getsockname(s, name, namelen);
+    if (ret == 0 && name != NULL && name->sa_family == AF_INET && netenv_nat_rule_count > 0) {
+        struct sockaddr_in *name_in = (struct sockaddr_in *)name;
+        uint32_t local_real = _byteswap_ulong(name_in->sin_addr.S_un.S_addr);
+        uint32_t local_virtual = netenv_nat_real_to_virtual(local_real);
+        if (local_virtual != local_real) {
+            name_in->sin_addr.S_un.S_addr = _byteswap_ulong(local_virtual);
+        }
+    }
+    return ret;
+}
+
+static SOCKET WINAPI hook_WSAAccept(
+        SOCKET s,
+        struct sockaddr *addr,
+        LPINT addrlen,
+        LPCONDITIONPROC lpfnCondition,
+        DWORD_PTR dwCallbackData) {
+    SOCKET ret = next_WSAAccept(s, addr, addrlen, lpfnCondition, dwCallbackData);
+    if (ret != INVALID_SOCKET && addr != NULL && addr->sa_family == AF_INET && netenv_nat_rule_count > 0) {
+        struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
+        uint32_t src_real = _byteswap_ulong(addr_in->sin_addr.S_un.S_addr);
+        uint32_t src_virtual = netenv_nat_real_to_virtual(src_real);
+        if (src_virtual != src_real) {
+            addr_in->sin_addr.S_un.S_addr = _byteswap_ulong(src_virtual);
+        }
+    }
+    return ret;
+}
+
+static int WINAPI hook_WSARecvFrom(
+        SOCKET s,
+        LPWSABUF lpBuffers,
+        DWORD dwBufferCount,
+        LPDWORD lpNumberOfBytesRecvd,
+        LPDWORD lpFlags,
+        struct sockaddr *lpFrom,
+        LPINT lpFromlen,
+        LPWSAOVERLAPPED lpOverlapped,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
+    int ret = next_WSARecvFrom(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpFrom, lpFromlen, lpOverlapped, lpCompletionRoutine);
+    if (ret != SOCKET_ERROR && lpFrom != NULL && lpFrom->sa_family == AF_INET && netenv_nat_rule_count > 0) {
+        struct sockaddr_in *from_in = (struct sockaddr_in *)lpFrom;
+        uint32_t src_real = _byteswap_ulong(from_in->sin_addr.S_un.S_addr);
+        uint32_t src_virtual = netenv_nat_real_to_virtual(src_real);
+        if (src_virtual != src_real) {
+            from_in->sin_addr.S_un.S_addr = _byteswap_ulong(src_virtual);
+        }
+    }
+    return ret;
+}
+
+static int WINAPI hook_WSASendTo(
+        SOCKET s,
+        LPWSABUF lpBuffers,
+        DWORD dwBufferCount,
+        LPDWORD lpNumberOfBytesSent,
+        DWORD dwFlags,
+        const struct sockaddr *lpTo,
+        int iToLen,
+        LPWSAOVERLAPPED lpOverlapped,
+        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
+    
+    if (lpTo->sa_family != AF_INET || netenv_nat_rule_count == 0) {
+        return next_WSASendTo(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped, lpCompletionRoutine);
+    }
+    
+    const struct sockaddr_in *original_to = (const struct sockaddr_in *)lpTo;
+    uint32_t dest_virtual = _byteswap_ulong(original_to->sin_addr.S_un.S_addr);
+    uint32_t dest_real = netenv_nat_virtual_to_real(dest_virtual);
+    
+    if (dest_real != dest_virtual) {
+        struct sockaddr_in modified_to = {0};
+        memcpy(&modified_to, original_to, iToLen);
+        modified_to.sin_addr.S_un.S_addr = _byteswap_ulong(dest_real);
+        return next_WSASendTo(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, (struct sockaddr*)&modified_to, sizeof(modified_to), lpOverlapped, lpCompletionRoutine);
+    }
+    
+    return next_WSASendTo(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped, lpCompletionRoutine);
+}
+
+static int WINAPI hook_WSAConnect(
+        SOCKET s,
+        const struct sockaddr *name,
+        int namelen,
+        LPWSABUF lpCallerData,
+        LPWSABUF lpCalleeData,
+        LPQOS lpSQOS,
+        LPQOS lpGQOS) {
+        
+    if (name->sa_family != AF_INET || netenv_nat_rule_count == 0) {
+        return next_WSAConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS);
+    }
+    
+    const struct sockaddr_in *original_name = (const struct sockaddr_in *)name;
+    uint32_t dest_virtual = _byteswap_ulong(original_name->sin_addr.S_un.S_addr);
+    uint32_t dest_real = netenv_nat_virtual_to_real(dest_virtual);
+    
+    if (dest_real != dest_virtual) {
+        struct sockaddr_in modified_name = {0};
+        memcpy(&modified_name, original_name, namelen);
+        modified_name.sin_addr.S_un.S_addr = _byteswap_ulong(dest_real);
+        return next_WSAConnect(s, (struct sockaddr*)&modified_name, sizeof(modified_name), lpCallerData, lpCalleeData, lpSQOS, lpGQOS);
+    }
+    
+    return next_WSAConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS);
+}
+
+static struct hostent * WINAPI hook_gethostbyname(
+        const char *name) {
+    struct hostent *ret = next_gethostbyname(name);
+    
+    // If successful, and we have NAT rules, rewrite the IP addresses to virtual IPs
+    // This handles the case where the game queries its own hostname to get its IP
+    if (ret != NULL && ret->h_addrtype == AF_INET && netenv_nat_rule_count > 0) {
+        for (int i = 0; ret->h_addr_list[i] != NULL; i++) {
+            uint32_t real_ip = _byteswap_ulong(*(uint32_t *)ret->h_addr_list[i]);
+            uint32_t virtual_ip = netenv_nat_real_to_virtual(real_ip);
+            if (virtual_ip != real_ip) {
+                *(uint32_t *)ret->h_addr_list[i] = _byteswap_ulong(virtual_ip);
+            }
+        }
+    }
+    
+    return ret;
+}
+
+static int WSAAPI hook_getaddrinfo(
+        const char *pNodeName,
+        const char *pServiceName,
+        const ADDRINFOA *pHints,
+        ADDRINFOA **ppResult) {
+    int ret = next_getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
+    
+    if (ret == 0 && ppResult != NULL && *ppResult != NULL && netenv_nat_rule_count > 0) {
+        for (ADDRINFOA *ptr = *ppResult; ptr != NULL; ptr = ptr->ai_next) {
+            if (ptr->ai_family == AF_INET && ptr->ai_addr != NULL) {
+                struct sockaddr_in *addr_in = (struct sockaddr_in *)ptr->ai_addr;
+                uint32_t real_ip = _byteswap_ulong(addr_in->sin_addr.S_un.S_addr);
+                uint32_t virtual_ip = netenv_nat_real_to_virtual(real_ip);
+                if (virtual_ip != real_ip) {
+                    addr_in->sin_addr.S_un.S_addr = _byteswap_ulong(virtual_ip);
+                }
+            }
+        }
+    }
+    
+    return ret;
 }

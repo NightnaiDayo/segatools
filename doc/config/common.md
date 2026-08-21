@@ -678,6 +678,23 @@ Default: `255.255.255.255`
 
 The UDP broadcast address that should be used if packets are being sent to the virtual keychip's subnet. This is used for cab-to-cab communication (Local Play, Satellite to Terminal, etc.). Depending on your network adapters (VPNs etc), sometimes you must explicitely specify your real LANs subnet.
 
+### `natRule`
+
+Default: none
+
+Translates an external network IP address to a custom internal IP address that the game will see.
+
+**Syntax:** `natRule{0-15}={real_ip}:{game_visible_ip}`
+
+**Example:**
+```ini
+natRule0=192.168.1.100:192.168.139.11
+```
+
+This rule maps the real IP address `192.168.1.100` to the virtual IP address `192.168.139.11`.
+
+As a result, the game communicates with `192.168.139.11`, while all traffic is actually redirected to `192.168.1.100`.
+
 ## `[pcbid]`
 
 Configure Windows host name virtualization. The ALLS-series platform no longer
