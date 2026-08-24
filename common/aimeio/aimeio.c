@@ -265,6 +265,20 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no)
         return S_OK;
     }
 
+    /* Try FeliCa IC */
+
+    hr = aime_io_read_id_file(
+            aime_io_cfg.felica_path,
+            aime_io_felica_id,
+            sizeof(aime_io_felica_id));
+
+    if (SUCCEEDED(hr) && hr != S_FALSE) {
+        aime_io_felica_id_present = true;
+
+        return S_OK;
+    }
+
+    // 2026-08-24 Hay1tsme: Skipping Generating aime before checking for felica was incredibly annoying.
     /* Try generating AiMe IC (if enabled) */
 
     if (aime_io_cfg.aime_gen) {
@@ -278,19 +292,6 @@ HRESULT aime_io_nfc_poll(uint8_t unit_no)
         }
 
         aime_io_aime_id_present = true;
-        return S_OK;
-    }
-
-    /* Try FeliCa IC */
-
-    hr = aime_io_read_id_file(
-            aime_io_cfg.felica_path,
-            aime_io_felica_id,
-            sizeof(aime_io_felica_id));
-
-    if (SUCCEEDED(hr) && hr != S_FALSE) {
-        aime_io_felica_id_present = true;
-
         return S_OK;
     }
 
