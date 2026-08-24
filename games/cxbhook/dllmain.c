@@ -19,6 +19,7 @@
 
 #include "hooklib/serial.h"
 #include "hooklib/spike.h"
+#include "hooklib/touch.h"
 
 #include "platform/platform.h"
 
@@ -113,6 +114,8 @@ static DWORD CALLBACK cxb_pre_startup(void)
     if (FAILED(hr)) {
         goto fail;
     }
+
+    touch_screen_hook_init(&cxb_hook_cfg.touch, cxb_hook_mod);
 
     /* Initialize debug helpers */
 

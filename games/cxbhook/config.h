@@ -11,6 +11,8 @@
 #include "cxbhook/revio.h"
 #include "cxbhook/led.h"
 
+#include "hooklib/touch.h"
+
 #include "gfxhook/gfx.h"
 
 #include "platform/platform.h"
@@ -23,6 +25,7 @@ struct cxb_hook_config {
     struct cxb_dll_config dll;
     struct revio_config revio;
     struct led_config led;
+    struct touch_screen_config touch;
 };
 
 void cxb_dll_config_load(

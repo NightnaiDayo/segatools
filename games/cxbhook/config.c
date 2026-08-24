@@ -71,4 +71,5 @@ void cxb_hook_config_load(
     cxb_dll_config_load(&cfg->dll, filename);
     revio_config_load(&cfg->revio, filename);
     led_config_load(&cfg->led, filename);
+    touch_screen_config_load(&cfg->touch, filename);
 }
