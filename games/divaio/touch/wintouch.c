@@ -9,7 +9,7 @@
 
 static HRESULT diva_wintouch_init();
 static void diva_wintouch_update(diva_io_touch_callback_t callback);
-static void diva_handle_touch(UINT cInputs, PTOUCHINPUT pInputs);
+static void diva_handle_touch(const UINT cInputs, const PTOUCHINPUT pInputs);
 
 static const struct diva_touch_backend diva_wintouch_backend = {
     .init   = diva_wintouch_init,
