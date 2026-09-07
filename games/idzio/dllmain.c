@@ -88,7 +88,7 @@ void idz_io_jvs_read_shifter(uint8_t *gear)
 
 void idz_io_jvs_read_analogs(struct idz_io_analog_state *out)
 {
-    struct idz_io_analog_state tmp;
+    struct idz_io_analog_state tmp = { 0 };
 
     assert(out != NULL);
     assert(idz_io_backend != NULL);
