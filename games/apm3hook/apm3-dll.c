@@ -89,7 +89,7 @@ HRESULT apm3_dll_init(const struct apm3_dll_config *cfg, HINSTANCE self)
     }
 
     sym = apm3_dll_syms;
-    hr = dll_bind(&apm3_dll, src, &sym, _countof(apm3_dll_syms));
+    hr = dll_bind(&apm3_dll, src, &sym, _countof(apm3_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

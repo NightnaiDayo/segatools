@@ -92,7 +92,7 @@ HRESULT ekt_dll_init(const struct ekt_dll_config *cfg, HINSTANCE self)
     }
 
     sym = ekt_dll_syms;
-    hr = dll_bind(&ekt_dll, src, &sym, _countof(ekt_dll_syms));
+    hr = dll_bind(&ekt_dll, src, &sym, _countof(ekt_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

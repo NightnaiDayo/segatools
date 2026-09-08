@@ -80,7 +80,7 @@ HRESULT cm_dll_init(const struct cm_dll_config *cfg, HINSTANCE self)
     }
 
     sym = cm_dll_syms;
-    hr = dll_bind(&cm_dll, src, &sym, _countof(cm_dll_syms));
+    hr = dll_bind(&cm_dll, src, &sym, _countof(cm_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

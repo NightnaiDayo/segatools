@@ -10,7 +10,8 @@ HRESULT dll_bind(
     void *dest,
     HINSTANCE src,
     const struct dll_bind_sym **syms_pos,
-    size_t syms_count)
+    size_t syms_count,
+    bool optional)
 {
     HRESULT hr;
     void *src_result;
@@ -30,14 +31,18 @@ HRESULT dll_bind(
     for (i = 0; i < syms_count; i++) {
         src_result = GetProcAddress(src, current_sym->sym);
 
-        if (src_result == NULL) {
+        if (src_result != NULL) {
+            dest_field = (void **)(((uint8_t *)dest) + current_sym->off);
+            *dest_field = src_result;
+        } else if (!optional) {
             hr = E_NOTIMPL;
-
             break;
+        } else {
+            dprintf("DLL Binding: Custom IO DLL does not provide function "
+                    "\"%s\". The default implementation will be used.\n",
+                    current_sym->sym);
         }
 
-        dest_field = (void **)(((uint8_t *)dest) + current_sym->off);
-        *dest_field = src_result;
         current_sym++;
     }
 

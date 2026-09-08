@@ -113,7 +113,7 @@ HRESULT idac_dll_init(const struct idac_dll_config *cfg, HINSTANCE self)
     }
 
     sym = idac_dll_syms;
-    hr = dll_bind(&idac_dll, src, &sym, _countof(idac_dll_syms));
+    hr = dll_bind(&idac_dll, src, &sym, _countof(idac_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

@@ -131,7 +131,7 @@ HRESULT aime_dll_init(const struct aime_dll_config *cfg, HINSTANCE self)
     sym_count = (aime_dll.api_version < 0x0101)
             ? AIME_DLL_SYM_COUNT_V100
             : AIME_DLL_SYM_COUNT_V101;
-    hr = dll_bind(&aime_dll, src, &sym, sym_count);
+    hr = dll_bind(&aime_dll, src, &sym, sym_count, false);
 
     if (FAILED(hr)) {
         if (src != self) {

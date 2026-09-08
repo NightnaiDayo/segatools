@@ -92,7 +92,7 @@ HRESULT sekito_dll_init(const struct sekito_dll_config *cfg, HINSTANCE self)
     }
 
     sym = sekito_dll_syms;
-    hr = dll_bind(&sekito_dll, src, &sym, _countof(sekito_dll_syms));
+    hr = dll_bind(&sekito_dll, src, &sym, _countof(sekito_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

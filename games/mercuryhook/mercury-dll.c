@@ -92,7 +92,7 @@ HRESULT mercury_dll_init(const struct mercury_dll_config *cfg, HINSTANCE self)
     }
 
     sym = mercury_dll_syms;
-    hr = dll_bind(&mercury_dll, src, &sym, _countof(mercury_dll_syms));
+    hr = dll_bind(&mercury_dll, src, &sym, _countof(mercury_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

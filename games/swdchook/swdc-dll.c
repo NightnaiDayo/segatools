@@ -110,7 +110,7 @@ HRESULT swdc_dll_init(const struct swdc_dll_config *cfg, HINSTANCE self)
     }
 
     sym = swdc_dll_syms;
-    hr = dll_bind(&swdc_dll, src, &sym, _countof(swdc_dll_syms));
+    hr = dll_bind(&swdc_dll, src, &sym, _countof(swdc_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

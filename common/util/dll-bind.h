@@ -22,12 +22,15 @@ struct dll_bind_sym {
     - syms_pos: Pointer to a (mutable) pointer which points to the start of an
         (immutable) table of symbols and structure offsets. This mutable
         pointer is advanced until either a symbol fails to bind, in which case
-        an error is returned, or the end of the table is reached, in which
-        case success is returned.
+        an error is returned if optional is set to false, or the end of
+        the table is reached, in which case success is returned.
    - syms_count: Number of entries in the symbol table.
+   - optional: false to make binding fail if a symbol is missing, true to
+       ignore missing symbols and leave the default.
 */
 HRESULT dll_bind(
         void *dest,
         HINSTANCE src,
         const struct dll_bind_sym **syms_pos,
-        size_t syms_count);
+        size_t syms_count,
+        bool optional);

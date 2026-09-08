@@ -8,11 +8,6 @@
 #include "util/dll-bind.h"
 #include "util/dprintf.h"
 
-enum {
-    DIVA_DLL_SYM_COUNT_V100 = 7,
-    DIVA_DLL_SYM_COUNT_V101 = 12,
-};
-
 const struct dll_bind_sym diva_dll_syms[] = {
     {
         .sym = "diva_io_jvs_init",
@@ -113,16 +108,7 @@ HRESULT diva_dll_init(const struct diva_dll_config *cfg, HINSTANCE self)
     }
 
     sym = diva_dll_syms;
-    switch (diva_dll.api_version) {
-    case 0x0101:
-        sym_count = DIVA_DLL_SYM_COUNT_V101;
-        break;
-    
-    default:
-        sym_count = DIVA_DLL_SYM_COUNT_V100;
-        break;
-    }
-    hr = dll_bind(&diva_dll, src, &sym, sym_count);
+    hr = dll_bind(&diva_dll, src, &sym, _countof(diva_dll_syms), true);
 
     if (FAILED(hr)) {
         if (src != self) {

@@ -83,7 +83,7 @@ HRESULT y3_dll_init(const struct y3_dll_config *cfg, HINSTANCE self)
     }
 
     sym = y3_dll_syms;
-    hr = dll_bind(&y3_dll, src, &sym, _countof(y3_dll_syms));
+    hr = dll_bind(&y3_dll, src, &sym, _countof(y3_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

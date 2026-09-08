@@ -112,7 +112,7 @@ HRESULT chuni_dll_init(const struct chuni_dll_config *cfg, HINSTANCE self)
 
     sym = chuni_dll_syms;
     const struct dll_bind_sym *init_sym = &sym[0];
-    hr = dll_bind(&chuni_dll, src, &sym, _countof(chuni_dll_syms));
+    hr = dll_bind(&chuni_dll, src, &sym, _countof(chuni_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

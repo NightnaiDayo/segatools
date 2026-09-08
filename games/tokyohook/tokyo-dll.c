@@ -89,7 +89,7 @@ HRESULT tokyo_dll_init(const struct tokyo_dll_config *cfg, HINSTANCE self)
     }
 
     sym = tokyo_dll_syms;
-    hr = dll_bind(&tokyo_dll, src, &sym, _countof(tokyo_dll_syms));
+    hr = dll_bind(&tokyo_dll, src, &sym, _countof(tokyo_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

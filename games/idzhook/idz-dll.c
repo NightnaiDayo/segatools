@@ -113,7 +113,7 @@ HRESULT idz_dll_init(const struct idz_dll_config *cfg, HINSTANCE self)
     }
 
     sym = idz_dll_syms;
-    hr = dll_bind(&idz_dll, src, &sym, _countof(idz_dll_syms));
+    hr = dll_bind(&idz_dll, src, &sym, _countof(idz_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {
