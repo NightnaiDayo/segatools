@@ -104,7 +104,7 @@ void idac_io_get_shifter(uint8_t *gear)
 
 void idac_io_get_analogs(struct idac_io_analog_state *out)
 {
-    struct idac_io_analog_state tmp;
+    struct idac_io_analog_state tmp = { 0 };
 
     assert(out != NULL);
     assert(idac_io_backend != NULL);

@@ -13,6 +13,13 @@ static IDirectInputDevice8W* idz_di_dev = NULL;
 
 static void update_or_create_effect(LPDIRECTINPUTEFFECT* effect_ptr, REFGUID guid, DIEFFECT* fx);
 
+static bool idz_di_dev_state_lost(HRESULT hr)
+{
+    return hr == DIERR_INPUTLOST
+        || hr == DIERR_NOTACQUIRED
+        || hr == DIERR_UNPLUGGED;
+}
+
 /* Individual DI Effects */
 static IDirectInputEffect* idz_di_fx_constant = NULL;
 static IDirectInputEffect* idz_di_fx_rumble = NULL;
@@ -121,6 +128,28 @@ HRESULT idz_di_dev_poll(IDirectInputDevice8W* dev, HWND wnd,
     }
 
     hr = IDirectInputDevice8_GetDeviceState(dev, sizeof(out->st), &out->st);
+
+    if (FAILED(hr) && idz_di_dev_state_lost(hr)) {
+        HRESULT acquire_hr;
+
+        dprintf("DirectInput: Device lost (%08x), attempting to reacquire\n",
+                (int) hr);
+
+        acquire_hr = IDirectInputDevice8_Acquire(dev);
+
+        if (SUCCEEDED(acquire_hr)) {
+            hr = IDirectInputDevice8_GetDeviceState(
+                    dev,
+                    sizeof(out->st),
+                    &out->st);
+
+            if (SUCCEEDED(hr)) {
+                dprintf("DirectInput: Device reacquired\n");
+            }
+        } else {
+            dprintf("DirectInput: Acquire failed: %08x\n", (int) acquire_hr);
+        }
+    }
 
     if (FAILED(hr)) {
         dprintf("DirectInput: GetDeviceState error: %08x\n", (int)hr);

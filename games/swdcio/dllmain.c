@@ -96,7 +96,7 @@ void swdc_io_get_gamebtns(uint16_t *gamebtn_out)
 
 void swdc_io_get_analogs(struct swdc_io_analog_state *out)
 {
-    struct swdc_io_analog_state tmp;
+    struct swdc_io_analog_state tmp = { 0 };
 
     assert(out != NULL);
     assert(swdc_io_backend != NULL);
