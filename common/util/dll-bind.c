@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "util/dll-bind.h"
 #include "util/dprintf.h"

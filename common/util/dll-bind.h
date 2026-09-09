@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 struct dll_bind_sym {
     /* Symbol name to locate in the source DLL */
