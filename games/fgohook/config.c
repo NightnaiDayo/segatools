@@ -106,7 +106,7 @@ void fgo_deck_config_load(
     assert(cfg != NULL);
     assert(filename != NULL);
 
-    cfg->enable = GetPrivateProfileIntW(L"deck", L"enable", 1, filename);
+    cfg->enable = GetPrivateProfileIntW(L"deckReader", L"enable", 1, filename);
 }
 
 void fgo_hook_config_load(

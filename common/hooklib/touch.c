@@ -25,6 +25,10 @@ static ATOM WINAPI hook_RegisterClassExA(
     WNDCLASSEXA* wndClass
 );
 
+static ATOM WINAPI hook_RegisterClassExW(
+    WNDCLASSEXW* wndClass
+);
+
 static int WINAPI hook_GetSystemMetrics(
     int nIndex
 );
@@ -49,6 +53,10 @@ static int WINAPI hook_ShowCursor(BOOL bShow);
 
 static ATOM (WINAPI *next_RegisterClassExA)(
     const WNDCLASSEXA* wndClass
+);
+
+static ATOM (WINAPI *next_RegisterClassExW)(
+    const WNDCLASSEXW* wndClass
 );
 
 static int (WINAPI *next_GetSystemMetrics)(
@@ -84,6 +92,11 @@ static const struct hook_symbol touch_hooks[] = {
         .name   = "RegisterClassExA",
         .patch  = hook_RegisterClassExA,
         .link   = (void**)&next_RegisterClassExA
+    },
+    {
+        .name   = "RegisterClassExW",
+        .patch  = hook_RegisterClassExW,
+        .link   = (void**)&next_RegisterClassExW
     },
     {
         .name   = "GetSystemMetrics",
@@ -130,7 +143,7 @@ void touch_screen_hook_init(const struct touch_screen_config *cfg, HINSTANCE sel
 
     memcpy(&touch_config, cfg, sizeof(*cfg));
     touch_hook_insert_hooks(NULL);
-    dprintf("TOUCH: hook enabled.\n");
+    dprintf("Touch: hook enabled.\n");
 }
 
 void touch_hook_insert_hooks(HMODULE target)
@@ -170,11 +183,24 @@ static ATOM WINAPI hook_RegisterClassExA(
     WNDCLASSEXA* wndClass
 ) {
     if (wndClass->lpfnWndProc) {
+        dprintf("Touch: Hook window proc (A)\n");
         orig_wndProc = wndClass->lpfnWndProc;
         wndClass->lpfnWndProc = (WNDPROC) hook_wndProc;
     }
 
     return next_RegisterClassExA(wndClass);
+}
+
+static ATOM WINAPI hook_RegisterClassExW(
+    WNDCLASSEXW* wndClass
+) {
+    if (wndClass->lpfnWndProc) {
+        dprintf("Touch: Hook window proc (W)\n");
+        orig_wndProc = wndClass->lpfnWndProc;
+        wndClass->lpfnWndProc = (WNDPROC) hook_wndProc;
+    }
+
+    return next_RegisterClassExW(wndClass);
 }
 
 // Spicetools misc/wintouchemu.cpp
