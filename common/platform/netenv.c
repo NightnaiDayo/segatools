@@ -1076,19 +1076,28 @@ static int WINAPI hook_WSAConnect(
 static struct hostent * WINAPI hook_gethostbyname(
         const char *name) {
     struct hostent *ret = next_gethostbyname(name);
-    
+
     // If successful, and we have NAT rules, rewrite the IP addresses to virtual IPs
     // This handles the case where the game queries its own hostname to get its IP
     if (ret != NULL && ret->h_addrtype == AF_INET && netenv_nat_rule_count > 0) {
-        for (int i = 0; ret->h_addr_list[i] != NULL; i++) {
+        static __declspec(thread) struct hostent hostent_copy;
+        static __declspec(thread) char *addr_list_copy[64];
+        static __declspec(thread) uint32_t addrs_copy[64];
+
+        hostent_copy = *ret;
+        int i = 0;
+        for (; ret->h_addr_list[i] != NULL && i < 63; i++) {
             uint32_t real_ip = _byteswap_ulong(*(uint32_t *)ret->h_addr_list[i]);
             uint32_t virtual_ip = netenv_nat_real_to_virtual(real_ip);
-            if (virtual_ip != real_ip) {
-                *(uint32_t *)ret->h_addr_list[i] = _byteswap_ulong(virtual_ip);
-            }
+            addrs_copy[i] = _byteswap_ulong(virtual_ip);
+            addr_list_copy[i] = (char *)&addrs_copy[i];
         }
+        addr_list_copy[i] = NULL;
+        hostent_copy.h_addr_list = addr_list_copy;
+
+        return &hostent_copy;
     }
-    
+
     return ret;
 }
 
