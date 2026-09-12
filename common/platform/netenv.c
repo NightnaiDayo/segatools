@@ -1080,9 +1080,9 @@ static struct hostent * WINAPI hook_gethostbyname(
     // If successful, and we have NAT rules, rewrite the IP addresses to virtual IPs
     // This handles the case where the game queries its own hostname to get its IP
     if (ret != NULL && ret->h_addrtype == AF_INET && netenv_nat_rule_count > 0) {
-        static __declspec(thread) struct hostent hostent_copy;
-        static __declspec(thread) char *addr_list_copy[64];
-        static __declspec(thread) uint32_t addrs_copy[64];
+        static struct hostent hostent_copy;
+        static char *addr_list_copy[64];
+        static uint32_t addrs_copy[64];
 
         hostent_copy = *ret;
         int i = 0;

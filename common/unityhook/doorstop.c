@@ -140,7 +140,7 @@ static void my_mono_jit_parse_options(int argc, const char** argv) {
         }
         dprintf("\n");
         */
-        mono_jit_parse_options(size, new_argv);
+        mono_jit_parse_options(size, (const char **)new_argv);
         free(debug_options);
         free(new_argv);
     } else {
