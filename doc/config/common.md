@@ -600,11 +600,15 @@ NOTE: Crossbeats erroniously displays Billing modes A/B1/B2, but this value come
 
 Default: `0x64`
 
-An 8-bit bitfield of unclear meaning. The least significant bit indicates a
-developer dongle. Changing this doesn't seem to have any effect on
-anything other than SEGA AM2 games.
+An 8-bit bitfield describing various keychip attributes.
+Changing this doesn't seem to have any effect on anything other than SEGA AM2 games.
 
-Other values observed in the wild:
+* 0x01: development dongle
+* 0x04: enable All.Net
+* 0x10: enable "All.Net Slim"
+* 0x20: enable accounting
+
+Values observed in the wild:
 
 - `0x04`: SDCH, SDCA
 - `0x20`: SDCA
