@@ -602,11 +602,17 @@ Default: `0x64`
 
 An 8-bit bitfield describing various keychip attributes.
 Changing this doesn't seem to have any effect on anything other than SEGA AM2 games.
+`|` the values below together to get the full system flag.
+Reserved bits should not be set.
 
-* 0x01: development dongle
+* 0x01: development dongle (enables extra logging in amdaemon, rarely affects games)
+* 0x02: *reserved*
 * 0x04: enable All.Net
-* 0x10: enable "All.Net Slim"
+* 0x08: enable net delivery
+* 0x10: enable "All.Net Slim" (CHN?)
 * 0x20: enable accounting
+* 0x40: rental flag
+* 0x80: *reserved*
 
 Values observed in the wild:
 
