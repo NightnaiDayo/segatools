@@ -8,6 +8,12 @@
 struct epay_config {
     bool enable;
     bool hook;
+    bool icas_emulate;
+    bool icas_aimeio;
+    bool icas_aime_access_code;
+    wchar_t icas_aime_path[MAX_PATH];
+    wchar_t icas_card_path[MAX_PATH];
+    unsigned int icas_scan;
 };
 
 /* The functions in these structs are how clients like amdaemon interface

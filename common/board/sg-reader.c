@@ -88,6 +88,7 @@ static const struct sg_led_ops sg_reader_led_ops = {
 
 static CRITICAL_SECTION sg_reader_lock;
 static bool sg_reader_started;
+static volatile LONG sg_reader_ready;
 static HRESULT sg_reader_start_hr;
 static struct uart sg_reader_uart;
 static uint8_t sg_reader_written_bytes[520];
@@ -147,7 +148,9 @@ HRESULT sg_reader_hook_init(
     sg_reader_uart.readable.bytes = sg_reader_readable_bytes;
     sg_reader_uart.readable.nbytes = sizeof(sg_reader_readable_bytes);
 
-    return iohook_push_handler(sg_reader_handle_irp);
+    hr = iohook_push_handler(sg_reader_handle_irp);
+    if (SUCCEEDED(hr)) InterlockedExchange(&sg_reader_ready, 1);
+    return hr;
 }
 
 static HRESULT sg_reader_handle_irp(struct irp *irp)
@@ -390,4 +393,51 @@ static HRESULT sg_reader_nfc_send_hex_data(
 static void sg_reader_led_set_color(void *ctx, uint8_t r, uint8_t g, uint8_t b)
 {
     aime_dll.led_set_color(0, r, g, b);
+}
+
+/* Shared with ICAS in the same amdaemon process. The normal UART transaction
+ * lock protects the entire poll/get sequence, including backend initialization.
+ * Do not load or initialize a second instance of the hardware plugin here. */
+static HRESULT sg_reader_icas_poll(uint64_t *idm, uint8_t *code)
+{
+    HRESULT hr;
+    if (!idm && !code) return E_POINTER;
+    if (idm) *idm = 0;
+    if (code) memset(code, 0, 10);
+    if (!InterlockedCompareExchange(&sg_reader_ready, 0, 0)) return E_PENDING;
+    EnterCriticalSection(&sg_reader_lock);
+    if (!sg_reader_started) {
+        hr = E_PENDING;
+        goto end;
+    }
+    hr = sg_reader_start_hr;
+    if (FAILED(hr)) goto end;
+    if (aime_dll.nfc_radio_on) {
+        hr = aime_dll.nfc_radio_on(0);
+        if (FAILED(hr) && hr != E_NOTIMPL) goto end;
+    }
+    hr = aime_dll.nfc_poll(0);
+    if (FAILED(hr)) goto end;
+    if (code) {
+        hr = aime_dll.nfc_get_aime_id(0, code, 10);
+    } else {
+        hr = aime_dll.nfc_get_felica_id(0, idm);
+        if (hr == S_OK && !*idm) hr = S_FALSE;
+    }
+end:
+    LeaveCriticalSection(&sg_reader_lock);
+    return hr;
+}
+
+/* Private bridge ABI resolved by ICAS with GetProcAddress. S_OK supplies a
+ * card, S_FALSE means no card, and E_PENDING means the reader is not ready.
+ * Outputs are a numeric FeliCa IDm or ten packed-BCD Aime access-code bytes. */
+__declspec(dllexport) HRESULT segatools_icas_aimeio_poll(uint64_t *idm)
+{
+    return sg_reader_icas_poll(idm, NULL);
+}
+
+__declspec(dllexport) HRESULT segatools_icas_aimeio_poll_access_code(uint8_t *code)
+{
+    return sg_reader_icas_poll(NULL, code);
 }

@@ -17,6 +17,7 @@
 
 #include "platform/dns.h"
 #include "platform/epay.h"
+#include "platform/icasrw.h"
 #include "platform/hwmon.h"
 #include "platform/hwreset.h"
 #include "platform/misc.h"
@@ -442,6 +443,7 @@ void epay_config_load(struct epay_config *cfg, const wchar_t *filename)
 
     cfg->enable = GetPrivateProfileIntW(L"epay", L"enable", 1, filename);
     cfg->hook = GetPrivateProfileIntW(L"epay", L"hook", 1, filename);
+    icasrw_config_load(cfg, filename);
 }
 
 void openssl_config_load(struct openssl_config *cfg, const wchar_t *filename)

@@ -11,6 +11,7 @@
 #include "hooklib/reg.h"
 
 #include "platform/epay.h"
+#include "platform/icasrw.h"
 
 #include <hooklib/path.h>
 
@@ -105,6 +106,14 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
         path_hook_insert_hooks(aime_adapter_debug);
         serial_hook_apply_hooks(aime_adapter_debug);
         iohook_apply_hooks(aime_adapter_debug);
+    }
+
+    if (cfg->icas_emulate) {
+        hr = icasrw_hook_init(cfg, thincapayment);
+        if (FAILED(hr)) {
+            dprintf("ICAS: Initialization failed (%08x); requires epay hook=0 and x64\n", (unsigned int) hr);
+            return hr;
+        }
     }
 
     if (cfg->hook) {
