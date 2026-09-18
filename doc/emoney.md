@@ -2,13 +2,25 @@
 
 Original authentication notes by Haruka Akechi.
 
-Segatools emulates the authentication card used to register the terminal and the
-ICAS reader used for payment cards. The game's ThincaPayment client handles
-communication with your payment server.
+E-money setup has two parts: register the cabinet, then configure how it reads
+a player's payment card. Registration uses an **authentication card** containing
+shop details. This is separate from the Aime or FeliCa card used for login and
+payment.
+
+Segatools supplies the authentication card from a file and emulates the payment
+card reader. The game's **ThincaPayment** component sends registration and
+payment requests to the configured service. It runs in **amdaemon**, the helper
+process launched alongside the game.
+
+Follow the setup steps below first. The technical section explains the file
+formats and network messages for readers working on the implementation.
 
 ## Setup
 
 ### 1. Generate the authentication data
+
+`authdata.bin` holds the shop details that segatools presents as an authentication
+card. The game expects these details to be encrypted with its own key.
 
 Obtain the game's 64-byte authentication-card encryption key from `amdaemon.exe`.
 From the `emoney` directory, install the dependencies and run the generator with
@@ -19,16 +31,19 @@ python -m pip install -r requirements.txt
 python authcardgen.py --key YOUR_128_HEX_CHARACTER_KEY
 ```
 
-The output is `authdata.bin`. Copy it into the game's `DEVICE` directory.
+The output is `authdata.bin`. Copy it into the `DEVICE` directory used by
+amdaemon. Relative paths in this guide are resolved from amdaemon's working
+directory, the directory from which it is launched.
 
-Use these options to match the registration details configured on your server:
+Your payment service supplies the registration details. Pass them to the
+generator using these options:
 
 | Option | Purpose |
 | --- | --- |
 | `--store-card-id` | Store card identifier, up to 16 bytes |
 | `--merchant-code` | Merchant code, up to 20 bytes |
 | `--store-branch-id` | Non-zero branch number, up to 12 bytes |
-| `--passphrase` | Password for the PFX certificate returned by the server, up to 16 bytes |
+| `--passphrase` | Password for the client certificate received during registration, up to 16 bytes |
 | `--cardid` | Override the static authentication card ID with 64 hexadecimal characters |
 | `--output` | Output path; defaults to `authdata.bin` |
 
@@ -48,15 +63,23 @@ enable=1
 authdataPath=DEVICE\authdata.bin
 ```
 
-`hook=0` selects the real ThincaPayment client. `authdataPath` is relative to the
-daemon's working directory and defaults to `DEVICE\authdata.bin`.
+`enable=1` turns on segatools' e-money support. `hook=0` keeps the game's
+ThincaPayment client active so it can communicate with the payment service.
+`[aime] enable=1` enables the reader that presents the authentication card, and
+`authdataPath` tells it where to read that card's data.
 
 If the game's `tfps-res-pro\env.json` has `"use_proxy": true`, also set
 `proxyFlag=3` in the existing `[aime]` section. Its default is `2`.
 
 ### 3. Configure the payment server connection
 
-Use the endpoint URLs and certificates supplied by your payment server:
+ThincaPayment needs a registration URL, payment-service URLs, and certificates
+for the HTTPS connection. Use the values provided by your payment service:
+
+* The CA certificate in `ca.pem` lets the client verify the service it connects to.
+* Registration returns a client certificate in PFX format, a password-protected
+  bundle used to identify the terminal. Its password must match `--passphrase`
+  from step 1.
 
 | File | Setting |
 | --- | --- |
@@ -64,22 +87,27 @@ Use the endpoint URLs and certificates supplied by your payment server:
 | `tfps-res-pro\resource.xml` | Set the service URLs, including `commonPrimaryUri`, to your server's endpoints |
 | `ca.pem`, beside `amdaemon.exe` | Include the CA certificates needed by your server's TLS setup |
 
-The endpoint hostnames must match the server's TLS certificate. The PFX returned
-by terminal registration must use the passphrase from your authentication data.
+Keep the trailing slash on `commonPrimaryUri`: ThincaPayment uses it as a base
+URL when looking up the payment services.
 
 ### 4. Register the terminal
 
 Open **E-Money Settings → Terminal Authentication** in the game's test menu.
-Hold the configured Aime scan key (Enter by default) when prompted. The shop name
-appears when registration completes.
+Hold the configured Aime scan key (Enter by default) when prompted. Segatools
+presents the authentication data from step 1. The shop name appears when
+registration completes.
 
-Then follow [ICAS reader setup](icas.md) to configure payment card input from a
-file or an AimeIO reader. ICAS is tested in SDHD.
+Then follow [Thinca payment reader setup](icas.md) to choose how to present a
+player's card: hold a key to read an ID from a file, or tap an AimeIO reader.
+That guide also explains how to reuse an Aime access code as the payment card
+input. The reader emulation is tested in SDHD.
 
 ## Troubleshooting
 
 Set `emoney.log.level` to `4` in the game's amdaemon `config.json`. Check
-`<amfs>\emoney_log\thincapayment.log`, the VFD message, and the segatools output.
+`<amfs>\emoney_log\thincapayment.log` (`<amfs>` is your configured AMFS
+directory), the message on the cabinet's small text display (VFD), and the
+segatools output.
 
 | Symptom | Check |
 | --- | --- |
@@ -91,10 +119,15 @@ Set `emoney.log.level` to `4` in the game's amdaemon `config.json`. Check
 
 ## Technical info
 
+The exchange follows the same order as setup: read the authentication card,
+register the terminal, discover the service URLs, then process payment-card
+requests. The formats below describe what the game client reads and sends.
+
 ### Authentication card
 
-The emulated MIFARE reader serves authentication data from
-[sg-nfc.c](../common/board/sg-nfc.c). Block 4 starts with `54 43`, followed by
+The authentication card uses the MIFARE reader path implemented in
+[sg-nfc.c](../common/board/sg-nfc.c). MIFARE data is addressed in numbered blocks.
+Block 4 starts with `54 43`, followed by
 `[aime] proxyFlag` and `01`. Encrypted data is served from `authdataPath` through
 blocks 5, 6, 8, 9, 10, 12, 13, and 14.
 
@@ -115,7 +148,8 @@ the IV. The payload is encrypted with AES-CBC and PKCS#7 padding.
 
 ### Registration and service discovery
 
-ThincaPayment sends the terminal details to `tasms.root_endpoint`:
+Registration identifies the cabinet and shop to the service. ThincaPayment
+sends a JSON request to the URL configured in `tasms.root_endpoint`, for example:
 
 ```json
 {
@@ -127,15 +161,17 @@ ThincaPayment sends the terminal details to `tasms.root_endpoint`:
 }
 ```
 
-`serialNumber` comes from the PCBID, while the merchant, branch, and store-card
+`serialNumber` comes from the cabinet's configured board identifier (PCBID), while the merchant, branch, and store-card
 values come from the authentication data. The response supplies a base64-encoded
 PFX certificate and `initSettings` containing the terminal ID, service endpoints,
 and available payment brands. The `x-certificate-md5` header contains the MD5 of
 the decoded PFX bytes, not the base64 text.
 
-The client then requests `initauth.jsp` relative to `commonPrimaryUri` for TLAM
-discovery. Keep the trailing slash on the configured base URI.
-The response uses `Content-Type: application/x-tlam` and names the TCAP endpoint:
+Next, the client needs the URL for the binary payment protocol. It requests
+`initauth.jsp` relative to `commonPrimaryUri`. This lookup is called TLAM
+discovery: the reply is a short text document with
+`Content-Type: application/x-tlam`. Its `SERV=` line supplies the URL to which
+the client will send TCAP, the binary messages described below:
 
 ```text
 SERV=https://payment.example/emoney/tcap
@@ -159,9 +195,12 @@ including JSON in `AdditionalSecurityInformation`. Initialization uses
 
 ### TCAP frames
 
-ThincaPayment exchanges binary frames with that endpoint using
-`Content-Type: application/x-tcap`. Segatools implements the reader calls made
-by the client; the server controls the payment flow.
+A TCAP frame is one complete binary message. ThincaPayment sends these messages
+over HTTP with `Content-Type: application/x-tcap`. Each frame has a five-byte
+header followed by a body containing smaller messages called subpackets.
+
+Offsets below count bytes from zero. Multi-byte lengths are big-endian: the
+most significant byte comes first, so `00 15` means 21 bytes.
 
 | Frame offset | Size | Field |
 | --- | --- | --- |
@@ -199,7 +238,9 @@ in another packet type; `0x25` in an entity-operation packet is a device command
 
 ### Entity operations
 
-Packet type `06`, subpacket opcode `0x25`, carries this command envelope:
+An entity operation asks the client to perform an action, such as opening the
+reader, showing a message, or returning card data. It uses packet type `06` and
+subpacket opcode `0x25`. Inside that subpacket, the command is encoded as follows:
 
 | Field | Size |
 | --- | --- |
@@ -241,7 +282,9 @@ ThincaPayment translates TCAP reader requests into ICAS calls. Segatools returns
 the card identity selected by the `[icas]` settings, which the client sends to
 the server for a balance inquiry or payment.
 
-A successful generic NFC detection payload is 27 bytes:
+For a successful FeliCa detection through the generic NFC reader interface,
+the response payload is 27 bytes. IDm is the card identifier; PMm contains
+card parameters:
 
 | Payload offset | Size | Field |
 | --- | --- | --- |
@@ -272,12 +315,11 @@ Response XML carries typed properties inside `userdata/properties`:
 | `AdditionalSecurityInformation` | XML-escaped JSON containing receipt or initialization data |
 | `CenterResultCode` | Server result detail |
 
-A successful payment uses `CURRENT` with the response XML. A balance inquiry
-also returns the balance, with `SettledAmount=0` and receipt type `5` rather
-than payment receipt type `0`. A declined payment sends a status message followed
-by `RESULT` with a non-zero `ResultCode` and `SettledAmount=0`. `CURRENT` updates
-receipt data alone; using it for a decline can leave the client's completion
-result at zero.
+The client treats `CURRENT` and `RESULT` differently. `CURRENT` supplies receipt
+data; `RESULT` also propagates the outcome to the completion callback. An error
+reported only through `CURRENT` can therefore leave the completion result at
+zero. This distinction matters when tracing a payment that displays an error
+but appears to the game to have succeeded.
 
 After an initialization or brand-discovery `CURRENT`, the client can acknowledge
 with the six-byte payload `00 00 00 02 00 00`. This is a completion acknowledgement,

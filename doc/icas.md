@@ -1,4 +1,4 @@
-# ICAS reader emulation
+# Thinca payment reader emulation
 
 The ICAS hook lets segatools provide card input to ThincaPayment, the game
 component that handles e-money payments. You can present a card by holding a
@@ -67,8 +67,14 @@ scan key and card file. Use AimeIO mode for the reader; direct serial mode with
 
 ### Aime access codes
 
-Set `aimeAccessCode=1` to use a 20-digit Aime access code as the payment
-identity:
+The Thinca reader interface used here expects a FeliCa IDm: an eight-byte card
+identifier, usually written as 16 hexadecimal digits. An Aime access code is
+20 decimal digits, so it cannot be passed directly as that IDm.
+
+If you already use an access code for game login, or want to keep using that
+code for payment input, set `aimeAccessCode=1`. Segatools acts as a shim: it
+converts the access code into an eight-byte value and presents it to Thinca as
+the emulated card's FeliCa IDm. You do not need to supply a separate FeliCa IDm:
 
 ```ini
 [icas]
@@ -83,22 +89,19 @@ With `aimeio=0`, hold the scan key to read the code from `aimePath`. With
 `felicaPath` is ignored in this mode. The file accepts spaces and line endings;
 leading zeroes are preserved.
 
-ThincaPayment expects an eight-byte card ID. Segatools converts the access code
-into that format by hashing its 20 digits with SHA-256 and taking the first
-eight bytes:
+The shim hashes the 20 digits with SHA-256 and takes the first eight bytes.
+This creates a repeatable emulated IDm; it does not recover a physical card's
+FeliCa IDm from its access code:
 
 ```text
 00123456789012345678 -> 3dea873e45c05c48
 ```
 
 Amusement IC codes contain a three-digit company code, 12 digits of encoded card
-data, and a five-digit checksum. Hashing the whole code keeps cards from different
-companies distinct and lets the result use all 64 bits of the payment ID. The
+data, and a five-digit checksum. Hashing the whole code includes the company
+code and lets the result use all 64 bits of the emulated IDm. The
 checksum is calculated from the other digits, so it adds no new randomness. The
 same access code produces the same payment ID whether read from a file or AimeIO.
-
-Enabling this setting changes the payment ID and its server wallet. Existing
-balances remain associated with the previous ID.
 
 ## Configuration
 
@@ -136,8 +139,7 @@ hook output. Status `0x20002` means timeout; `0x20003` means cancelled. Set
 ThincaPayment asks a reader adapter to open the reader, wait for a card, and
 return its identity. The ICAS hook supplies an emulated adapter for those calls.
 It handles opening and closing the reader, card detection, timeouts,
-cancellation, and basic FeliCa polling. ThincaPayment and the payment server
-handle balances and settlement.
+cancellation, and basic FeliCa polling.
 
 A detected FeliCa card has two eight-byte values: its IDm (card identifier) and
 PMm (card parameters). Segatools takes the IDm from the configured input and
