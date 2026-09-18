@@ -11,5 +11,7 @@ iccard_lib = static_library(
         'felica.c',
         'felica.h',
         'mifare.h',
+        'solitaire.c',
+        'solitaire.h',
     ],
 )
