@@ -4,6 +4,7 @@ platform_lib = static_library(
     implicit_include_directories : false,
     dependencies : [
         capnhook.get_variable('hook_dep'),
+        advapi32_lib,
         shlwapi_lib,
         bcrypt_lib,
     ],
@@ -34,6 +35,8 @@ platform_lib = static_library(
         'pcbid.h',
         'platform.c',
         'platform.h',
+        'registry.c',
+        'registry.h',
         'security.c',
         'security.h',
         'vfs.c',

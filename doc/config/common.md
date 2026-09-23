@@ -846,6 +846,37 @@ Default: `0`
 
 Allows network services to download arbitrary files to the AMFS directory specified above. This has security implications, do not enable this, unless you trust your server operator.
 
+## `[reg]`
+
+Configure the registry store: a registry hive file that stands in for parts
+of the Windows registry. Hooks use it to keep registry state without
+administrator rights, and every process that uses the same INI shares it.
+It is currently used by `[epay] regRedirect`.
+
+### `path`
+
+Default: `DEVICE\reg\segatools.hiv`
+
+Path to the hive file. Relative paths are resolved from the directory
+containing the INI file, not from the working directory. Absolute paths must
+start with a drive letter, such as `C:\segatools\reg.hiv`. The file must be
+on a local drive: UNC paths and mapped network drives are rejected, and
+environment variables such as `%APPDATA%` are not expanded. `/` is accepted as
+a separator, and an empty value uses the default. Windows creates `.LOG1` and
+`.LOG2` files next to the hive.
+
+### `profile`
+
+Default: the current four-character game ID, such as `SDEZ`
+
+Selects the namespace inside the shared store. Set a distinct profile such as
+`SDEZ-cab1` when two instances of the same title must not share state. The
+value may contain up to 32 ASCII letters, digits, `.`, `_` or `-`.
+
+Redirected subtrees use the following general layout:
+
+`profiles\<profile>\<registry-root>\<original-path>`
+
 ## `[epay]`
 
 Configure Thinca Payment (E-Money) emulation and hooks.
@@ -861,6 +892,28 @@ Enables the Thinca emulation. This will allow you to enable E-Money on compatibl
 Default: `1`
 
 Enables hooking of respective Thinca DLL functions to emulate the existence of E-Money. This cannot be used with a real E-Money server.
+
+### `regRedirect`
+
+Default: `0`
+
+Controls where the real Thinca DLLs in `amdaemon.exe` keep the
+`HKLM\SOFTWARE\TFPaymentService` registry subtree:
+
+- `0`: Use the real HKLM key. amdaemon writes it on every boot, which may
+  require administrator rights.
+- `1`: Redirect the subtree to the `[reg]` store, at
+  `profiles\<profile>\HKLM\SOFTWARE\TFPaymentService`.
+
+This setting needs `enable=1` and only applies in `amdaemon.exe`; other
+processes ignore it. Numbers other than `0` and `1` are ignored with a warning
+and treated as `0`. Like the other `[epay]` keys, the value is read as an
+integer, so text such as `true` also reads as `0`, without a warning.
+
+As on a real system, amdaemon creates `TFPaymentService` as a volatile key and
+rewrites it on every boot, so the hive does not keep it across restarts.
+Values placed by hand in the real HKLM key, such as `KeepAliveTimeout` or
+`ThincaHttpClientPath`, are not visible while the redirect is on.
 
 ## `[openssl]`
 

@@ -4,11 +4,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#pragma pack(push,1)
+struct registry_config;
+
 struct epay_config {
     bool enable;
     bool hook;
+    int reg_redirect;
 };
+
+#pragma pack(push,1)
 
 /* The functions in these structs are how clients like amdaemon interface
  * with thinca. We can simply replace these functions with our own stubs
@@ -62,4 +66,7 @@ struct thinca_main {
 };
 
 #pragma pack(pop)
-HRESULT epay_hook_init(const struct epay_config *cfg);
+HRESULT epay_hook_init(
+        const struct epay_config *cfg,
+        const struct registry_config *registry_cfg,
+        const char *game_id);

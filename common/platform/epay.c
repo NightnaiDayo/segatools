@@ -1,6 +1,8 @@
 #include <windows.h>
+#include <shlwapi.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +13,7 @@
 #include "hooklib/reg.h"
 
 #include "platform/epay.h"
+#include "platform/registry.h"
 
 #include <hooklib/path.h>
 
@@ -26,6 +29,14 @@ static HRESULT misc_read_pattern0(void *bytes, uint32_t *nbytes);
 static HRESULT misc_read_network_timeout0(void *bytes, uint32_t *nbytes);
 static HRESULT misc_read_pattern1(void *bytes, uint32_t *nbytes);
 static HRESULT misc_read_network_timeout1(void *bytes, uint32_t *nbytes);
+
+static bool epay_is_amdaemon(void);
+
+static HRESULT epay_registry_redirect_init(
+        const struct registry_config *registry_cfg,
+        const char *game_id);
+
+static void epay_registry_preload_warn(const char *module_name);
 
 static uint64_t thinca_initialize(struct thinca_impl * self, uint64_t val);
 static uint64_t thinca_dispose(struct thinca_impl * self);
@@ -72,12 +83,43 @@ static const struct hook_symbol epay_syms[] = {
     }
 };
 
-HRESULT epay_hook_init(const struct epay_config *cfg) {
+HRESULT epay_hook_init(
+        const struct epay_config *cfg,
+        const struct registry_config *registry_cfg,
+        const char *game_id)
+{
     HRESULT hr = S_OK;
+    bool reg_redirect;
+
     assert(cfg != NULL);
+    assert(registry_cfg != NULL);
+    assert(game_id != NULL);
 
     if (!cfg->enable) {
         return S_FALSE;
+    }
+
+    reg_redirect = false;
+
+    if (cfg->reg_redirect == 1) {
+        if (epay_is_amdaemon()) {
+            reg_redirect = true;
+        } else {
+            dprintf("Epay: regRedirect only applies to amdaemon.exe\n");
+        }
+    } else if (cfg->reg_redirect != 0) {
+        dprintf(
+                "Epay: Ignoring regRedirect=%d; expected 0 (HKLM) or 1 "
+                "(DEVICE registry hive)\n",
+                cfg->reg_redirect);
+    }
+
+    if (reg_redirect) {
+        hr = epay_registry_redirect_init(registry_cfg, game_id);
+
+        if (FAILED(hr)) {
+            return hr;
+        }
     }
 
     // HACK:(?) the DLLs are loaded dynamically so we just preload it and apply DNS and VFS hooks to it
@@ -85,26 +127,54 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     if (thincahttpclient != NULL){
         dns_hook_apply_hooks(thincahttpclient);
         path_hook_insert_hooks(thincahttpclient);
+
+        if (reg_redirect) {
+            reg_hook_insert_hooks(thincahttpclient);
+        }
+    } else if (reg_redirect) {
+        epay_registry_preload_warn("thincahttpclient.dll");
     }
     HMODULE thincapayment = LoadLibraryA("ThincaPayment.dll");
     if (thincapayment != NULL){
         path_hook_insert_hooks(thincapayment);
+
+        if (reg_redirect) {
+            reg_hook_insert_hooks(thincapayment);
+        }
+    } else if (reg_redirect) {
+        epay_registry_preload_warn("ThincaPayment.dll");
     }
     HMODULE thincatcapclient = LoadLibraryA("thincatcapclient.dll");
     if (thincatcapclient != NULL){
         path_hook_insert_hooks(thincatcapclient);
+
+        if (reg_redirect) {
+            reg_hook_insert_hooks(thincatcapclient);
+        }
+    } else if (reg_redirect) {
+        epay_registry_preload_warn("thincatcapclient.dll");
     }
     HMODULE aime_adapter = LoadLibraryA("aime_rw_adapterMD.dll");
     if (aime_adapter != NULL){
         path_hook_insert_hooks(aime_adapter);
         serial_hook_apply_hooks(aime_adapter);
         iohook_apply_hooks(aime_adapter);
+
+        if (reg_redirect) {
+            reg_hook_insert_hooks(aime_adapter);
+        }
+    } else if (reg_redirect) {
+        epay_registry_preload_warn("aime_rw_adapterMD.dll");
     }
     HMODULE aime_adapter_debug = LoadLibraryA("aime_rw_adapterMDD.dll");
     if (aime_adapter_debug != NULL){
         path_hook_insert_hooks(aime_adapter_debug);
         serial_hook_apply_hooks(aime_adapter_debug);
         iohook_apply_hooks(aime_adapter_debug);
+
+        if (reg_redirect) {
+            reg_hook_insert_hooks(aime_adapter_debug);
+        }
     }
 
     if (cfg->hook) {
@@ -139,6 +209,59 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     }
 
     return hr;
+}
+
+static bool epay_is_amdaemon(void)
+{
+    wchar_t path[MAX_PATH];
+    DWORD len;
+
+    len = GetModuleFileNameW(NULL, path, _countof(path));
+
+    if (len == 0 || len >= _countof(path)) {
+        return false;
+    }
+
+    return _wcsicmp(PathFindFileNameW(path), L"amdaemon.exe") == 0;
+}
+
+static HRESULT epay_registry_redirect_init(
+        const struct registry_config *registry_cfg,
+        const char *game_id)
+{
+    HRESULT hr;
+
+    hr = registry_store_push_redirect(
+            registry_cfg,
+            game_id,
+            HKEY_LOCAL_MACHINE,
+            L"SOFTWARE\\TFPaymentService");
+
+    if (FAILED(hr)) {
+        dprintf(
+                "Epay: Failed to install registry-store redirect: %08lX\n",
+                (unsigned long) hr);
+
+        return hr;
+    }
+
+    dprintf("Epay: Registry-store redirect initialized\n");
+
+    return S_OK;
+}
+
+static void epay_registry_preload_warn(const char *module_name)
+{
+    DWORD err;
+
+    assert(module_name != NULL);
+
+    err = GetLastError();
+    dprintf(
+            "Epay: Could not preload %s (%lu); registry calls from a later "
+            "load are not redirected\n",
+            module_name,
+            (unsigned long) err);
 }
 
 static HRESULT misc_read_thinca_adapter(void *bytes, uint32_t *nbytes)

@@ -83,7 +83,7 @@ HRESULT platform_hook_init(
         return hr;
     }
 
-    hr = epay_hook_init(&cfg->epay);
+    hr = epay_hook_init(&cfg->epay, &cfg->registry, game_id);
 
     if (FAILED(hr)) {
         return hr;

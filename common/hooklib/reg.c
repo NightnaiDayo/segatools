@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
 
 #include "hook/table.h"
 
@@ -23,13 +25,50 @@ struct reg_hook_key {
     size_t nhandles;
 };
 
+struct reg_hook_redirect {
+    HKEY from_root;
+    wchar_t *from_prefix;
+    size_t from_prefix_len;
+    HKEY to_root;
+    wchar_t *to_prefix;
+    size_t to_prefix_len;
+};
+
 /* Helper functions */
 
 static void reg_hook_init(void);
 
+static BOOL CALLBACK reg_hook_init_once(
+        PINIT_ONCE once,
+        void *param,
+        void **context);
+
+static HRESULT reg_hook_redirect_init(void);
+
+static BOOL CALLBACK reg_hook_redirect_init_once(
+        PINIT_ONCE once,
+        void *param,
+        void **context);
+
 static LRESULT reg_hook_propagate_hr(HRESULT hr);
 
 static struct reg_hook_key *reg_hook_match_key_locked(HKEY handle);
+
+static LSTATUS reg_hook_resolve_redirect_locked(
+        HKEY parent,
+        const wchar_t *name,
+        HKEY *redirect_root,
+        wchar_t **redirect_name);
+
+static LSTATUS reg_hook_widen(const char *src, wchar_t **dest);
+
+static LSTATUS reg_hook_narrow(const wchar_t *src, char **dest);
+
+static LSTATUS reg_hook_resolve_redirect_a(
+        HKEY parent,
+        const char *name,
+        HKEY *redirect_root,
+        char **redirect_name);
 
 static const struct reg_hook_val *reg_hook_match_val_locked(
         struct reg_hook_key *key,
@@ -56,11 +95,29 @@ static LSTATUS WINAPI hook_RegOpenKeyExW(
         uint32_t access,
         HKEY *out);
 
+static LSTATUS WINAPI hook_RegOpenKeyExA(
+        HKEY parent,
+        const char *name,
+        uint32_t flags,
+        uint32_t access,
+        HKEY *out);
+
 static LSTATUS WINAPI hook_RegCreateKeyExW(
         HKEY parent,
         const wchar_t *name,
         uint32_t reserved,
         const wchar_t *class_,
+        uint32_t options,
+        uint32_t access,
+        const SECURITY_ATTRIBUTES *sa,
+        HKEY *out,
+        uint32_t *disposition);
+
+static LSTATUS WINAPI hook_RegCreateKeyExA(
+        HKEY parent,
+        const char *name,
+        uint32_t reserved,
+        char *class_,
         uint32_t options,
         uint32_t access,
         const SECURITY_ATTRIBUTES *sa,
@@ -103,6 +160,16 @@ static LSTATUS WINAPI hook_RegGetValueW(
     uint32_t *numData
 );
 
+static LSTATUS WINAPI hook_RegGetValueA(
+    HKEY    hkey,
+    LPCSTR  lpSubKey,
+    LPCSTR  lpValue,
+    uint32_t flags,
+    uint32_t *type,
+    void   *pData,
+    uint32_t *numData
+);
+
 static LSTATUS WINAPI hook_RegQueryInfoKeyW(
     HKEY      hKey,
     LPWSTR    lpClass,
@@ -135,11 +202,29 @@ static LSTATUS (WINAPI *next_RegOpenKeyExW)(
         uint32_t access,
         HKEY *out);
 
+static LSTATUS (WINAPI *next_RegOpenKeyExA)(
+        HKEY parent,
+        const char *name,
+        uint32_t flags,
+        uint32_t access,
+        HKEY *out);
+
 static LSTATUS (WINAPI *next_RegCreateKeyExW)(
         HKEY parent,
         const wchar_t *name,
         uint32_t reserved,
         const wchar_t *class_,
+        uint32_t options,
+        uint32_t access,
+        const SECURITY_ATTRIBUTES *sa,
+        HKEY *out,
+        uint32_t *disposition);
+
+static LSTATUS (WINAPI *next_RegCreateKeyExA)(
+        HKEY parent,
+        const char *name,
+        uint32_t reserved,
+        char *class_,
         uint32_t options,
         uint32_t access,
         const SECURITY_ATTRIBUTES *sa,
@@ -177,6 +262,16 @@ static LSTATUS (WINAPI *next_RegGetValueW)(
     LPCWSTR lpSubKey,
     LPCWSTR lpValue,
     uint32_t   flags,
+    uint32_t *type,
+    void   *pData,
+    uint32_t *numData
+);
+
+static LSTATUS (WINAPI *next_RegGetValueA)(
+    HKEY    hkey,
+    LPCSTR  lpSubKey,
+    LPCSTR  lpValue,
+    uint32_t flags,
     uint32_t *type,
     void   *pData,
     uint32_t *numData
@@ -246,10 +341,31 @@ static const struct hook_symbol reg_hook_syms[] = {
     }
 };
 
-static bool reg_hook_initted;
+static const struct hook_symbol reg_hook_redirect_syms[] = {
+    {
+        .name   = "RegOpenKeyExA",
+        .patch  = hook_RegOpenKeyExA,
+        .link   = (void **) &next_RegOpenKeyExA,
+    }, {
+        .name   = "RegCreateKeyExA",
+        .patch  = hook_RegCreateKeyExA,
+        .link   = (void **) &next_RegCreateKeyExA,
+    }, {
+        .name   = "RegGetValueA",
+        .patch  = hook_RegGetValueA,
+        .link   = (void **) &next_RegGetValueA,
+    }
+};
+
+static INIT_ONCE reg_hook_once = INIT_ONCE_STATIC_INIT;
+static INIT_ONCE reg_hook_redirect_once = INIT_ONCE_STATIC_INIT;
+static HRESULT reg_hook_redirect_init_hr = E_UNEXPECTED;
 static CRITICAL_SECTION reg_hook_lock;
 static struct reg_hook_key *reg_hook_keys;
 static size_t reg_hook_nkeys;
+static struct reg_hook_redirect *reg_hook_redirects;
+static size_t reg_hook_nredirects;
+static volatile LONG reg_hook_redirect_active;
 
 HRESULT reg_hook_push_key(
         HKEY root,
@@ -303,24 +419,177 @@ end:
     return hr;
 }
 
-static void reg_hook_init(void)
+HRESULT reg_hook_push_redirect(
+        HKEY from_root,
+        const wchar_t *from_prefix,
+        HKEY to_root,
+        const wchar_t *to_prefix)
 {
-    if (reg_hook_initted) {
-        return;
+    struct reg_hook_redirect *new_mem;
+    struct reg_hook_redirect *new_redirect;
+    wchar_t *from_copy;
+    wchar_t *to_copy;
+    size_t from_len;
+    size_t to_len;
+    size_t i;
+    HRESULT hr;
+
+    assert(from_root != NULL);
+    assert(from_prefix != NULL);
+    assert(to_root != NULL);
+    assert(to_prefix != NULL);
+
+    from_len = wcslen(from_prefix);
+    to_len = wcslen(to_prefix);
+
+    if (from_len == 0 || to_len == 0 ||
+            from_prefix[0] == L'\\' || to_prefix[0] == L'\\' ||
+            from_prefix[from_len - 1] == L'\\' ||
+            to_prefix[to_len - 1] == L'\\') {
+        return E_INVALIDARG;
     }
 
-    reg_hook_initted = true;
+    reg_hook_init();
+    hr = reg_hook_redirect_init();
+
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    from_copy = malloc((from_len + 1) * sizeof(wchar_t));
+    to_copy = malloc((to_len + 1) * sizeof(wchar_t));
+
+    if (from_copy == NULL || to_copy == NULL) {
+        free(from_copy);
+        free(to_copy);
+
+        return E_OUTOFMEMORY;
+    }
+
+    memcpy(from_copy, from_prefix, (from_len + 1) * sizeof(wchar_t));
+    memcpy(to_copy, to_prefix, (to_len + 1) * sizeof(wchar_t));
+
+    EnterCriticalSection(&reg_hook_lock);
+
+    for (i = 0; i < reg_hook_nredirects; i++) {
+        if (reg_hook_redirects[i].from_root == from_root &&
+                _wcsicmp(reg_hook_redirects[i].from_prefix, from_prefix) == 0) {
+            hr = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+
+            goto end;
+        }
+    }
+
+    new_mem = realloc(
+            reg_hook_redirects,
+            (reg_hook_nredirects + 1) * sizeof(struct reg_hook_redirect));
+
+    if (new_mem == NULL) {
+        hr = E_OUTOFMEMORY;
+
+        goto end;
+    }
+
+    new_redirect = &new_mem[reg_hook_nredirects];
+    new_redirect->from_root = from_root;
+    new_redirect->from_prefix = from_copy;
+    new_redirect->from_prefix_len = from_len;
+    new_redirect->to_root = to_root;
+    new_redirect->to_prefix = to_copy;
+    new_redirect->to_prefix_len = to_len;
+
+    reg_hook_redirects = new_mem;
+    reg_hook_nredirects++;
+    InterlockedExchange(&reg_hook_redirect_active, 1);
+    from_copy = NULL;
+    to_copy = NULL;
+
+    dprintf("Reg: redirect %ls\\%ls -> %ls\\%ls\n",
+            from_root == HKEY_LOCAL_MACHINE ? L"HKLM" :
+            from_root == HKEY_CURRENT_USER ? L"HKCU" : L"HKEY",
+            from_prefix,
+            to_root == HKEY_LOCAL_MACHINE ? L"HKLM" :
+            to_root == HKEY_CURRENT_USER ? L"HKCU" : L"HKEY",
+            to_prefix);
+
+    hr = S_OK;
+
+end:
+    LeaveCriticalSection(&reg_hook_lock);
+    free(from_copy);
+    free(to_copy);
+
+    return hr;
+}
+
+static void reg_hook_init(void)
+{
+    InitOnceExecuteOnce(&reg_hook_once, reg_hook_init_once, NULL, NULL);
+}
+
+static BOOL CALLBACK reg_hook_init_once(
+        PINIT_ONCE once,
+        void *param,
+        void **context)
+{
+    (void) once;
+    (void) param;
+    (void) context;
+
     InitializeCriticalSection(&reg_hook_lock);
     dprintf("Reg: hook init.\n");
 
     reg_hook_insert_hooks(NULL);
 
     proc_addr_table_push(
-        NULL,
-        "ADVAPI32.dll",
-        (struct hook_symbol *) reg_hook_syms,
-        _countof(reg_hook_syms));
+            NULL,
+            "ADVAPI32.dll",
+            (struct hook_symbol *) reg_hook_syms,
+            _countof(reg_hook_syms));
 
+    return TRUE;
+}
+
+static HRESULT reg_hook_redirect_init(void)
+{
+    DWORD err;
+
+    if (!InitOnceExecuteOnce(
+                &reg_hook_redirect_once,
+                reg_hook_redirect_init_once,
+                NULL,
+                NULL)) {
+        err = GetLastError();
+
+        return HRESULT_FROM_WIN32(
+                err != ERROR_SUCCESS ? err : ERROR_GEN_FAILURE);
+    }
+
+    return reg_hook_redirect_init_hr;
+}
+
+static BOOL CALLBACK reg_hook_redirect_init_once(
+        PINIT_ONCE once,
+        void *param,
+        void **context)
+{
+    (void) once;
+    (void) param;
+    (void) context;
+
+    hook_table_apply(
+            NULL,
+            "advapi32.dll",
+            reg_hook_redirect_syms,
+            _countof(reg_hook_redirect_syms));
+
+    reg_hook_redirect_init_hr = proc_addr_table_push(
+            NULL,
+            "ADVAPI32.dll",
+            (struct hook_symbol *) reg_hook_redirect_syms,
+            _countof(reg_hook_redirect_syms));
+
+    return TRUE;
 }
 
 void reg_hook_insert_hooks(HMODULE target)
@@ -330,7 +599,14 @@ void reg_hook_insert_hooks(HMODULE target)
             "advapi32.dll",
             reg_hook_syms,
             _countof(reg_hook_syms));
-    
+
+    if (InterlockedCompareExchange(&reg_hook_redirect_active, 0, 0) != 0) {
+        hook_table_apply(
+                target,
+                "advapi32.dll",
+                reg_hook_redirect_syms,
+                _countof(reg_hook_redirect_syms));
+    }
 }
 
 static LRESULT reg_hook_propagate_hr(HRESULT hr)
@@ -364,6 +640,240 @@ static struct reg_hook_key *reg_hook_match_key_locked(HKEY handle)
     }
 
     return NULL;
+}
+
+static LSTATUS reg_hook_resolve_redirect_locked(
+        HKEY parent,
+        const wchar_t *name,
+        HKEY *redirect_root,
+        wchar_t **redirect_name)
+{
+    const struct reg_hook_redirect *best;
+    const struct reg_hook_redirect *redirect;
+    const wchar_t *suffix;
+    wchar_t *mapped;
+    size_t mapped_len;
+    size_t name_len;
+    size_t suffix_len;
+    size_t i;
+
+    assert(redirect_root != NULL);
+    assert(redirect_name != NULL);
+
+    *redirect_root = NULL;
+    *redirect_name = NULL;
+
+    if (name == NULL) {
+        return ERROR_SUCCESS;
+    }
+
+    name_len = wcslen(name);
+    best = NULL;
+
+    for (i = 0; i < reg_hook_nredirects; i++) {
+        redirect = &reg_hook_redirects[i];
+
+        if (redirect->from_root != parent ||
+                name_len < redirect->from_prefix_len ||
+                _wcsnicmp(
+                        name,
+                        redirect->from_prefix,
+                        redirect->from_prefix_len) != 0) {
+            continue;
+        }
+
+        if (name[redirect->from_prefix_len] != L'\0' &&
+                name[redirect->from_prefix_len] != L'\\') {
+            continue;
+        }
+
+        if (best == NULL ||
+                redirect->from_prefix_len > best->from_prefix_len) {
+            best = redirect;
+        }
+    }
+
+    if (best == NULL) {
+        return ERROR_SUCCESS;
+    }
+
+    suffix = name + best->from_prefix_len;
+    suffix_len = name_len - best->from_prefix_len;
+
+    if (best->to_prefix_len > SIZE_MAX - suffix_len - 1) {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    mapped_len = best->to_prefix_len + suffix_len;
+    mapped = malloc((mapped_len + 1) * sizeof(wchar_t));
+
+    if (mapped == NULL) {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    memcpy(
+            mapped,
+            best->to_prefix,
+            best->to_prefix_len * sizeof(wchar_t));
+    memcpy(
+            mapped + best->to_prefix_len,
+            suffix,
+            (suffix_len + 1) * sizeof(wchar_t));
+
+    *redirect_root = best->to_root;
+    *redirect_name = mapped;
+
+    return ERROR_SUCCESS;
+}
+
+static LSTATUS reg_hook_widen(const char *src, wchar_t **dest)
+{
+    wchar_t *result;
+    DWORD err;
+    int nchars;
+
+    assert(dest != NULL);
+
+    *dest = NULL;
+
+    if (src == NULL) {
+        return ERROR_SUCCESS;
+    }
+
+    nchars = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
+
+    if (nchars == 0) {
+        err = GetLastError();
+
+        return err != ERROR_SUCCESS ? err : ERROR_NO_UNICODE_TRANSLATION;
+    }
+
+    result = malloc(nchars * sizeof(wchar_t));
+
+    if (result == NULL) {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    if (MultiByteToWideChar(CP_ACP, 0, src, -1, result, nchars) == 0) {
+        err = GetLastError();
+        free(result);
+
+        return err != ERROR_SUCCESS ? err : ERROR_NO_UNICODE_TRANSLATION;
+    }
+
+    *dest = result;
+
+    return ERROR_SUCCESS;
+}
+
+static LSTATUS reg_hook_narrow(const wchar_t *src, char **dest)
+{
+    BOOL used_default;
+    BOOL *used_default_ptr;
+    char *result;
+    DWORD err;
+    DWORD flags;
+    int nchars;
+
+    assert(dest != NULL);
+
+    *dest = NULL;
+
+    if (src == NULL) {
+        return ERROR_SUCCESS;
+    }
+
+    if (GetACP() == CP_UTF8) {
+        flags = 0;
+        used_default_ptr = NULL;
+    } else {
+        flags = WC_NO_BEST_FIT_CHARS;
+        used_default_ptr = &used_default;
+    }
+
+    used_default = FALSE;
+    nchars = WideCharToMultiByte(
+            CP_ACP,
+            flags,
+            src,
+            -1,
+            NULL,
+            0,
+            NULL,
+            used_default_ptr);
+
+    if (nchars == 0) {
+        err = GetLastError();
+
+        return err != ERROR_SUCCESS ? err : ERROR_NO_UNICODE_TRANSLATION;
+    }
+
+    if (used_default_ptr != NULL && used_default) {
+        return ERROR_NO_UNICODE_TRANSLATION;
+    }
+
+    result = malloc(nchars);
+
+    if (result == NULL) {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    used_default = FALSE;
+
+    if (WideCharToMultiByte(
+                CP_ACP,
+                flags,
+                src,
+                -1,
+                result,
+                nchars,
+                NULL,
+                used_default_ptr) == 0 ||
+            (used_default_ptr != NULL && used_default)) {
+        err = GetLastError();
+        free(result);
+
+        return err != ERROR_SUCCESS ? err : ERROR_NO_UNICODE_TRANSLATION;
+    }
+
+    *dest = result;
+
+    return ERROR_SUCCESS;
+}
+
+static LSTATUS reg_hook_resolve_redirect_a(
+        HKEY parent,
+        const char *name,
+        HKEY *redirect_root,
+        char **redirect_name)
+{
+    wchar_t *name_w;
+    wchar_t *mapped;
+    LSTATUS err;
+
+    *redirect_root = NULL;
+    *redirect_name = NULL;
+    mapped = NULL;
+
+    err = reg_hook_widen(name, &name_w);
+
+    if (err != ERROR_SUCCESS) {
+        return err;
+    }
+
+    EnterCriticalSection(&reg_hook_lock);
+    err = reg_hook_resolve_redirect_locked(
+            parent, name_w, redirect_root, &mapped);
+    LeaveCriticalSection(&reg_hook_lock);
+    free(name_w);
+
+    if (err == ERROR_SUCCESS && mapped != NULL) {
+        err = reg_hook_narrow(mapped, redirect_name);
+    }
+
+    free(mapped);
+
+    return err;
 }
 
 static const struct reg_hook_val *reg_hook_match_val_locked(
@@ -455,15 +965,47 @@ static LSTATUS WINAPI hook_RegOpenKeyExW(
         uint32_t access,
         HKEY *out)
 {
+    HKEY redirect_root;
+    wchar_t *redirect_name;
     LSTATUS err;
 
     if (out == NULL) {
         return ERROR_INVALID_PARAMETER;
     }
 
+    *out = NULL;
+    redirect_name = NULL;
+
     EnterCriticalSection(&reg_hook_lock);
-    err = reg_hook_open_locked(parent, name, out);
+    err = reg_hook_resolve_redirect_locked(
+            parent,
+            name,
+            &redirect_root,
+            &redirect_name);
+
+    if (err == ERROR_SUCCESS && redirect_name == NULL) {
+        err = reg_hook_open_locked(parent, name, out);
+    }
+
     LeaveCriticalSection(&reg_hook_lock);
+
+    if (err != ERROR_SUCCESS) {
+        free(redirect_name);
+
+        return err;
+    }
+
+    if (redirect_name != NULL) {
+        err = next_RegOpenKeyExW(
+                redirect_root,
+                redirect_name,
+                flags,
+                access,
+                out);
+        free(redirect_name);
+
+        return err;
+    }
 
     if (err == ERROR_SUCCESS) {
         if (*out != NULL) {
@@ -472,6 +1014,44 @@ static LSTATUS WINAPI hook_RegOpenKeyExW(
             err = next_RegOpenKeyExW(parent, name, flags, access, out);
         }
     }
+
+    return err;
+}
+
+static LSTATUS WINAPI hook_RegOpenKeyExA(
+        HKEY parent,
+        const char *name,
+        uint32_t flags,
+        uint32_t access,
+        HKEY *out)
+{
+    char *redirect_name;
+    HKEY redirect_root;
+    LSTATUS err;
+
+    if (InterlockedCompareExchange(&reg_hook_redirect_active, 0, 0) == 0) {
+        return next_RegOpenKeyExA(parent, name, flags, access, out);
+    }
+
+    if (out == NULL) {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    *out = NULL;
+    err = reg_hook_resolve_redirect_a(
+            parent, name, &redirect_root, &redirect_name);
+
+    if (err != ERROR_SUCCESS) {
+        return err;
+    }
+
+    if (redirect_name != NULL) {
+        parent = redirect_root;
+        name = redirect_name;
+    }
+
+    err = next_RegOpenKeyExA(parent, name, flags, access, out);
+    free(redirect_name);
 
     return err;
 }
@@ -487,15 +1067,51 @@ static LSTATUS WINAPI hook_RegCreateKeyExW(
         HKEY *out,
         uint32_t *disposition)
 {
+    HKEY redirect_root;
+    wchar_t *redirect_name;
     LSTATUS err;
 
     if (out == NULL) {
         return ERROR_INVALID_PARAMETER;
     }
 
+    *out = NULL;
+    redirect_name = NULL;
+
     EnterCriticalSection(&reg_hook_lock);
-    err = reg_hook_open_locked(parent, name, out);
+    err = reg_hook_resolve_redirect_locked(
+            parent,
+            name,
+            &redirect_root,
+            &redirect_name);
+
+    if (err == ERROR_SUCCESS && redirect_name == NULL) {
+        err = reg_hook_open_locked(parent, name, out);
+    }
+
     LeaveCriticalSection(&reg_hook_lock);
+
+    if (err != ERROR_SUCCESS) {
+        free(redirect_name);
+
+        return err;
+    }
+
+    if (redirect_name != NULL) {
+        err = next_RegCreateKeyExW(
+                redirect_root,
+                redirect_name,
+                reserved,
+                class_,
+                options,
+                access,
+                sa,
+                out,
+                disposition);
+        free(redirect_name);
+
+        return err;
+    }
 
     if (err == ERROR_SUCCESS) {
         if (*out != NULL) {
@@ -513,6 +1129,66 @@ static LSTATUS WINAPI hook_RegCreateKeyExW(
                     disposition);
         }
     }
+
+    return err;
+}
+
+static LSTATUS WINAPI hook_RegCreateKeyExA(
+        HKEY parent,
+        const char *name,
+        uint32_t reserved,
+        char *class_,
+        uint32_t options,
+        uint32_t access,
+        const SECURITY_ATTRIBUTES *sa,
+        HKEY *out,
+        uint32_t *disposition)
+{
+    char *redirect_name;
+    HKEY redirect_root;
+    LSTATUS err;
+
+    if (InterlockedCompareExchange(&reg_hook_redirect_active, 0, 0) == 0) {
+        return next_RegCreateKeyExA(
+                parent,
+                name,
+                reserved,
+                class_,
+                options,
+                access,
+                sa,
+                out,
+                disposition);
+    }
+
+    if (out == NULL) {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    *out = NULL;
+    err = reg_hook_resolve_redirect_a(
+            parent, name, &redirect_root, &redirect_name);
+
+    if (err != ERROR_SUCCESS) {
+        return err;
+    }
+
+    if (redirect_name != NULL) {
+        parent = redirect_root;
+        name = redirect_name;
+    }
+
+    err = next_RegCreateKeyExA(
+            parent,
+            name,
+            reserved,
+            class_,
+            options,
+            access,
+            sa,
+            out,
+            disposition);
+    free(redirect_name);
 
     return err;
 }
@@ -855,9 +1531,40 @@ static LSTATUS WINAPI hook_RegGetValueW(
     struct reg_hook_key *key;
     HKEY tmp = NULL;
     const struct reg_hook_val *val;
+    HKEY redirect_root;
+    wchar_t *redirect_name;
     LSTATUS err;
 
+    redirect_name = NULL;
+
     EnterCriticalSection(&reg_hook_lock);
+    err = reg_hook_resolve_redirect_locked(
+            handle,
+            subkey,
+            &redirect_root,
+            &redirect_name);
+
+    if (err != ERROR_SUCCESS || redirect_name != NULL) {
+        LeaveCriticalSection(&reg_hook_lock);
+
+        if (err != ERROR_SUCCESS) {
+            free(redirect_name);
+
+            return err;
+        }
+
+        err = next_RegGetValueW(
+                redirect_root,
+                redirect_name,
+                name,
+                flags,
+                type,
+                pData,
+                numData);
+        free(redirect_name);
+
+        return err;
+    }
 
     if (subkey == NULL) {
         key = reg_hook_match_key_locked(handle);
@@ -897,6 +1604,55 @@ static LSTATUS WINAPI hook_RegGetValueW(
     if (tmp != NULL) {
         hook_RegCloseKey(tmp);
     }
+
+    return err;
+}
+
+static LSTATUS WINAPI hook_RegGetValueA(
+    HKEY    handle,
+    LPCSTR  subkey,
+    LPCSTR  name,
+    uint32_t flags,
+    uint32_t *type,
+    void   *pData,
+    uint32_t *numData)
+{
+    char *redirect_name;
+    HKEY redirect_root;
+    LSTATUS err;
+
+    if (InterlockedCompareExchange(&reg_hook_redirect_active, 0, 0) == 0) {
+        return next_RegGetValueA(
+                handle,
+                subkey,
+                name,
+                flags,
+                type,
+                pData,
+                numData);
+    }
+
+    err = reg_hook_resolve_redirect_a(
+            handle, subkey, &redirect_root, &redirect_name);
+
+    if (err != ERROR_SUCCESS) {
+        return err;
+    }
+
+    if (redirect_name != NULL) {
+        handle = redirect_root;
+        subkey = redirect_name;
+    }
+
+    err = next_RegGetValueA(
+            handle,
+            subkey,
+            name,
+            flags,
+            type,
+            pData,
+            numData);
+    free(redirect_name);
 
     return err;
 }
