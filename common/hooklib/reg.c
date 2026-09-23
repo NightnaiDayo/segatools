@@ -401,6 +401,10 @@ static LSTATUS reg_hook_open_locked(
 
     *out = NULL;
 
+    if (name == NULL) {
+        return ERROR_SUCCESS;
+    }
+
     for (i = 0 ; i < reg_hook_nkeys ; i++) {
         /* Assume reg keys are referenced from a root key and not from some
            intermediary key */
@@ -421,7 +425,7 @@ static LSTATUS reg_hook_open_locked(
 
     /* Assume only MAX_CONCURRENT_REG_HANDLES handles will be open at a time */
 
-    if (key->nhandles > MAX_CONCURRENT_REG_HANDLES) {
+    if (key->nhandles >= MAX_CONCURRENT_REG_HANDLES) {
         return ERROR_SHARING_VIOLATION;
     }
 
@@ -854,20 +858,20 @@ static LSTATUS WINAPI hook_RegGetValueW(
     LSTATUS err;
 
     EnterCriticalSection(&reg_hook_lock);
-    //dprintf("Registry: RegGetValueW lookup for %ls\\%ls\n", subkey, name);
 
     if (subkey == NULL) {
         key = reg_hook_match_key_locked(handle);
     } else {
-        err = hook_RegOpenKeyExW(handle, subkey, flags, 1, &tmp);
+        hook_RegOpenKeyExW(handle, subkey, flags, 1, &tmp);
         key = reg_hook_match_key_locked(tmp);
     }
 
-    //dprintf("Registry: RegGetValueW key is %ls", key->name);
-
     if (key == NULL) {
         LeaveCriticalSection(&reg_hook_lock);
-        dprintf("Registry: RegGetValueW Failed to find %ls\\%ls, passing on\n", subkey, name);
+
+        if (tmp != NULL) {
+            hook_RegCloseKey(tmp);
+        }
 
         return next_RegGetValueW(
                 handle,
@@ -879,26 +883,21 @@ static LSTATUS WINAPI hook_RegGetValueW(
                 numData);
     }
 
-    val = reg_hook_match_val_locked(key, name);    
+    val = reg_hook_match_val_locked(key, name);
 
-    if (val != NULL) {
-        //dprintf("Registry: RegGetValueW found %ls\\%ls!\n", subkey, name);
-
-        if (val->read != NULL) {
-            val->read(pData, numData);
-
-            if (tmp != NULL) {
-                hook_RegCloseKey(tmp);
-            }
-            
-            LeaveCriticalSection(&reg_hook_lock);
-            err = ERROR_SUCCESS;
-            return err;
-        }        
+    if (val != NULL && val->read != NULL) {
+        val->read(pData, numData);
+        err = ERROR_SUCCESS;
+    } else {
+        err = ERROR_NOT_FOUND;
     }
 
     LeaveCriticalSection(&reg_hook_lock);
-    err = ERROR_NOT_FOUND;
+
+    if (tmp != NULL) {
+        hook_RegCloseKey(tmp);
+    }
+
     return err;
 }
 
