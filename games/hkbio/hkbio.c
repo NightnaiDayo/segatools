@@ -83,14 +83,18 @@ void hkb_io_get_opbtns(uint8_t* opbtn) {
     assert(hkb_io_backend != NULL);
     assert(opbtn != NULL);
 
-    hkb_io_backend->get_opbtns(opbtn);
+    if (hkb_io_backend->get_opbtns != NULL) {
+        hkb_io_backend->get_opbtns(opbtn);
+    }
 }
 
 void hkb_io_get_gamebtns(uint16_t* btn) {
     assert(hkb_io_backend != NULL);
     assert(btn != NULL);
 
-    hkb_io_backend->get_gamebtns(btn);
+    if (hkb_io_backend->get_gamebtns != NULL) {
+        hkb_io_backend->get_gamebtns(btn);
+    }
 }
 
 HRESULT hkb_io_led_init(void) {
