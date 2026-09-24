@@ -14,9 +14,6 @@
 #include "util/str.h"
 
 static uint8_t hkb_opbtn;
-static uint8_t hkb_gamebtn;
-static int16_t hkb_stick_x;
-static int16_t hkb_stick_y;
 static struct hkb_io_config hkb_io_cfg;
 static const struct hkb_io_backend* hkb_io_backend;
 static bool hkb_io_coin;
@@ -55,9 +52,6 @@ HRESULT hkb_io_poll(void) {
     assert(hkb_io_backend != NULL);
 
     hkb_opbtn = 0;
-    hkb_gamebtn = 0;
-    hkb_stick_x = 0;
-    hkb_stick_y = 0;
 
     if (GetAsyncKeyState(hkb_io_cfg.vk_test) & 0x8000) {
         hkb_opbtn |= HKB_IO_OPBTN_TEST;
@@ -86,6 +80,8 @@ void hkb_io_get_opbtns(uint8_t* opbtn) {
     if (hkb_io_backend->get_opbtns != NULL) {
         hkb_io_backend->get_opbtns(opbtn);
     }
+
+    *opbtn |= hkb_opbtn;
 }
 
 void hkb_io_get_gamebtns(uint16_t* btn) {
