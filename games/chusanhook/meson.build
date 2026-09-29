@@ -25,6 +25,8 @@ shared_library(
         'dllmain.c',
         'io4.c',
         'io4.h',
+        'protect.c',
+        'protect.h',
         'slider.c',
         'slider.h',
     ],

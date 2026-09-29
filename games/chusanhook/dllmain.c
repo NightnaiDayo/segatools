@@ -32,6 +32,7 @@
 #include "chuniio/chuniio.h"
 #include "chusanhook/config.h"
 #include "chusanhook/io4.h"
+#include "chusanhook/protect.h"
 #include "chusanhook/slider.h"
 
 #include "gfxhook/d3d9.h"
@@ -81,6 +82,11 @@ static DWORD CALLBACK chusan_pre_startup(void) {
     /* Config load */
 
     chusan_hook_config_load(&chusan_hook_cfg, get_config_path());
+
+    /* Neutralize the game's startup protection suite. This has to happen
+       before the game's entry point runs. */
+
+    chusan_protect_hook_init();
 
     /* Hook Win32 APIs */
 
