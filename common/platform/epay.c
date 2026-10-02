@@ -109,10 +109,12 @@ HRESULT epay_hook_init(const struct epay_config *cfg) {
     }
 
     if (cfg->icas_emulate) {
-        hr = icasrw_hook_init(cfg, thincapayment);
-        if (FAILED(hr)) {
-            dprintf("ICAS: Initialization failed (%08x); requires epay hook=0 and x64\n", (unsigned int) hr);
-            return hr;
+        /* Payment card emulation is optional; keep booting without it. */
+        HRESULT icas_hr = icasrw_hook_init(cfg, thincapayment);
+
+        if (FAILED(icas_hr)) {
+            dprintf("ICAS: Initialization failed (%08x), card emulation disabled\n",
+                    (unsigned int) icas_hr);
         }
     }
 

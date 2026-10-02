@@ -100,7 +100,7 @@ registration completes.
 Then follow [Thinca payment reader setup](icas.md) to choose how to present a
 player's card: hold a key to read an ID from a file, or tap an AimeIO reader.
 That guide also explains how to reuse an Aime access code as the payment card
-input. The reader emulation is tested in SDHD.
+input. The reader emulation is tested with two games.
 
 ## Troubleshooting
 
@@ -115,7 +115,7 @@ segatools output.
 | Unsupported card reader | Terminal authentication requires reader generation 3 or later; check `[aime] gen` |
 | `setClientCertificate(). ErrCode 203` | Downloaded PFX file and its password |
 | TCAP error `06514086` | Server CA entries in `ca.pem` |
-| Registration works but payment taps fail | `[epay] hook=0` and the [ICAS settings](icas.md#configuration) |
+| Registration works but payment taps fail | `[epay] hook=0`, the [ICAS settings](icas.md#configuration), and the `ICAS:` lines in the segatools output |
 
 ## Technical info
 
@@ -161,8 +161,9 @@ sends a JSON request to the URL configured in `tasms.root_endpoint`, for example
 }
 ```
 
-`serialNumber` comes from the cabinet's configured board identifier (PCBID), while the merchant, branch, and store-card
-values come from the authentication data. The response supplies a base64-encoded
+`serialNumber` comes from the cabinet's configured board identifier (PCBID),
+while the merchant, branch, and store-card values come from the authentication
+data. The response supplies a base64-encoded
 PFX certificate and `initSettings` containing the terminal ID, service endpoints,
 and available payment brands. The `x-certificate-md5` header contains the MD5 of
 the decoded PFX bytes, not the base64 text.
@@ -282,25 +283,42 @@ ThincaPayment translates TCAP reader requests into ICAS calls. Segatools returns
 the card identity selected by the `[icas]` settings, which the client sends to
 the server for a balance inquiry or payment.
 
-For a successful FeliCa detection through the generic NFC reader interface,
-the response payload is 27 bytes. IDm is the card identifier; PMm contains
+Every device response starts with a four-byte prefix added by the TCAP client:
+two reserved zero bytes and the big-endian length of the handler output that
+follows. For a successful FeliCa detection through the generic NFC reader
+interface, ThincaPayment's `TARGET_DETECT` handler outputs 23 bytes, so the
+device-response payload is 27 bytes. IDm is the card identifier; PMm contains
 card parameters:
 
 | Payload offset | Size | Field |
 | --- | --- | --- |
-| 0 | 9 | Detection metadata |
+| 0 | 2 | Reserved, `00 00` |
+| 2 | 2 | Handler output length, `00 17` (23) |
+| 4 | 1 | Result, `01` for a detected card |
+| 5 | 2 | Card type, `00 08` for FeliCa |
+| 7 | 2 | IDm length, `00 08` |
 | 9 | 8 | FeliCa IDm |
 | 17 | 2 | PMm length, `00 08` |
 | 19 | 8 | PMm |
 
+For example, IDm `0123456789ABCDEF` with segatools' fixed PMm produces:
+
+```text
+00 00 00 17 01 00 08 00 08 01 23 45 67 89 AB CD EF 00 08 00 F1 00 00 00 01 43 00
+```
+
 The card ID is exactly eight bytes at offset 9. The following `0008` is the PMm
-length and must not be included in the ID. See the
-[ICAS technical notes](icas.md#technical-info) for adapter and AimeIO details.
+length and must not be included in the ID. If no card is presented before the
+timeout, or detection is cancelled, the handler output is the single byte `00`.
+These bytes sit inside the entity-operation subpacket; TCAP frame and HTTP
+framing are separate. See the [ICAS technical notes](icas.md#technical-info)
+for adapter and AimeIO details.
 
 ### Transaction responses and completion
 
-The client's device-response payload contains a six-byte prefix followed by
-request XML. A payment request uses service `AuthorizeSales` and supplies
+For `REQUEST`, the device-response payload contains the four-byte prefix
+described above, a two-byte big-endian XML length, and the request XML. A
+payment request uses service `AuthorizeSales` and supplies
 `Amount`, `PaymentMedia`, and `SequenceNumber`. The sequence number is echoed in
 the response. PASELI uses payment-media value `8`.
 
@@ -316,15 +334,16 @@ Response XML carries typed properties inside `userdata/properties`:
 | `CenterResultCode` | Server result detail |
 
 The client treats `CURRENT` and `RESULT` differently. `CURRENT` supplies receipt
-data; `RESULT` also propagates the outcome to the completion callback. An error
-reported only through `CURRENT` can therefore leave the completion result at
-zero. This distinction matters when tracing a payment that displays an error
-but appears to the game to have succeeded.
+data; `RESULT` also passes the outcome to the completion callback. Send failures
+through `RESULT`: an error sent only through `CURRENT` leaves the completion
+result at zero, so the game treats the payment as successful while the screen
+shows an error.
 
-After an initialization or brand-discovery `CURRENT`, the client can acknowledge
-with the six-byte payload `00 00 00 02 00 00`. This is a completion acknowledgement,
-not another XML request; the server finishes with a farewell instead of sending
-the initialization response again.
+After an initialization or brand-discovery `CURRENT`, the client acknowledges
+with the six-byte payload `00 00 00 02 00 00`: the four-byte prefix with handler
+output length 2, followed by an XML length of zero. This is a completion
+acknowledgement, not another XML request; the server finishes with a farewell
+instead of sending the initialization response again.
 
 ### Server reference
 

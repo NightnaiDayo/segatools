@@ -9,6 +9,13 @@ static uint32_t test_initialize(void *self, uint64_t arg)
     (void) self; (void) arg;
     return 42;
 }
+/* Stands in for a later platform hook (capnhook proc_addr) on the same import. */
+static unsigned int later_hook_calls;
+static FARPROC WINAPI later_hook(HMODULE module, LPCSTR name)
+{
+    later_hook_calls++;
+    return GetProcAddress(module, name);
+}
 
 int main(void)
 {
@@ -42,7 +49,7 @@ int main(void)
         }
     }
     if (!lookup) return 4;
-    struct hook_symbol overwritten = {.name = "GetProcAddress", .patch = GetProcAddress};
+    struct hook_symbol overwritten = {.name = "GetProcAddress", .patch = later_hook};
     hook_table_apply(payment, "kernel32.dll", &overwritten, 1);
     next_payment_initialize = test_initialize;
     if (icas_payment_initialize(NULL, 0) != 42) return 13;
@@ -57,7 +64,10 @@ int main(void)
     if (!restored) return 14;
     struct icas_reader *(*factory)(uint32_t) = (void *) lookup(adapter, "CreateThincaRwAdapter");
     if (!factory || (void *) factory != (void *) lookup(adapter, (LPCSTR) 2)) return 5;
+    if (later_hook_calls != 0) return 15;
     if (lookup(adapter, "GetThincaRwAdapterVersion") != (FARPROC) version) return 6;
+    /* Other lookups must chain through the later hook instead of bypassing it. */
+    if (later_hook_calls != 1) return 16;
     struct icas_reader *reader = factory(version());
     if (!reader || reader->vtable != &icas_vtable) return 7;
     if (reader->vtable->configure(reader, "\\\\.\\COM4:115200:00")) return 8;

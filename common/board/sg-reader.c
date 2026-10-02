@@ -404,6 +404,9 @@ static HRESULT sg_reader_icas_poll(uint64_t *idm, uint8_t *code)
     if (!idm && !code) return E_POINTER;
     if (idm) *idm = 0;
     if (code) memset(code, 0, 10);
+    /* Two readiness stages. ready: sg_reader_hook_init has run, so the lock
+     * exists; platform hooks, including ICAS, start before it. started: the
+     * game opened the reader UART and the AimeIO backend was initialized. */
     if (!InterlockedCompareExchange(&sg_reader_ready, 0, 0)) return E_PENDING;
     EnterCriticalSection(&sg_reader_lock);
     if (!sg_reader_started) {

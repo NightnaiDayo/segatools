@@ -91,6 +91,9 @@ int main(void)
     CHECK(icas_open_nfc(reader, 0, 9) == ICAS_DEVICE_ERROR);
     CHECK(icas_claim(reader) == 0);
     CHECK(icas_open_nfc(reader, 0, 9) == 0);
+    /* Match the real adapter: reopen is a device error, other mode conflicts. */
+    CHECK(icas_open_nfc(reader, 0, 9) == ICAS_DEVICE_ERROR);
+    CHECK(icas_open_felica(reader) == ICAS_MODE_CONFLICT);
     CHECK(icas_detect(reader, 30, &type, (void *) &idm, (void *) &pmm) == ICAS_TIMEOUT);
     CHECK(type == 0 && idm.count == 0 && test_clock == 30);
     icas_cancel(reader);
@@ -116,6 +119,14 @@ int main(void)
     uint8_t poll[] = {6, 0, 0xff, 0xff, 1, 0};
     CHECK(icas_transact(reader, 10, 0, poll, sizeof(poll), (void *) &idm) == 0);
     CHECK(idm.count == 20 && idm.bytes[0] == 20 && idm.bytes[1] == 1);
+    CHECK(idm.bytes[18] == 0x88 && idm.bytes[19] == 0xb4);
+    poll[2] = 0xfe;
+    poll[3] = 0x00;
+    CHECK(icas_transact(reader, 10, 0, poll, sizeof(poll), (void *) &idm) == 0);
+    CHECK(idm.bytes[18] == 0xfe && idm.bytes[19] == 0x00);
+    poll[4] = 0;
+    CHECK(icas_transact(reader, 10, 0, poll, sizeof(poll), (void *) &idm) == 0);
+    CHECK(idm.count == 18);
     poll[1] = 6;
     CHECK(icas_transact(reader, 10, 0, poll, sizeof(poll), (void *) &idm) == ICAS_DEVICE_ERROR);
     icas_cfg.icas_aimeio = true;
@@ -181,6 +192,14 @@ int main(void)
     icas_destroy(registered_reader);
     wchar_t ini[MAX_PATH];
     struct epay_config config = {0};
+    config.hook = true;
+    config.icas_scan = VK_RETURN;
+    CHECK(icasrw_hook_init(&config, (HMODULE) 1) == E_INVALIDARG);
+    CHECK(icasrw_hook_init(&config, NULL) == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+    config.hook = false;
+    config.icas_scan = 0;
+    CHECK(icasrw_hook_init(&config, (HMODULE) 1) == E_INVALIDARG);
+    memset(&config, 0, sizeof(config));
     CHECK(GetTempFileNameW(temp, L"cfg", 0, ini));
     icasrw_config_load(&config, ini);
     CHECK(!config.icas_emulate);
