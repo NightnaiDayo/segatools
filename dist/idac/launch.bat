@@ -25,13 +25,18 @@ config_seat_single_ex.json ^
 config_seat_single_jp.json ^
 config_hook.json
 
+rem detect keychip country code: 1 （JPN), 4 （EXP), 8 （CHN）
+inject -w -k idachook.dll hwvalue.exe region
+set region_value=%ERRORLEVEL%
+
+set culture_name=ja
+if %region_value% equ 4 (
+  set culture_name=en
+)
+
 start "AM Daemon" /min inject -d -k idachook.dll amdaemon.exe -c %AMDAEMON_CFG%
 
-rem JP
-rem inject -d -k idachook.dll ..\WindowsNoEditor\GameProject\Binaries\Win64\GameProject-Win64-Shipping.exe -culture=ja launch=Cabinet ABSLOG="..\..\..\..\..\Userdata\GameProject.log" -Master -UserDir="..\..\..\Userdata" -NotInstalled -UNATTENDED
-
-rem EXP
-inject -d -k idachook.dll ..\WindowsNoEditor\GameProject\Binaries\Win64\GameProject-Win64-Shipping.exe -culture=en launch=Cabinet ABSLOG="..\..\..\..\..\Userdata\GameProject.log" -Master -UserDir="..\..\..\Userdata" -NotInstalled -UNATTENDED
+inject -d -k idachook.dll ..\WindowsNoEditor\GameProject\Binaries\Win64\GameProject-Win64-Shipping.exe -culture=%culture_name% launch=Cabinet ABSLOG="..\..\..\..\..\Userdata\GameProject.log" -Master -UserDir="..\..\..\Userdata" -NotInstalled -UNATTENDED
 
 taskkill /f /im amdaemon.exe > nul 2>&1
 
