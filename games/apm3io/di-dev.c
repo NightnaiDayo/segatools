@@ -1,11 +1,19 @@
 #include <windows.h>
 #include <dinput.h>
-
 #include <assert.h>
+#include <stdbool.h>
 
 #include "apm3io/di-dev.h"
 
 #include "util/dprintf.h"
+
+
+static bool apm3_di_dev_state_lost(HRESULT hr)
+{
+    return hr == DIERR_INPUTLOST
+        || hr == DIERR_NOTACQUIRED
+        || hr == DIERR_UNPLUGGED;
+}
 
 HRESULT apm3_di_dev_start(IDirectInputDevice8W *dev, HWND wnd)
 {
@@ -71,6 +79,28 @@ HRESULT apm3_di_dev_poll(
             dev,
             sizeof(out->st),
             &out->st);
+    
+    if (FAILED(hr) && apm3_di_dev_state_lost(hr)) {
+        HRESULT acquire_hr;
+
+        dprintf("DirectInput: Device lost (%08x), attempting to reacquire\n",
+                (int) hr);
+
+        acquire_hr = IDirectInputDevice8_Acquire(dev);
+
+        if (SUCCEEDED(acquire_hr)) {
+            hr = IDirectInputDevice8_GetDeviceState(
+                    dev,
+                    sizeof(out->st),
+                    &out->st);
+
+            if (SUCCEEDED(hr)) {
+                dprintf("DirectInput: Device reacquired\n");
+            }
+        } else {
+            dprintf("DirectInput: Acquire failed: %08x\n", (int) acquire_hr);
+        }
+    }
 
     if (FAILED(hr)) {
         dprintf("DirectInput: GetDeviceState error: %08x\n", (int) hr);
