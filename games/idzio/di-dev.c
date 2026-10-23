@@ -91,7 +91,7 @@ HRESULT idz_di_dev_start(IDirectInputDevice8W* dev, HWND wnd) {
         return hr;
     }
 
-    hr = IDirectInputDevice8_SetDataFormat(dev, &c_dfDIJoystick);
+    hr = IDirectInputDevice8_SetDataFormat(dev, &c_dfDIJoystick2);
 
     if (FAILED(hr)) {
         dprintf("DirectInput: SetDataFormat failed: %08x\n", (int)hr);

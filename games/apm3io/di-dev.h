@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 union apm3_di_state {
-    DIJOYSTATE st;
-    uint8_t bytes[sizeof(DIJOYSTATE)];
+    DIJOYSTATE2 st;
+    uint8_t bytes[sizeof(DIJOYSTATE2)];
 };
 
 HRESULT apm3_di_dev_start(IDirectInputDevice8W *dev, HWND wnd);

@@ -8,8 +8,8 @@
 #include "swdcio/config.h"
 
 union swdc_di_state {
-    DIJOYSTATE st;
-    uint8_t bytes[sizeof(DIJOYSTATE)];
+    DIJOYSTATE2 st;
+    uint8_t bytes[sizeof(DIJOYSTATE2)];
 };
 
 HRESULT swdc_di_dev_init(

@@ -29,7 +29,6 @@ static uint8_t swdc_di_decode_pov(DWORD pov);
 static void swdc_di_get_analogs(struct swdc_io_analog_state *out);
 
 static const struct swdc_di_axis swdc_di_axes[] = {
-    /* Just map DIJOYSTATE for now, we can map DIJOYSTATE2 later if needed */
     { .name = L"X",     .off = DIJOFS_X },
     { .name = L"Y",     .off = DIJOFS_Y },
     { .name = L"Z",     .off = DIJOFS_Z },
@@ -194,73 +193,73 @@ static HRESULT swdc_di_config_apply(const struct swdc_di_config *cfg)
         return E_INVALIDARG;
     }
 
-    if (cfg->start > 32) {
+    if (cfg->start > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid start button: %i\n", cfg->start);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->view_chg > 32) {
+    if (cfg->view_chg > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid view change button: %i\n", cfg->view_chg);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->up > 32) {
+    if (cfg->up > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid up button: %i\n", cfg->up);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->down > 32) {
+    if (cfg->down > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid down button: %i\n", cfg->down);
         
         return E_INVALIDARG;
     }
 
-    if (cfg->left > 32) {
+    if (cfg->left > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid left button: %i\n", cfg->left);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->right > 32) {
+    if (cfg->right > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid right button: %i\n", cfg->right);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->paddle_left > 32) {
+    if (cfg->paddle_left > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid left paddle button: %i\n", cfg->paddle_left);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->paddle_right > 32) {
+    if (cfg->paddle_right > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid right paddle button: %i\n", cfg->paddle_right);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->wheel_green > 32) {
+    if (cfg->wheel_green > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid steering wheel green button: %i\n", cfg->wheel_green);
 
         return E_INVALIDARG;
     }
     
-    if (cfg->wheel_red > 32) {
+    if (cfg->wheel_red > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid steering wheel red button: %i\n", cfg->wheel_red);
 
         return E_INVALIDARG;
     }
     
-    if (cfg->wheel_blue > 32) {
+    if (cfg->wheel_blue > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid steering wheel blue button: %i\n", cfg->wheel_blue);
 
         return E_INVALIDARG;
     }
     
-    if (cfg->wheel_yellow > 32) {
+    if (cfg->wheel_yellow > SWDC_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid steering wheel yellow button: %i\n", cfg->wheel_yellow);
 
         return E_INVALIDARG;

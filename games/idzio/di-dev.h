@@ -8,8 +8,8 @@
 #include "idzio/config.h"
 
 union idz_di_state {
-    DIJOYSTATE st;
-    uint8_t bytes[sizeof(DIJOYSTATE)];
+    DIJOYSTATE2 st;
+    uint8_t bytes[sizeof(DIJOYSTATE2)];
 };
 
 HRESULT idz_di_dev_init(

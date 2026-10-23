@@ -42,7 +42,6 @@ static void idz_di_jvs_read_shifter_virt(uint8_t *gear);
 static void idz_di_jvs_read_analogs(struct idz_io_analog_state *out);
 
 static const struct idz_di_axis idz_di_axes[] = {
-    /* Just map DIJOYSTATE for now, we can map DIJOYSTATE2 later if needed */
     { .name = L"X",     .off = DIJOFS_X },
     { .name = L"Y",     .off = DIJOFS_Y },
     { .name = L"Z",     .off = DIJOFS_Z },
@@ -268,56 +267,56 @@ static HRESULT idz_di_config_apply(const struct idz_di_config *cfg)
         return E_INVALIDARG;
     }
 
-    if (cfg->start > 32) {
+    if (cfg->start > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid start button: %i\n", cfg->start);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->view_chg > 32) {
+    if (cfg->view_chg > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid view change button: %i\n", cfg->view_chg);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->up > 32) {
+    if (cfg->up > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid up button: %i\n", cfg->up);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->down > 32) {
+    if (cfg->down > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid down button: %i\n", cfg->down);
         
         return E_INVALIDARG;
     }
 
-    if (cfg->left > 32) {
+    if (cfg->left > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid left button: %i\n", cfg->left);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->right > 32) {
+    if (cfg->right > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid right button: %i\n", cfg->right);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->shift_dn > 32) {
+    if (cfg->shift_dn > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid shift down button: %i\n", cfg->shift_dn);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->shift_up > 32) {
+    if (cfg->shift_up > IDZ_DI_MAX_BUTTONS) {
         dprintf("Wheel: Invalid shift up button: %i\n", cfg->shift_up);
 
         return E_INVALIDARG;
     }
 
     for (i = 0 ; i < 6 ; i++) {
-        if (cfg->gear[i] > 32) {
+        if (cfg->gear[i] > IDZ_DI_MAX_BUTTONS) {
             dprintf("Shifter: Invalid gear %i button: %i\n",
                     i + 1,
                     cfg->gear[i]);

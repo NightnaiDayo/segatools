@@ -118,13 +118,13 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg)
 {
     int i;
 
-    if (cfg->start > 32) {
+    if (cfg->start > APM3_DI_MAX_BUTTONS) {
         dprintf("Stick: Invalid start button: %i\n", cfg->start);
 
         return E_INVALIDARG;
     }
 
-    if (cfg->home > 32) {
+    if (cfg->home > APM3_DI_MAX_BUTTONS) {
         dprintf("Stick: Invalid home button: %i\n", cfg->home);
 
         return E_INVALIDARG;
@@ -132,7 +132,7 @@ static HRESULT apm3_di_config_apply(const struct apm3_di_config *cfg)
 
     /* Check all 8 defined buttons */
     for (i = 0; i < 8; i++) {
-        if (cfg->button[i] > 32) {
+        if (cfg->button[i] > APM3_DI_MAX_BUTTONS) {
             dprintf("Stick: Invalid button %i: %i\n", i, cfg->button[i]);
 
             return E_INVALIDARG;

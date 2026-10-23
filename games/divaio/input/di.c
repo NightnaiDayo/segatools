@@ -16,7 +16,6 @@ struct diva_di_axis {
 };
 
 static const struct diva_di_axis diva_di_axes[] = {
-    /* Just map DIJOYSTATE for now, we can map DIJOYSTATE2 later if needed */
     { .name = L"X",     .off = DIJOFS_X },
     { .name = L"Y",     .off = DIJOFS_Y },
     { .name = L"Z",     .off = DIJOFS_Z },
@@ -141,39 +140,39 @@ static const struct diva_di_axis* diva_di_get_axis(const wchar_t* name) {
 
 static HRESULT diva_di_config_apply(const struct diva_di_config* cfg) {
 
-    if (cfg->start > 32) {
+    if (cfg->start > DIVA_DI_MAX_BUTTONS) {
         dprintf("Stick: Invalid start button: %i\n", cfg->start);
         return E_INVALIDARG;
     }
 
     for (int i = 0; i < 2; i++) {
-        if (cfg->triangle[i] > 32) {
+        if (cfg->triangle[i] > DIVA_DI_MAX_BUTTONS) {
             dprintf("Stick: Invalid triangle button %d: %i\n", i+1, cfg->triangle[i]);
             return E_INVALIDARG;
         }
 
-        if (cfg->square[i] > 32) {
+        if (cfg->square[i] > DIVA_DI_MAX_BUTTONS) {
             dprintf("Stick: Invalid square button %d: %i\n", i+1, cfg->square[i]);
             return E_INVALIDARG;
         }
 
-        if (cfg->circle[i] > 32) {
+        if (cfg->circle[i] > DIVA_DI_MAX_BUTTONS) {
             dprintf("Stick: Invalid circle button %d: %i\n", i+1, cfg->circle[i]);
             return E_INVALIDARG;
         }
 
-        if (cfg->cross[i] > 32) {
+        if (cfg->cross[i] > DIVA_DI_MAX_BUTTONS) {
             dprintf("Stick: Invalid cross button %d: %i\n", i+1, cfg->cross[i]);
             return E_INVALIDARG;
         }
     }
 
-    if (cfg->auto_left_button > 32) {
+    if (cfg->auto_left_button > DIVA_DI_MAX_BUTTONS) {
         dprintf("Stick: Invalid auto slide left button: %i\n", cfg->auto_left_button);
         return E_INVALIDARG;
     }
 
-    if (cfg->auto_right_button > 32) {
+    if (cfg->auto_right_button > DIVA_DI_MAX_BUTTONS) {
         dprintf("Stick: Invalid auto slide right button: %i\n", cfg->auto_right_button);
         return E_INVALIDARG;
     }
