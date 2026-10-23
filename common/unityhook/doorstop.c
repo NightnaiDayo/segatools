@@ -97,7 +97,7 @@ static void my_mono_jit_parse_options(int argc, const char** argv) {
         dprintf("Unity: Configuring mono debug server\n");
 
         int size = argc + 1;
-        char** new_argv = calloc(size, sizeof(char*));
+        const char** new_argv = calloc(size, sizeof(char*));
         memcpy(new_argv, argv, argc * sizeof(char*));
 
         //check if debug options are already set by env variable, if not, build it from config
