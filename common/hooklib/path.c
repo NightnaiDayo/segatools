@@ -500,14 +500,6 @@ static const struct hook_symbol path_hook_syms[] = {
         .patch  = hook_RemoveDirectoryW,
         .link   = (void **) &next_RemoveDirectoryW,
     }, {
-        .name   = "PathFileExistsA",
-        .patch  = hook_PathFileExistsA,
-        .link   = (void **) &next_PathFileExistsA,
-    }, {
-        .name   = "PathFileExistsW",
-        .patch  = hook_PathFileExistsW,
-        .link   = (void **) &next_PathFileExistsW,
-    }, {
         .name   = "MoveFileA",
         .patch  = hook_MoveFileA,
         .link   = (void **) &next_MoveFileA,
@@ -586,6 +578,19 @@ static const struct hook_symbol path_hook_syms[] = {
     }
 };
 
+/* Shell path helpers are imported from shlwapi, not kernel32. */
+static const struct hook_symbol path_shlwapi_syms[] = {
+    {
+        .name   = "PathFileExistsA",
+        .patch  = hook_PathFileExistsA,
+        .link   = (void **) &next_PathFileExistsA,
+    }, {
+        .name   = "PathFileExistsW",
+        .patch  = hook_PathFileExistsW,
+        .link   = (void **) &next_PathFileExistsW,
+    }
+};
+
 static bool path_hook_initted;
 static CRITICAL_SECTION path_hook_lock;
 static path_hook_t *path_hook_list;
@@ -645,6 +650,12 @@ void path_hook_insert_hooks(HMODULE target)
             "kernel32.dll",
             path_hook_syms,
             _countof(path_hook_syms));
+
+    hook_table_apply(
+            target,
+            "shlwapi.dll",
+            path_shlwapi_syms,
+            _countof(path_shlwapi_syms));
 }
 
 BOOL path_transform_a(char **out, const char *src)
