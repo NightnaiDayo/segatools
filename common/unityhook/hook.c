@@ -148,8 +148,10 @@ static HMODULE WINAPI hook_LoadLibraryW(const wchar_t *name)
             dprintf("Unity: Loaded %S\n", target_module);
 
             dll_hook_insert_hooks(result);
-            path_hook_insert_hooks(result);
             iohook_apply_hooks(result);
+            /* Path translation must wrap I/O dispatch: its pass-through
+               may otherwise call the OS with the untranslated filename. */
+            path_hook_insert_hooks(result);
 
             reg_hook_insert_hooks(result);
             clock_hook_insert_hooks(result);
