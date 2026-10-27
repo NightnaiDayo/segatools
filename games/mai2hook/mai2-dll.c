@@ -120,7 +120,7 @@ HRESULT mai2_dll_init(const struct mai2_dll_config *cfg, HINSTANCE self)
             ? MAI2_DLL_SYM_COUNT_V101
             : MAI2_DLL_SYM_COUNT_V102;
 
-    hr = dll_bind(&mai2_dll, src, &sym, sym_count, false);
+    hr = dll_bind(&mai2_dll, src, self, &sym, sym_count, false);
 
     if (FAILED(hr)) {
         if (src != self) {

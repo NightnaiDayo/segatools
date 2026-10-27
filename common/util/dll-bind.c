@@ -10,6 +10,7 @@
 HRESULT dll_bind(
     void *dest,
     HINSTANCE src,
+    HINSTANCE self,
     const struct dll_bind_sym **syms_pos,
     size_t syms_count,
     bool optional)
@@ -22,6 +23,7 @@ HRESULT dll_bind(
 
     assert(dest != NULL);
     assert(src != NULL);
+    assert(self != NULL);
     assert(syms_pos != NULL);
 
     hr = S_OK;
@@ -31,9 +33,9 @@ HRESULT dll_bind(
 
     for (i = 0; i < syms_count; i++) {
         src_result = GetProcAddress(src, current_sym->sym);
+        dest_field = (void **)(((uint8_t *)dest) + current_sym->off);
 
         if (src_result != NULL) {
-            dest_field = (void **)(((uint8_t *)dest) + current_sym->off);
             *dest_field = src_result;
         } else if (!optional) {
             hr = E_NOTIMPL;
@@ -42,6 +44,7 @@ HRESULT dll_bind(
             dprintf("DLL Binding: Custom IO DLL does not provide function "
                     "\"%s\". The default implementation will be used.\n",
                     current_sym->sym);
+            *dest_field = GetProcAddress(self, current_sym->sym);
         }
 
         current_sym++;

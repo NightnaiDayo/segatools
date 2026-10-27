@@ -93,7 +93,7 @@ HRESULT kemono_dll_init(const struct kemono_dll_config *cfg, HINSTANCE self) {
     }
 
     sym = kemono_dll_syms;
-    hr = dll_bind(&kemono_dll, src, &sym, _countof(kemono_dll_syms), false);
+    hr = dll_bind(&kemono_dll, src, self, &sym, _countof(kemono_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

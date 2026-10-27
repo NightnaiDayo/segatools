@@ -92,7 +92,7 @@ HRESULT fgo_dll_init(const struct fgo_dll_config *cfg, HINSTANCE self)
     }
 
     sym = fgo_dll_syms;
-    hr = dll_bind(&fgo_dll, src, &sym, _countof(fgo_dll_syms), false);
+    hr = dll_bind(&fgo_dll, src, self, &sym, _countof(fgo_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

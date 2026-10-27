@@ -95,7 +95,7 @@ HRESULT carol_dll_init(const struct carol_dll_config *cfg, HINSTANCE self)
     }
 
     sym = carol_dll_syms;
-    hr = dll_bind(&carol_dll, src, &sym, _countof(carol_dll_syms), false);
+    hr = dll_bind(&carol_dll, src, self, &sym, _countof(carol_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

@@ -63,7 +63,6 @@ HRESULT diva_dll_init(const struct diva_dll_config *cfg, HINSTANCE self)
     HINSTANCE owned;
     HINSTANCE src;
     HRESULT hr;
-    size_t sym_count;
 
     assert(cfg != NULL);
     assert(self != NULL);
@@ -108,7 +107,7 @@ HRESULT diva_dll_init(const struct diva_dll_config *cfg, HINSTANCE self)
     }
 
     sym = diva_dll_syms;
-    hr = dll_bind(&diva_dll, src, &sym, _countof(diva_dll_syms), true);
+    hr = dll_bind(&diva_dll, src, self, &sym, _countof(diva_dll_syms), true);
 
     if (FAILED(hr)) {
         if (src != self) {

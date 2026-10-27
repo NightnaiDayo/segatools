@@ -107,7 +107,7 @@ HRESULT mu3_dll_init(const struct mu3_dll_config *cfg, HINSTANCE self)
     sym = mu3_dll_syms;
     const struct dll_bind_sym *init_sym = &sym[0];
 
-    hr = dll_bind(&mu3_dll, src, &sym, _countof(mu3_dll_syms), false);
+    hr = dll_bind(&mu3_dll, src, self, &sym, _countof(mu3_dll_syms), false);
 
     if (FAILED(hr)) {
         if (src != self) {

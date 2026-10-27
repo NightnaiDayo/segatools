@@ -20,6 +20,7 @@ struct dll_bind_sym {
 
     - dest: Pointer to destination structure.
     - src: Handle to source DLL.
+    - src: Handle to the hook DLL itself.
     - syms_pos: Pointer to a (mutable) pointer which points to the start of an
         (immutable) table of symbols and structure offsets. This mutable
         pointer is advanced until either a symbol fails to bind, in which case
@@ -32,6 +33,7 @@ struct dll_bind_sym {
 HRESULT dll_bind(
         void *dest,
         HINSTANCE src,
+        HINSTANCE self,
         const struct dll_bind_sym **syms_pos,
         size_t syms_count,
         bool optional);
