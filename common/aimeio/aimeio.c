@@ -498,18 +498,12 @@ HRESULT aime_io_nfc_send_hex_data(
         size_t payload_size,
         uint8_t *status_out)
 {
+    (void) unit_no;
     (void) payload;
     (void) payload_size;
+    (void) status_out;
 
-    if (unit_no != 0) {
-        return S_FALSE;
-    }
-
-    if (status_out != NULL) {
-        *status_out = (payload_size == 0x2b) ? 0x20 : 0x00;
-    }
-
-    return S_OK;
+    return S_FALSE;
 }
 
 void aime_io_led_set_color(uint8_t unit_no, uint8_t r, uint8_t g, uint8_t b)

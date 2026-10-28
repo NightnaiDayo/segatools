@@ -821,7 +821,7 @@ static HRESULT sg_nfc_cmd_send_hex_data(
         /* Firmware checksum length? */
         if (req->payload_len == 0x2b) {
              /* The firmware is identical flag? */
-            res->status = 0x20;
+            res->status = nfc->gen == 1 ? 0x03 : 0x20;
         }
 
         return S_OK;
@@ -844,7 +844,7 @@ static HRESULT sg_nfc_cmd_send_hex_data(
         sg_res_init(res, req, 0);
 
         if (req->payload_len == 0x2b) {
-            res->status = 0x20;
+            res->status = nfc->gen == 1 ? 0x03 : 0x20;
         }
 
         return S_OK;
