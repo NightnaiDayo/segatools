@@ -40,6 +40,10 @@ static BOOL (WINAPI *next_K32EnumProcesses)(DWORD *lpidProcess, DWORD cb, LPDWOR
 
 static BOOL WINAPI hook_GetUserNameW(LPWSTR  lpBuffer, LPDWORD pcbBuffer);
 
+static BOOL WINAPI hook_IsDebuggerPresent(void);
+static BOOL WINAPI hook_CheckRemoteDebuggerPresent(HANDLE process, PBOOL present);
+static BOOL (WINAPI *next_CheckRemoteDebuggerPresent)(HANDLE process, PBOOL present);
+
 static const struct hook_symbol idac_app_user32_syms[] = {
     {
         .name = "GetSystemMetrics",
@@ -86,6 +90,15 @@ static const struct hook_symbol indrun_kernel32_syms[] = {
         .name = "LoadLibraryW",
         .patch = hook_LoadLibraryW,
         .link = (void **) &next_LoadLibraryW,
+    },
+    {
+        .name = "IsDebuggerPresent",
+        .patch = hook_IsDebuggerPresent,
+    },
+    {
+        .name = "CheckRemoteDebuggerPresent",
+        .patch = hook_CheckRemoteDebuggerPresent,
+        .link = (void **) &next_CheckRemoteDebuggerPresent,
     }
 };
 
@@ -271,5 +284,23 @@ static BOOL WINAPI hook_K32EnumProcesses(DWORD *lpidProcess, DWORD cb, LPDWORD l
     lpidProcess = NULL;
     *lpcbNeeded = 0;
 
+    return TRUE;
+}
+
+static BOOL WINAPI hook_IsDebuggerPresent(void) {
+    return FALSE;
+}
+
+static BOOL WINAPI hook_CheckRemoteDebuggerPresent(HANDLE process, PBOOL present) {
+    if (present == NULL) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (GetProcessId(process) != GetCurrentProcessId()) {
+        return next_CheckRemoteDebuggerPresent(process, present);
+    }
+
+    *present = FALSE;
     return TRUE;
 }
