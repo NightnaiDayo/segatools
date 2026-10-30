@@ -812,7 +812,7 @@ static int WSAAPI hook_GetAddrInfoExA(
 end:
     free(wstr);
     free(str);
-    
+
     return result;
 }
 
@@ -1012,7 +1012,12 @@ DWORD WINAPI hook_send(SOCKET s, const char* buf, int len, int flags) {
                     strncpy(host_value, host_value_start, value_len);
                     host_value[value_len] = '\0';
 
-                    for (struct dns_hook_entry *entry = dns_hook_entries; entry && entry->from; entry++) {
+                    for (size_t i = 0; i < dns_hook_nentries; i++) {
+                        struct dns_hook_entry *entry = &dns_hook_entries[i];
+
+                        if (entry->to == NULL) {
+                            continue;
+                        }
                         char from_value[256];
                         wcstombs(from_value, entry->from, sizeof(from_value));
 
