@@ -98,6 +98,7 @@ if get_option('log_all') or get_option('log_custom_vfs')
 endif
 
 shlwapi_lib = cc.find_library('shlwapi')
+advapi32_lib = cc.find_library('advapi32')
 dinput8_lib = cc.find_library('dinput8')
 dxguid_lib = cc.find_library('dxguid')
 xinput_lib = cc.find_library('xinput')

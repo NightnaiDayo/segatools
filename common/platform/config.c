@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "platform/amvideo.h"
 #include "platform/clock.h"
@@ -23,6 +24,7 @@
 #include "platform/netenv.h"
 #include "platform/nusec.h"
 #include "platform/pcbid.h"
+#include "platform/registry.h"
 #include "platform/platform.h"
 #include "platform/vfs.h"
 #include "platform/system.h"
@@ -52,6 +54,7 @@ void platform_config_load(struct platform_config *cfg, const wchar_t *filename)
     hwreset_config_load(&cfg->hwreset, filename);
     misc_config_load(&cfg->misc, filename);
     pcbid_config_load(&cfg->pcbid, filename);
+    registry_config_load(&cfg->registry, filename);
     netenv_config_load(&cfg->netenv, filename);
     nusec_config_load(&cfg->nusec, filename);
     vfs_config_load(&cfg->vfs, filename);
@@ -435,6 +438,223 @@ void system_config_load(struct system_config *cfg, const wchar_t *filename)
     }
 }
 
+static bool registry_config_path_is_drive_absolute(const wchar_t *path)
+{
+    assert(path != NULL);
+
+    return
+            ((path[0] >= L'A' && path[0] <= L'Z') ||
+             (path[0] >= L'a' && path[0] <= L'z')) &&
+            path[1] == L':' &&
+            path[2] == L'\\';
+}
+
+static bool registry_config_path_is_remote_drive(const wchar_t *path)
+{
+    wchar_t root[] = L"C:\\";
+
+    assert(path != NULL);
+    assert(registry_config_path_is_drive_absolute(path));
+
+    root[0] = path[0];
+
+    return GetDriveTypeW(root) == DRIVE_REMOTE;
+}
+
+static bool registry_config_component_equals(
+        const wchar_t *component,
+        size_t ncomponent,
+        const wchar_t *expected)
+{
+    return wcslen(expected) == ncomponent &&
+            _wcsnicmp(component, expected, ncomponent) == 0;
+}
+
+static bool registry_config_path_has_unsupported_component(
+        const wchar_t *path)
+{
+    const wchar_t *base_end;
+    const wchar_t *component;
+    const wchar_t *cursor;
+    size_t base_len;
+
+    assert(path != NULL);
+
+    component = path + 3;
+
+    while (*component != L'\0') {
+        cursor = component;
+
+        while (*cursor != L'\0' && *cursor != L'\\' && *cursor != L'/') {
+            if (*cursor < L' ' || wcschr(L"\"<>|?*:", *cursor) != NULL) {
+                return true;
+            }
+
+            cursor++;
+        }
+
+        if (cursor == component || cursor[-1] == L' ' || cursor[-1] == L'.') {
+            return true;
+        }
+
+        base_end = component;
+
+        while (base_end < cursor && *base_end != L'.') {
+            base_end++;
+        }
+
+        base_len = (size_t) (base_end - component);
+
+        if (registry_config_component_equals(component, base_len, L"CON") ||
+                registry_config_component_equals(component, base_len, L"PRN") ||
+                registry_config_component_equals(component, base_len, L"AUX") ||
+                registry_config_component_equals(component, base_len, L"NUL") ||
+                registry_config_component_equals(component, base_len, L"CLOCK$") ||
+                registry_config_component_equals(component, base_len, L"CONIN$") ||
+                registry_config_component_equals(component, base_len, L"CONOUT$") ||
+                (base_len == 4 &&
+                 (_wcsnicmp(component, L"COM", 3) == 0 ||
+                  _wcsnicmp(component, L"LPT", 3) == 0) &&
+                 ((component[3] >= L'1' && component[3] <= L'9') ||
+                  component[3] == L'\u00B9' ||
+                  component[3] == L'\u00B2' ||
+                  component[3] == L'\u00B3'))) {
+            return true;
+        }
+
+        component = *cursor == L'\0' ? cursor : cursor + 1;
+    }
+
+    return false;
+}
+
+static enum registry_path_error registry_config_resolve_path(
+        const wchar_t *filename,
+        const wchar_t *path,
+        wchar_t *resolved,
+        size_t nresolved)
+{
+    wchar_t config_dir[MAX_PATH];
+    wchar_t combined[MAX_PATH];
+    const wchar_t *full;
+    DWORD count;
+
+    assert(filename != NULL);
+    assert(path != NULL);
+    assert(resolved != NULL);
+
+    resolved[0] = L'\0';
+
+    if (PathIsRelativeW(path)) {
+        count = GetFullPathNameW(
+                filename,
+                _countof(config_dir),
+                config_dir,
+                NULL);
+
+        if (count == 0 || count >= _countof(config_dir)) {
+            return REGISTRY_PATH_TOO_LONG;
+        }
+
+        PathRemoveFileSpecW(config_dir);
+
+        if (PathCombineW(combined, config_dir, path) == NULL) {
+            return REGISTRY_PATH_TOO_LONG;
+        }
+
+        full = combined;
+    } else {
+        full = path;
+    }
+
+    if (!registry_config_path_is_drive_absolute(full)) {
+        wcscpy_s(resolved, nresolved, full);
+
+        return REGISTRY_PATH_NOT_LOCAL;
+    }
+
+    count = GetFullPathNameW(full, (DWORD) nresolved, resolved, NULL);
+
+    if (count >= nresolved) {
+        resolved[0] = L'\0';
+
+        return REGISTRY_PATH_TOO_LONG;
+    }
+
+    if (count == 0 || !registry_config_path_is_drive_absolute(resolved)) {
+        wcscpy_s(resolved, nresolved, full);
+
+        return REGISTRY_PATH_BAD_NAME;
+    }
+
+    if (registry_config_path_is_remote_drive(resolved)) {
+        return REGISTRY_PATH_NOT_LOCAL;
+    }
+
+    if (registry_config_path_has_unsupported_component(resolved)) {
+        return REGISTRY_PATH_BAD_NAME;
+    }
+
+    return REGISTRY_PATH_OK;
+}
+
+void registry_config_load(
+        struct registry_config *cfg,
+        const wchar_t *filename)
+{
+    wchar_t path[MAX_PATH + 1];
+    wchar_t profile[REGISTRY_STORE_PROFILE_MAX + 2];
+    DWORD count;
+    size_t i;
+
+    assert(cfg != NULL);
+    assert(filename != NULL);
+
+    memset(cfg, 0, sizeof(*cfg));
+
+    count = GetPrivateProfileStringW(
+            L"reg",
+            L"path",
+            L"",
+            path,
+            _countof(path),
+            filename);
+
+    if (path[0] == L'\0') {
+        wcscpy_s(path, _countof(path), L"DEVICE\\reg\\segatools.hiv");
+    } else if (count >= MAX_PATH) {
+        cfg->path_error = REGISTRY_PATH_TOO_LONG;
+    }
+
+    if (cfg->path_error == REGISTRY_PATH_OK) {
+        for (i = 0; path[i] != L'\0'; i++) {
+            if (path[i] == L'/') {
+                path[i] = L'\\';
+            }
+        }
+
+        cfg->path_error = registry_config_resolve_path(
+                filename,
+                path,
+                cfg->path,
+                _countof(cfg->path));
+    }
+
+    count = GetPrivateProfileStringW(
+            L"reg",
+            L"profile",
+            L"",
+            profile,
+            _countof(profile),
+            filename);
+
+    if (count > REGISTRY_STORE_PROFILE_MAX) {
+        cfg->profile_truncated = true;
+    } else {
+        wcscpy_s(cfg->profile, _countof(cfg->profile), profile);
+    }
+}
+
 void epay_config_load(struct epay_config *cfg, const wchar_t *filename)
 {
     assert(cfg != NULL);
@@ -442,6 +662,11 @@ void epay_config_load(struct epay_config *cfg, const wchar_t *filename)
 
     cfg->enable = GetPrivateProfileIntW(L"epay", L"enable", 1, filename);
     cfg->hook = GetPrivateProfileIntW(L"epay", L"hook", 1, filename);
+    cfg->reg_redirect = (int) GetPrivateProfileIntW(
+            L"epay",
+            L"regRedirect",
+            0,
+            filename);
 }
 
 void openssl_config_load(struct openssl_config *cfg, const wchar_t *filename)

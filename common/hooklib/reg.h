@@ -20,6 +20,12 @@ HRESULT reg_hook_push_key(
         const struct reg_hook_val *vals,
         size_t nvals);
 
+HRESULT reg_hook_push_redirect(
+        HKEY from_root,
+        const wchar_t *from_prefix,
+        HKEY to_root,
+        const wchar_t *to_prefix);
+
 HRESULT reg_hook_read_bin(
         void *bytes,
         uint32_t *nbytes,

@@ -13,6 +13,7 @@
 #include "platform/netenv.h"
 #include "platform/nusec.h"
 #include "platform/pcbid.h"
+#include "platform/registry.h"
 #include "platform/vfs.h"
 #include "platform/system.h"
 #include "platform/openssl.h"
@@ -26,6 +27,7 @@ struct platform_config {
     struct hwreset_config hwreset;
     struct misc_config misc;
     struct pcbid_config pcbid;
+    struct registry_config registry;
     struct netenv_config netenv;
     struct nusec_config nusec;
     struct vfs_config vfs;
